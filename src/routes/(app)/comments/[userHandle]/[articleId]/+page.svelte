@@ -2,6 +2,7 @@
 	import { authState, logout } from '$lib/auth.svelte';
 	import { type AppBskyFeedGetPostThread } from '@atproto/api';
 	import AuthModal from '$lib/components/AuthModal.svelte';
+	import ArticleLinkCreator from '$lib/components/ArticleLinkCreator.svelte';
 	import type { ThreadViewPost } from '@atproto/api/dist/client/types/app/bsky/feed/defs.js';
 	import CommentNode from '$lib/components/CommentNode.svelte';
 	import CommentSortSelect from '$lib/components/CommentSortSelect.svelte';
@@ -12,7 +13,11 @@
 
 	let modal = $state<HTMLDialogElement>();
 	const { data } = $props();
-	console.log('Page data:', data);
+
+	// Local override for rootPostUri after creating an article link
+	let rootPostUriOverride = $state<string | null>(null);
+	// Effective rootPostUri: use override if set, otherwise use data from server
+	let rootPostUri = $derived(rootPostUriOverride ?? data.rootPostUri);
 	let isLoading = $state(true);
 	let threadData = $state<ThreadViewPost | null>(null);
 	let sortOrder = $state<SortOption>('most-liked');
@@ -94,12 +99,17 @@
 		}
 	}
 
+	// Handle article link creation
+	function handleArticleLinkCreated(newRootPostUri: string) {
+		rootPostUriOverride = newRootPostUri;
+	}
+
 	// Load thread data when rootPostUri is available AND auth is initialized
 	// We track authState.isInitialized to wait for auth, but use untrack inside loadThreadData for agent
 	$effect(() => {
-		if (data.rootPostUri && authState.isInitialized) {
-			loadThreadData(data.rootPostUri);
-		} else if (!data.rootPostUri) {
+		if (rootPostUri && authState.isInitialized) {
+			loadThreadData(rootPostUri);
+		} else if (!rootPostUri) {
 			isLoading = false;
 		}
 	});
@@ -114,8 +124,14 @@
 
 <h1>Comments for {data.userDid}</h1>
 
-{#if data.rootPostUri === null}
-	<p>No post has been linked to this article. Please, create one.</p>
+{#if rootPostUri === null}
+	<div class="mx-auto max-w-xl p-5">
+		<ArticleLinkCreator
+			userHandle={data.userHandle}
+			articleId={data.articleId}
+			onArticleLinkCreated={handleArticleLinkCreated}
+		/>
+	</div>
 {:else if isLoading}
 	<p>Loading comments...</p>
 {:else}
@@ -133,7 +149,7 @@
 
 			{#if sortedTopLevelReplies.length > 0}
 				<div class="mb-4 flex w-full items-end">
-					<h2 class="flex-grow text-xl font-bold">Comments</h2>
+					<h2 class="grow text-xl font-bold">Comments</h2>
 					<CommentSortSelect value={sortOrder} onchange={(v) => (sortOrder = v)} />
 				</div>
 				{#each sortedTopLevelReplies as reply (reply.post.uri)}

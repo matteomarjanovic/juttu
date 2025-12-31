@@ -13,7 +13,7 @@
 		"format": "prettier --write .",
 		"lint": "prettier --check . && eslint .",
 		"prebuild": "lex build --lexicons ./lexicons --out ./src/lib/lexicons",
-		"predev": "lex build --lexicons ./lexicons --out ./src/lib/lexicons"
+		"predev": "lex build --lexicons ./lexicons --out ./src/lib/lexicons --clear"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.4.0",
@@ -41,6 +41,7 @@
 	},
 	"dependencies": {
 		"@atproto/api": "^0.18.8",
+		"@atproto/lex": "^0.0.7",
 		"@atproto/oauth-client-browser": "^0.3.37"
 	}
 }

@@ -24,8 +24,10 @@ export const load: PageLoad = async ({ params, setHeaders }) => {
         });
 
         return {
+            userHandle,
+            articleId,
             userDid: null,
-            rootPost: null,
+            rootPostUri: null,
             error: `Failed to resolve handle: ${userHandle}`,
         };
     }
@@ -44,6 +46,8 @@ export const load: PageLoad = async ({ params, setHeaders }) => {
         });
 
         return {
+            userHandle,
+            articleId,
             userDid,
             rootPostUri,
         };
@@ -55,6 +59,8 @@ export const load: PageLoad = async ({ params, setHeaders }) => {
         });
 
         return {
+            userHandle,
+            articleId,
             userDid,
             rootPostUri: null,
             error: `Failed to fetch post record for articleId: ${articleId}`,
