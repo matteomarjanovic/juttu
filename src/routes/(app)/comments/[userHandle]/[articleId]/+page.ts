@@ -1,10 +1,11 @@
 import { Agent } from '@atproto/api';
 import type { PageLoad } from './$types';
+import * as app from '$lib/lexicons/app.js'
 
 export const load: PageLoad = async ({ params, setHeaders }) => {
     const { userHandle, articleId } = params;
 
-	const agent = new Agent({service: 'https://bsky.social'});
+    const agent = new Agent({ service: 'https://bsky.social' });
 
     let userDid: string | null = null;
 
@@ -35,8 +36,9 @@ export const load: PageLoad = async ({ params, setHeaders }) => {
             rkey: articleId,
             repo: userDid,
         });
+        const articleLink = resPost?.data?.value as app.juttu.articleLink.Main;
 
-        const rootPostUri = resPost?.data?.value?.commentsThread?.uri;
+        const rootPostUri = articleLink?.commentsThread?.uri;
         setHeaders({
             'cache-control': 'public, max-age=3600',
         });

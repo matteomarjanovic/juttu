@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "lexicons": [
+    "app.juttu.articleLink"
+  ],
+  "resolutions": {
+    "app.juttu.articleLink": {
+      "uri": "at://did:plc:wgh2vn7jb56unancaapfmrin/com.atproto.lexicon.schema/app.juttu.articleLink",
+      "cid": "bafyreidtxfq44adargrxpdotv7lrlwxdu4db6pdfrxhvsxm5v4rmoehu4y"
+    },
+    "com.atproto.repo.strongRef": {
+      "uri": "at://did:plc:6msi3pj7krzih5qxqtryxlzw/com.atproto.lexicon.schema/com.atproto.repo.strongRef",
+      "cid": "bafyreifrkdbnkvfjujntdaeigolnrjj3srrs53tfixjhmacclps72qlov4"
+    }
+  }
+}
