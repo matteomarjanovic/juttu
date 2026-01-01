@@ -12,8 +12,8 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"format": "prettier --write .",
 		"lint": "prettier --check . && eslint .",
-		"prebuild": "lex build --lexicons ./lexicons --out ./src/lib/lexicons",
-		"predev": "lex build --lexicons ./lexicons --out ./src/lib/lexicons --clear"
+		"prebuild": "node scripts/generate-oauth-metadata.js && lex build --lexicons ./lexicons --out ./src/lib/lexicons",
+		"predev": "node scripts/generate-oauth-metadata.js && lex build --lexicons ./lexicons --out ./src/lib/lexicons --clear"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.4.0",
@@ -25,6 +25,7 @@
 		"@tailwindcss/vite": "^4.1.17",
 		"@types/node": "^24",
 		"daisyui": "^5.5.14",
+		"dotenv": "^17.2.3",
 		"eslint": "^9.39.1",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-svelte": "^3.13.1",

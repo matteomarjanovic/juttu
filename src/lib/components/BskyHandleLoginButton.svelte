@@ -27,8 +27,8 @@
 
 	<button class="btn btn-primary" disabled={authState.isLoading} onclick={handleLogin}>
 		Login with ATProtocol
-		{#if error}
-			<p class="text-sm text-error">{error}</p>
-		{/if}
 	</button>
 </div>
+{#if error}
+	<p class="text-sm text-error">{error}</p>
+{/if}

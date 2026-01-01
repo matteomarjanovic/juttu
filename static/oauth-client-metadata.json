@@ -1,6 +1,6 @@
 {
-    "client_id": "https://7b1bb07fa5f7.ngrok-free.app/client-metadata.json",
-    "client_name": "My App",
+    "client_id": "https://7b1bb07fa5f7.ngrok-free.app/oauth-client-metadata.json",
+    "client_name": "Juttu",
     "client_uri": "https://7b1bb07fa5f7.ngrok-free.app",
     "logo_uri": "https://7b1bb07fa5f7.ngrok-free.app/logo.png",
     "tos_uri": "https://7b1bb07fa5f7.ngrok-free.app/tos",

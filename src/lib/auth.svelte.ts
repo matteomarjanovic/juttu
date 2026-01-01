@@ -23,7 +23,7 @@ export const authState = $state<{
 
 function getClientMetadata() {
     return {
-        client_id: `https://${PUBLIC_HOSTNAME}/client-metadata.json`,
+        client_id: `https://${PUBLIC_HOSTNAME}/oauth-client-metadata.json`,
         client_name: "My App",
         client_uri: `https://${PUBLIC_HOSTNAME}`,
         logo_uri: `https://${PUBLIC_HOSTNAME}/logo.png`,

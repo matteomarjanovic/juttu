@@ -25,7 +25,7 @@
 		></path>
 	</svg>
 	Login with Bluesky
-	{#if error}
-		<p class="text-sm text-error">{error}</p>
-	{/if}
 </button>
+{#if error}
+	<p class="text-sm text-error">{error}</p>
+{/if}
