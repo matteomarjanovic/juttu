@@ -257,7 +257,7 @@
 			</div>
 
 			<!-- Body -->
-			<div class="text-sm leading-relaxed whitespace-pre-wrap text-base-content">
+			<div class="py-1 font-comment text-sm leading-relaxed whitespace-pre-wrap text-base-content">
 				<!-- {comment.post?.record.text} -->
 				{#each loadedFacets?.segments() as segment}
 					{#if segment.isLink()}

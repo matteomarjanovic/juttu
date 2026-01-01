@@ -1,6 +1,13 @@
+@import '@fontsource-variable/outfit';
+@import '@fontsource-variable/recursive';
 @import 'tailwindcss';
 @plugin '@tailwindcss/typography';
 @plugin "daisyui" {
     themes: light --default;
     exclude: rootscrollgutter;
+}
+
+@theme {
+    --font-sans: 'Outfit Variable', sans-serif;
+    --font-comment: 'Recursive Variable', serif;
 }
