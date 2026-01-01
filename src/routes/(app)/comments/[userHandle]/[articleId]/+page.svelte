@@ -8,6 +8,7 @@
 	import CommentSortSelect from '$lib/components/CommentSortSelect.svelte';
 	import RootCommentComposer from '$lib/components/RootCommentComposer.svelte';
 	import { untrack } from 'svelte';
+	import CommentsLoading from '$lib/components/CommentsLoading.svelte';
 
 	type SortOption = 'newest' | 'oldest' | 'most-liked';
 
@@ -115,15 +116,6 @@
 	});
 </script>
 
-{#if authState.agent}
-	<p>✅ Authenticated as {authState.session?.sub}</p>
-	<button class="btn btn-outline btn-sm" onclick={handleLogout}> Logout </button>
-{:else}
-	<p>❌ Not authenticated</p>
-{/if}
-
-<h1>Comments for {data.userDid}</h1>
-
 {#if rootPostUri === null}
 	<div class="mx-auto max-w-xl p-5">
 		<ArticleLinkCreator
@@ -133,12 +125,18 @@
 		/>
 	</div>
 {:else if isLoading}
-	<p>Loading comments...</p>
+	<div class="mx-auto max-w-xl p-5">
+		<CommentsLoading />
+	</div>
 {:else}
 	<!-- Here you would render the comments thread -->
 	<div class="mx-auto max-w-xl p-5">
 		{#if threadData}
-			<p class="text-end text-sm">Powered by Juttu</p>
+			<p class="text-end text-sm">
+				<a href="https://juttu.app" class="hover:cursor-pointer hover:underline" target="_blank"
+					>Powered by (Juttu)</a
+				>
+			</p>
 			<div class="divider mt-0"></div>
 			<RootCommentComposer
 				{modal}
@@ -149,7 +147,7 @@
 
 			{#if sortedTopLevelReplies.length > 0}
 				<div class="mb-4 flex w-full items-end">
-					<h2 class="grow text-xl font-bold">Comments</h2>
+					<h1 class="grow text-xl font-bold">Comments</h1>
 					<CommentSortSelect value={sortOrder} onchange={(v) => (sortOrder = v)} />
 				</div>
 				{#each sortedTopLevelReplies as reply (reply.post.uri)}

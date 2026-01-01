@@ -213,7 +213,7 @@
 
 {#if !comment.blocked && !comment.notFound}
 	<div class="relative mb-4">
-		<div class="bg-base-100">
+		<div>
 			<!-- Header -->
 			<div class="mb-1 flex items-start gap-2">
 				<div class="flex min-w-0 flex-1 items-center gap-2">
@@ -257,7 +257,9 @@
 			</div>
 
 			<!-- Body -->
-			<div class="py-1 font-comment text-sm leading-relaxed whitespace-pre-wrap text-base-content">
+			<div
+				class="py-1 font-comment text-sm leading-relaxed wrap-anywhere whitespace-pre-wrap text-base-content"
+			>
 				<!-- {comment.post?.record.text} -->
 				{#each loadedFacets?.segments() as segment}
 					{#if segment.isLink()}

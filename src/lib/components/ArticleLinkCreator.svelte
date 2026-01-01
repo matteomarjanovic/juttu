@@ -185,6 +185,11 @@
 	}
 </script>
 
+<p class="mb-2 text-end text-sm">
+	<a href="https://juttu.app" class="hover:cursor-pointer hover:underline" target="_blank"
+		>Powered by (Juttu)</a
+	>
+</p>
 <div class="mx-auto max-w-xl rounded-lg border border-base-300 bg-base-100 p-6">
 	<h2 class="mb-4 text-xl font-bold">Link Article to Bluesky</h2>
 	<p class="mb-6 text-sm text-base-content/70">
