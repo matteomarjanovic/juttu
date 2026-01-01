@@ -304,7 +304,7 @@
 							href={`https://bsky.app/profile/${comment.post?.author?.did}/post/${getPostId(comment.post?.uri || '')}`}
 							target="_blank"
 							rel="noopener noreferrer"
-							class="block overflow-hidden rounded-lg border border-base-300"
+							class="block overflow-hidden rounded-lg border border-base-300 transition-transform duration-150 hover:scale-[101%]"
 						>
 							<img
 								src={image.thumb}
@@ -418,7 +418,7 @@
 						bind:value={replyText}
 						onkeydown={handleReplyKeydown}
 						placeholder="Write a reply..."
-						class="textarea-bordered textarea min-h-16 w-full text-sm"
+						class="textarea-bordered textarea min-h-16 w-full font-comment text-sm"
 						disabled={isSubmittingReply}
 						rows="3"
 					></textarea>

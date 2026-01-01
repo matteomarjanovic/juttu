@@ -168,7 +168,7 @@
 		bind:value={commentText}
 		onkeydown={handleKeydown}
 		placeholder="Add a comment..."
-		class="textarea-bordered textarea min-h-20 w-full"
+		class="textarea-bordered textarea min-h-20 w-full font-comment"
 		disabled={isSubmitting}
 		rows="3"
 	></textarea>

@@ -16,11 +16,7 @@
 	}
 </script>
 
-<button
-	class="btn bg-[#0A7AFF] text-lg text-white"
-	disabled={authState.isLoading}
-	onclick={handleLogin}
->
+<button class="btn text-lg btn-accent" disabled={authState.isLoading} onclick={handleLogin}>
 	<svg class="h-auto w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 568 501">
 		<title>Bluesky butterfly logo</title>
 		<path

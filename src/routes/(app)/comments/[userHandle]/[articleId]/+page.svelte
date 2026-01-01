@@ -9,11 +9,22 @@
 	import RootCommentComposer from '$lib/components/RootCommentComposer.svelte';
 	import { untrack } from 'svelte';
 	import CommentsLoading from '$lib/components/CommentsLoading.svelte';
+	import { page } from '$app/state';
 
 	type SortOption = 'newest' | 'oldest' | 'most-liked';
 
 	let modal = $state<HTMLDialogElement>();
 	const { data } = $props();
+
+	// Check for theme parameter in URL
+	$effect(() => {
+		const theme = page.url.searchParams.get('theme');
+		if (theme === 'dark') {
+			document.documentElement.setAttribute('data-theme', 'juttu-dark');
+		} else {
+			document.documentElement.removeAttribute('data-theme');
+		}
+	});
 
 	// Local override for rootPostUri after creating an article link
 	let rootPostUriOverride = $state<string | null>(null);

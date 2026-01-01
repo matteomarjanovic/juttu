@@ -201,11 +201,7 @@
 			<p class="mb-4 text-base-content/70">
 				Sign in as <span class="font-semibold">@{userHandle}</span> to link this article.
 			</p>
-			<button
-				class="btn bg-[#0A7AFF] text-white"
-				disabled={authState.isLoading}
-				onclick={handleLogin}
-			>
+			<button class="btn text-lg btn-accent" disabled={authState.isLoading} onclick={handleLogin}>
 				{#if authState.isLoading}
 					<span class="loading loading-sm loading-spinner"></span>
 				{/if}
@@ -298,7 +294,7 @@
 				Create a new post on Bluesky that will serve as the comments thread for this article.
 			</p>
 			<textarea
-				class="textarea-bordered textarea min-h-32 w-full"
+				class="textarea-bordered textarea min-h-32 w-full font-comment"
 				placeholder="Write your post... (e.g., 'Comments thread for my new article!')"
 				bind:value={newPostText}
 				maxlength="300"

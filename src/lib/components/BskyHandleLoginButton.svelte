@@ -21,7 +21,7 @@
 	<input
 		type="text"
 		placeholder="Your Bluesky handle"
-		class="input-bordered input w-full max-w-2xs"
+		class="input-bordered input w-full max-w-2xs font-comment"
 		bind:value={userHandle}
 	/>
 
