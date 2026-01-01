@@ -293,6 +293,28 @@
 				{/each}
 			</div>
 
+			<!-- Embedded Images -->
+			{#if comment.post?.embed?.$type === 'app.bsky.embed.images#view'}
+				{@const imagesEmbed = comment.post.embed}
+				<div class="flex flex-wrap gap-2">
+					{#each imagesEmbed.images as image}
+						<a
+							href={`https://bsky.app/profile/${comment.post?.author?.did}/post/${getPostId(comment.post?.uri || '')}`}
+							target="_blank"
+							rel="noopener noreferrer"
+							class="block overflow-hidden rounded-lg border border-base-300"
+						>
+							<img
+								src={image.thumb}
+								alt={image.alt || 'Embedded image'}
+								class="h-auto max-h-64 w-auto object-cover"
+								loading="lazy"
+							/>
+						</a>
+					{/each}
+				</div>
+			{/if}
+
 			<!-- Actions -->
 			<div class="mt-2 flex gap-4 text-xs text-base-content/80">
 				<!-- <div class="tooltip duration-50" data-tip="Like comment"> -->
@@ -362,26 +384,29 @@
 					<span>{replyCount}</span>
 				</button>
 				<!-- </div> -->
-				<a
-					class="group flex cursor-pointer items-center gap-1 border-none bg-transparent p-0 text-blue-500 no-underline"
-					href={`https://bsky.app/profile/${comment.post?.author?.did}/post/${getPostId(comment.post?.uri || '')}`}
-					target="_blank"
-					rel="noopener noreferrer"
-					title="View on Bluesky"
-				>
-					<svg
-						class="h-4 h-auto w-4 stroke-current hover:stroke-[#1d9bf0]"
-						xmlns="http://www.w3.org/2000/svg"
-						fill="none"
-						viewBox="0 0 568 501"
+				<!-- Bluesky logo for "View on Bluesky" -->
+				<div class="tooltip tooltip-right duration-50" data-tip="View on Bluesky">
+					<a
+						class="group flex cursor-pointer items-center gap-1 border-none bg-transparent p-0 text-blue-500 no-underline transition-transform duration-150 hover:scale-105"
+						href={`https://bsky.app/profile/${comment.post?.author?.did}/post/${getPostId(comment.post?.uri || '')}`}
+						target="_blank"
+						rel="noopener noreferrer"
+						aria-label="View on Bluesky"
 					>
-						<title>View on Bluesky</title>
-						<path
-							fill="currentColor"
-							d="M123.121 33.664C188.241 82.553 258.281 181.68 284 234.873c25.719-53.192 95.759-152.32 160.879-201.21C491.866-1.611 568-28.906 568 57.947c0 17.346-9.945 145.713-15.778 166.555-20.275 72.453-94.155 90.933-159.875 79.748C507.222 323.8 536.444 388.56 473.333 453.32c-119.86 122.992-172.272-30.859-185.702-70.281-2.462-7.227-3.614-10.608-3.631-7.733-.017-2.875-1.169.506-3.631 7.733-13.43 39.422-65.842 193.273-185.702 70.281-63.111-64.76-33.89-129.52 80.986-149.071-65.72 11.185-139.6-7.295-159.875-79.748C9.945 203.659 0 75.291 0 57.946 0-28.906 76.135-1.612 123.121 33.664Z"
-						></path>
-					</svg>
-				</a>
+						<svg
+							class="h-4 w-4 stroke-current hover:stroke-[#1d9bf0]"
+							xmlns="http://www.w3.org/2000/svg"
+							fill="none"
+							viewBox="0 0 568 501"
+						>
+							<title>View on Bluesky</title>
+							<path
+								fill="currentColor"
+								d="M123.121 33.664C188.241 82.553 258.281 181.68 284 234.873c25.719-53.192 95.759-152.32 160.879-201.21C491.866-1.611 568-28.906 568 57.947c0 17.346-9.945 145.713-15.778 166.555-20.275 72.453-94.155 90.933-159.875 79.748C507.222 323.8 536.444 388.56 473.333 453.32c-119.86 122.992-172.272-30.859-185.702-70.281-2.462-7.227-3.614-10.608-3.631-7.733-.017-2.875-1.169.506-3.631 7.733-13.43 39.422-65.842 193.273-185.702 70.281-63.111-64.76-33.89-129.52 80.986-149.071-65.72 11.185-139.6-7.295-159.875-79.748C9.945 203.659 0 75.291 0 57.946 0-28.906 76.135-1.612 123.121 33.664Z"
+							></path>
+						</svg>
+					</a>
+				</div>
 			</div>
 
 			<!-- Reply Form -->
