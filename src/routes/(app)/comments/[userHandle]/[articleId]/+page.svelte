@@ -26,6 +26,42 @@
 		}
 	});
 
+	// Send height updates to parent window (for iframe embedding)
+	$effect(() => {
+		if (typeof window === 'undefined') return;
+
+		const sendHeight = () => {
+			const height = document.documentElement.scrollHeight;
+			window.parent.postMessage(
+				{
+					type: 'juttu-resize',
+					height
+				},
+				'*'
+			);
+		};
+
+		// Send initial height
+		sendHeight();
+
+		// Setup ResizeObserver to detect content changes
+		const resizeObserver = new ResizeObserver(sendHeight);
+		resizeObserver.observe(document.body);
+
+		// Also listen for dynamic content changes
+		const observer = new MutationObserver(sendHeight);
+		observer.observe(document.body, {
+			childList: true,
+			subtree: true,
+			attributes: true
+		});
+
+		return () => {
+			resizeObserver.disconnect();
+			observer.disconnect();
+		};
+	});
+
 	// Local override for rootPostUri after creating an article link
 	let rootPostUriOverride = $state<string | null>(null);
 	// Effective rootPostUri: use override if set, otherwise use data from server

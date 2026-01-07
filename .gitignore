@@ -24,3 +24,9 @@ vite.config.ts.timestamp-*
 
 # ATProto generated lexicons
 src/lib/lexicons
+
+# Embed script output
+static/embed
+
+# Generated OAuth metadata
+static/oauth-client-metadata.json
