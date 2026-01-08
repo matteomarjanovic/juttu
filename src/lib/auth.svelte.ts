@@ -167,6 +167,12 @@ export async function loginWithPopup(handle: string): Promise<OAuthSession> {
 	authState.isLoading = true;
 
 	try {
+		// Store current URL for iframe callback redirect
+		// This allows us to return to the correct page after OAuth completes in iframe context
+		if (typeof window !== 'undefined') {
+			sessionStorage.setItem('juttu_oauth_return_url', window.location.href);
+		}
+
 		const client = await getClient();
 		console.log('Initiating popup login for:', handle);
 

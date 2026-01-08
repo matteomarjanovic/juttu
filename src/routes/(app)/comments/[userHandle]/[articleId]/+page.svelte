@@ -46,11 +46,16 @@
 
 			console.log('Received OAuth callback from popup, redirecting iframe to callback URL');
 
-			// Validate callback URL to ensure it's from our domain
+			// Validate callback URL to ensure it's from our domain and is the callback endpoint
 			try {
 				const callbackUrl = new URL(event.data.url);
 				if (callbackUrl.origin !== expectedOrigin) {
 					console.warn('Callback URL origin does not match expected origin');
+					return;
+				}
+				// Ensure it's the callback endpoint to prevent redirects to other pages
+				if (!callbackUrl.pathname.startsWith('/callback')) {
+					console.warn('Callback URL is not the callback endpoint:', callbackUrl.pathname);
 					return;
 				}
 			} catch (err) {

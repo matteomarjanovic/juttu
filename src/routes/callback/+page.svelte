@@ -59,9 +59,11 @@
 				const isInIframe = window.self !== window.top;
 
 				if (isInIframe) {
-					// In iframe: redirect back to the page that initiated auth
-					// Try to get the return URL from the referrer or state
-					const returnUrl = document.referrer || '/';
+					// In iframe: redirect back to the stored return URL
+					// This URL was saved before the OAuth flow started
+					const returnUrl = sessionStorage.getItem('juttu_oauth_return_url') || '/';
+					sessionStorage.removeItem('juttu_oauth_return_url');
+
 					console.log('Callback in iframe, redirecting to:', returnUrl);
 					setTimeout(() => {
 						window.location.href = returnUrl;
