@@ -59,10 +59,16 @@
 				const isInIframe = window.self !== window.top;
 
 				if (isInIframe) {
-					// In iframe: redirect back to the stored return URL
-					// This URL was saved before the OAuth flow started
-					const returnUrl = sessionStorage.getItem('juttu_oauth_return_url') || '/';
+					// In iframe: redirect back to the stored return path
+					// Validate it's a safe path (starts with /) and is same-origin
+					let returnUrl = sessionStorage.getItem('juttu_oauth_return_url') || '/';
 					sessionStorage.removeItem('juttu_oauth_return_url');
+
+					// Security: validate return URL is a safe relative path
+					if (!returnUrl.startsWith('/') || returnUrl.startsWith('//')) {
+						console.warn('Invalid return URL, using default:', returnUrl);
+						returnUrl = '/';
+					}
 
 					console.log('Callback in iframe, redirecting to:', returnUrl);
 					setTimeout(() => {

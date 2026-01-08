@@ -54,7 +54,7 @@
 					return;
 				}
 				// Ensure it's the callback endpoint to prevent redirects to other pages
-				if (!callbackUrl.pathname.startsWith('/callback')) {
+				if (callbackUrl.pathname !== '/callback') {
 					console.warn('Callback URL is not the callback endpoint:', callbackUrl.pathname);
 					return;
 				}
