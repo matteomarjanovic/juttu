@@ -29,12 +29,16 @@
 				// Send the callback URL to the opener (iframe) to process
 				// The iframe has the correct storage context to complete the OAuth flow
 				const callbackUrl = window.location.href;
+
+				// Send to the opener iframe's origin (same as our origin)
+				// The iframe is always loaded from our domain, so we can restrict the target
+				const targetOrigin = window.location.origin;
 				window.opener.postMessage(
 					{
 						type: 'juttu-oauth-callback',
 						url: callbackUrl
 					},
-					'*' // We use '*' because the iframe might be embedded on any domain
+					targetOrigin
 				);
 
 				status = 'popup-closed';

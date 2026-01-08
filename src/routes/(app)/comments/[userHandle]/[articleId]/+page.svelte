@@ -37,7 +37,26 @@
 				return;
 			}
 
+			// Validate origin: must come from our own domain (the popup callback page)
+			const expectedOrigin = window.location.origin;
+			if (event.origin !== expectedOrigin) {
+				console.warn('Received OAuth callback from untrusted origin:', event.origin);
+				return;
+			}
+
 			console.log('Received OAuth callback from popup, redirecting iframe to callback URL');
+
+			// Validate callback URL to ensure it's from our domain
+			try {
+				const callbackUrl = new URL(event.data.url);
+				if (callbackUrl.origin !== expectedOrigin) {
+					console.warn('Callback URL origin does not match expected origin');
+					return;
+				}
+			} catch (err) {
+				console.warn('Invalid callback URL received:', event.data.url);
+				return;
+			}
 
 			// Redirect this iframe to the callback URL
 			// This ensures the OAuth client in this context processes the callback
