@@ -1,12 +1,12 @@
 <script lang="ts">
-    import { initAuth } from '$lib/auth.svelte';
-    import { onMount } from 'svelte';
+	import { initAuth } from '$lib/auth.svelte';
+	import { onMount } from 'svelte';
 
-    let { children } = $props();
+	let { children } = $props();
 
-    onMount(async () => {
-        await initAuth();
-    });
+	onMount(async () => {
+		await initAuth();
+	});
 </script>
 
 {@render children()}
