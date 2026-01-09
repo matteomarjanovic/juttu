@@ -13,7 +13,10 @@
 		"format": "prettier --write .",
 		"lint": "prettier --check . && eslint .",
 		"prebuild": "node scripts/generate-oauth-metadata.js && lex build --lexicons ./lexicons --out ./src/lib/lexicons && node scripts/build-embed.js",
-		"predev": "node scripts/generate-oauth-metadata.js && lex build --lexicons ./lexicons --out ./src/lib/lexicons --clear && node scripts/build-embed.js"
+		"predev": "node scripts/generate-oauth-metadata.js && lex build --lexicons ./lexicons --out ./src/lib/lexicons --clear && node scripts/build-embed.js",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"test:ui": "vitest --ui"
 	},
 	"devDependencies": {
 		"@eslint/compat": "^1.4.0",
@@ -23,13 +26,17 @@
 		"@sveltejs/vite-plugin-svelte": "^6.2.1",
 		"@tailwindcss/typography": "^0.5.19",
 		"@tailwindcss/vite": "^4.1.17",
+		"@testing-library/jest-dom": "^6.9.1",
+		"@testing-library/svelte": "^5.3.1",
 		"@types/node": "^24",
+		"@vitest/ui": "^4.0.16",
 		"daisyui": "^5.5.14",
 		"dotenv": "^17.2.3",
 		"eslint": "^9.39.1",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-svelte": "^3.13.1",
 		"globals": "^16.5.0",
+		"happy-dom": "^20.1.0",
 		"prettier": "^3.7.4",
 		"prettier-plugin-svelte": "^3.4.0",
 		"prettier-plugin-tailwindcss": "^0.7.2",
@@ -38,7 +45,8 @@
 		"tailwindcss": "^4.1.17",
 		"typescript": "^5.9.3",
 		"typescript-eslint": "^8.48.1",
-		"vite": "^7.2.6"
+		"vite": "^7.2.6",
+		"vitest": "^4.0.16"
 	},
 	"dependencies": {
 		"@atproto/api": "^0.18.8",
