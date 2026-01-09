@@ -26,56 +26,6 @@
 		}
 	});
 
-	// Handle OAuth callback when running in iframe
-	// The callback popup sends the OAuth response here for processing
-	$effect(() => {
-		if (typeof window === 'undefined') return;
-
-		const handleOAuthCallback = async (event: MessageEvent) => {
-			// Only process juttu-oauth-callback messages
-			if (event.data?.type !== 'juttu-oauth-callback') {
-				return;
-			}
-
-			// Validate origin: must come from our own domain (the popup callback page)
-			const expectedOrigin = window.location.origin;
-			if (event.origin !== expectedOrigin) {
-				console.warn('Received OAuth callback from untrusted origin:', event.origin);
-				return;
-			}
-
-			console.log('Received OAuth callback from popup, redirecting iframe to callback URL');
-
-			// Validate callback URL to ensure it's from our domain and is the callback endpoint
-			try {
-				const callbackUrl = new URL(event.data.url);
-				if (callbackUrl.origin !== expectedOrigin) {
-					console.warn('Callback URL origin does not match expected origin');
-					return;
-				}
-				// Ensure it's the callback endpoint to prevent redirects to other pages
-				if (callbackUrl.pathname !== '/callback') {
-					console.warn('Callback URL is not the callback endpoint:', callbackUrl.pathname);
-					return;
-				}
-			} catch (err) {
-				console.warn('Invalid callback URL received:', event.data.url);
-				return;
-			}
-
-			// Redirect this iframe to the callback URL
-			// This ensures the OAuth client in this context processes the callback
-			// with access to the correct (partitioned) storage
-			window.location.href = event.data.url;
-		};
-
-		window.addEventListener('message', handleOAuthCallback);
-
-		return () => {
-			window.removeEventListener('message', handleOAuthCallback);
-		};
-	});
-
 	// Send height updates to parent window (for iframe embedding)
 	$effect(() => {
 		if (typeof window === 'undefined') return;

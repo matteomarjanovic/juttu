@@ -157,23 +157,109 @@ export async function processCallback(): Promise<{
 }
 
 /**
+ * Check if we're running in an iframe
+ */
+function isInIframe(): boolean {
+	try {
+		return typeof window !== 'undefined' && window.self !== window.top;
+	} catch (e) {
+		// Cross-origin access might throw
+		return true;
+	}
+}
+
+/**
+ * Login from iframe context - opens login page as popup
+ * This avoids storage partitioning issues by doing OAuth in top-level context
+ */
+export async function loginFromIframe(handle?: string): Promise<OAuthSession> {
+	return new Promise((resolve, reject) => {
+		authState.isLoading = true;
+
+		// Build login URL
+		const loginUrl = new URL('/login', window.location.origin);
+		if (handle) {
+			loginUrl.searchParams.set('handle', handle);
+		}
+
+		// Open login page as popup
+		const popup = window.open(
+			loginUrl.toString(),
+			'juttu-login',
+			'width=600,height=700,menubar=no,toolbar=no,location=no,status=no'
+		);
+
+		if (!popup) {
+			authState.isLoading = false;
+			reject(new Error('Failed to open login popup. Please allow popups for this site.'));
+			return;
+		}
+
+		// Listen for session data from login popup
+		const handleMessage = async (event: MessageEvent) => {
+			// Validate origin
+			if (event.origin !== window.location.origin) {
+				return;
+			}
+
+			// Handle login success
+			if (event.data?.type === 'juttu-login-success') {
+				console.log('Received login success from popup:', event.data.sessionDid);
+
+				try {
+					// Restore session in this iframe's storage context
+					const session = await restoreSession(event.data.sessionDid);
+					if (session) {
+						console.log('Session restored in iframe context');
+						window.removeEventListener('message', handleMessage);
+						authState.isLoading = false;
+						resolve(session);
+					} else {
+						throw new Error('Failed to restore session in iframe');
+					}
+				} catch (err) {
+					console.error('Failed to restore session:', err);
+					window.removeEventListener('message', handleMessage);
+					authState.isLoading = false;
+					reject(err);
+				}
+			}
+		};
+
+		window.addEventListener('message', handleMessage);
+
+		// Check if popup was closed without completing login
+		const checkPopupClosed = setInterval(() => {
+			if (popup.closed) {
+				clearInterval(checkPopupClosed);
+				window.removeEventListener('message', handleMessage);
+				if (authState.isLoading) {
+					authState.isLoading = false;
+					reject(new Error('Login cancelled'));
+				}
+			}
+		}, 500);
+	});
+}
+
+/**
  * Login with popup - prompts user for their handle
+ * In iframe context, delegates to loginFromIframe
  */
 export async function loginWithPopup(handle: string): Promise<OAuthSession> {
 	if (!handle?.trim()) {
 		throw new Error('Handle is required');
 	}
 
+	// If in iframe, use the iframe-specific login flow
+	if (isInIframe()) {
+		console.log('Detected iframe context, using iframe login flow');
+		return loginFromIframe(handle);
+	}
+
 	authState.isLoading = true;
 
 	try {
-		// Store current page path for iframe callback redirect
-		// Only store pathname + search to avoid exposing sensitive data
-		if (typeof window !== 'undefined') {
-			const returnPath = window.location.pathname + window.location.search;
-			sessionStorage.setItem('juttu_oauth_return_url', returnPath);
-		}
-
 		const client = await getClient();
 		console.log('Initiating popup login for:', handle);
 
