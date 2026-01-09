@@ -28,14 +28,42 @@
 			const client = await getClient();
 			console.log('Initiating OAuth login for:', handle);
 
-			// Call signIn - this will redirect to OAuth provider
-			// The flow will continue in the /callback route
-			await client.signIn(handle.trim(), {
+			// Use 'popup' display mode - this opens a nested popup for OAuth
+			// The current popup window stays open and can send postMessage to iframe
+			const session = await client.signIn(handle.trim(), {
+				display: 'popup',
 				signal: AbortSignal.timeout(5 * 60 * 1000)
 			});
 
-			// Note: Code after signIn won't execute due to redirect
-			// The flow continues in /callback route
+			console.log('Login successful, session:', session.sub);
+			status = 'success';
+
+			// If this login page was opened as a popup from iframe, send message
+			if (window.opener) {
+				console.log('Sending login success message to opener (iframe)');
+
+				// Send message to opener (iframe) to notify of successful login
+				window.opener.postMessage(
+					{
+						type: 'juttu-login-success',
+						session: {
+							did: session.did,
+							sub: session.sub
+						}
+					},
+					window.location.origin
+				);
+
+				// Close this popup after a brief delay
+				setTimeout(() => {
+					window.close();
+				}, 1000);
+			} else {
+				// Not opened from popup, redirect to home
+				setTimeout(() => {
+					window.location.href = '/';
+				}, 1000);
+			}
 		} catch (err: unknown) {
 			console.error('Login failed:', err);
 			status = 'error';
