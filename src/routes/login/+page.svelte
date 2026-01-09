@@ -1,16 +1,17 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { loginWithPopup, authState, getClient } from '$lib/auth.svelte';
+	import { getClient, authState } from '$lib/auth.svelte';
 	import { page } from '$app/state';
 
 	let status = $state<'login' | 'processing' | 'success' | 'error'>('login');
 	let errorMessage = $state<string | null>(null);
 	let userHandle = $state<string>('');
+	let provider = $state<string>('');
 
 	/**
-	 * Check if this popup was opened by an iframe
+	 * Check if this page was opened as a popup from an iframe
 	 */
-	function isOpenerIframe(): boolean {
+	function isPopupFromIframe(): boolean {
 		try {
 			return window.opener && window.opener !== window.opener.top;
 		} catch (e) {
@@ -35,35 +36,49 @@
 		status = 'processing';
 
 		try {
-			// Perform OAuth login in this popup context
-			const session = await loginWithPopup(handle);
+			const client = await getClient();
+			console.log('Initiating OAuth login for:', handle);
 
-			console.log('Login successful in popup, session:', session.sub);
+			// Use 'page' display mode - the OAuth flow will redirect this page
+			// to the provider and back (no nested popups)
+			const session = await client.signIn(handle.trim(), {
+				signal: AbortSignal.timeout(5 * 60 * 1000)
+			});
+
+			console.log('Login successful, session:', session.sub);
 			status = 'success';
 
-			// If opened from an iframe, send session data back to iframe
-			if (isOpenerIframe() && window.opener) {
+			// Update global auth state
+			authState.session = session;
+			authState.isInitialized = true;
+
+			// Create agent
+			const { Agent } = await import('@atproto/api');
+			authState.agent = new Agent(session);
+
+			// If opened from an iframe, send session data back
+			if (isPopupFromIframe() && window.opener) {
 				console.log('Sending session data to iframe opener');
 
-				// Get the OAuth client to extract session data
-				const client = await getClient();
-
-				// Send session info to iframe so it can restore the session
+				// Send session identifier to iframe
+				// The iframe will reinitialize to pick up the session
 				window.opener.postMessage(
 					{
 						type: 'juttu-login-success',
-						sessionDid: session.did,
-						sessionSub: session.sub
+						session: {
+							did: session.did,
+							sub: session.sub
+						}
 					},
 					window.location.origin
 				);
 
-				// Close this popup after a brief delay
+				// Close popup after a brief delay
 				setTimeout(() => {
 					window.close();
 				}, 1000);
 			} else {
-				// Not in iframe context, redirect to home
+				// Not a popup, redirect to home
 				setTimeout(() => {
 					window.location.href = '/';
 				}, 1000);
@@ -76,11 +91,18 @@
 	}
 
 	onMount(() => {
-		// Auto-login if handle is provided in URL params
+		// Check for auto-login parameters
 		const handleParam = page.url.searchParams.get('handle');
+		const providerParam = page.url.searchParams.get('provider');
+
 		if (handleParam) {
 			userHandle = handleParam;
 			handleCustomLogin();
+		} else if (providerParam) {
+			provider = providerParam;
+			if (providerParam === 'bsky.social') {
+				handleBskyLogin();
+			}
 		}
 	});
 </script>
@@ -144,7 +166,7 @@
 				<div class="card-body items-center text-center">
 					<div class="loading loading-lg loading-spinner text-primary"></div>
 					<h2 class="card-title">Authenticating...</h2>
-					<p>Please complete the authentication in the popup window.</p>
+					<p>You will be redirected to complete authentication.</p>
 				</div>
 			</div>
 		{:else if status === 'success'}

@@ -204,21 +204,36 @@ export async function loginFromIframe(handle?: string): Promise<OAuthSession> {
 
 			// Handle login success
 			if (event.data?.type === 'juttu-login-success') {
-				console.log('Received login success from popup:', event.data.sessionDid);
+				console.log('Received login success from popup, session DID:', event.data.session?.did);
 
 				try {
-					// Restore session in this iframe's storage context
-					const session = await restoreSession(event.data.sessionDid);
-					if (session) {
-						console.log('Session restored in iframe context');
+					// The popup has already completed OAuth and stored the session
+					// Now we need to initialize our OAuth client in the iframe to pick it up
+					const client = await getClient();
+
+					// Initialize the client - it should restore the session that was just created
+					const result = await client.init(false);
+
+					if (result?.session) {
+						console.log('Session restored in iframe context:', result.session.sub);
+						authState.session = result.session;
+						authState.isInitialized = true;
+
+						// Create agent
+						const { Agent } = await import('@atproto/api');
+						authState.agent = new Agent(result.session);
+
+						// Fetch profile info
+						await fetchProfile(result.session);
+
 						window.removeEventListener('message', handleMessage);
 						authState.isLoading = false;
-						resolve(session);
+						resolve(result.session);
 					} else {
-						throw new Error('Failed to restore session in iframe');
+						throw new Error('Failed to restore session in iframe after login');
 					}
 				} catch (err) {
-					console.error('Failed to restore session:', err);
+					console.error('Failed to initialize session in iframe:', err);
 					window.removeEventListener('message', handleMessage);
 					authState.isLoading = false;
 					reject(err);
