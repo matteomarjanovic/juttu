@@ -1,23 +1,12 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { getClient, authState } from '$lib/auth.svelte';
+	import { getClient } from '$lib/auth.svelte';
 	import { page } from '$app/state';
 
 	let status = $state<'login' | 'processing' | 'success' | 'error'>('login');
 	let errorMessage = $state<string | null>(null);
 	let userHandle = $state<string>('');
 	let provider = $state<string>('');
-
-	/**
-	 * Check if this page was opened as a popup from an iframe
-	 */
-	function isPopupFromIframe(): boolean {
-		try {
-			return window.opener && window.opener !== window.opener.top;
-		} catch (e) {
-			return false;
-		}
-	}
 
 	async function handleBskyLogin() {
 		await handleLogin('https://bsky.social');
@@ -39,50 +28,14 @@
 			const client = await getClient();
 			console.log('Initiating OAuth login for:', handle);
 
-			// Use 'page' display mode - the OAuth flow will redirect this page
-			// to the provider and back (no nested popups)
-			const session = await client.signIn(handle.trim(), {
+			// Call signIn - this will redirect to OAuth provider
+			// The flow will continue in the /callback route
+			await client.signIn(handle.trim(), {
 				signal: AbortSignal.timeout(5 * 60 * 1000)
 			});
 
-			console.log('Login successful, session:', session.sub);
-			status = 'success';
-
-			// Update global auth state
-			authState.session = session;
-			authState.isInitialized = true;
-
-			// Create agent
-			const { Agent } = await import('@atproto/api');
-			authState.agent = new Agent(session);
-
-			// If opened from an iframe, send session data back
-			if (isPopupFromIframe() && window.opener) {
-				console.log('Sending session data to iframe opener');
-
-				// Send session identifier to iframe
-				// The iframe will reinitialize to pick up the session
-				window.opener.postMessage(
-					{
-						type: 'juttu-login-success',
-						session: {
-							did: session.did,
-							sub: session.sub
-						}
-					},
-					window.location.origin
-				);
-
-				// Close popup after a brief delay
-				setTimeout(() => {
-					window.close();
-				}, 1000);
-			} else {
-				// Not a popup, redirect to home
-				setTimeout(() => {
-					window.location.href = '/';
-				}, 1000);
-			}
+			// Note: Code after signIn won't execute due to redirect
+			// The flow continues in /callback route
 		} catch (err: unknown) {
 			console.error('Login failed:', err);
 			status = 'error';

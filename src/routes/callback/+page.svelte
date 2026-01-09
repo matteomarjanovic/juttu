@@ -5,6 +5,17 @@
 	let status = $state<'processing' | 'success' | 'error' | 'popup-closed'>('processing');
 	let errorMessage = $state<string | null>(null);
 
+	/**
+	 * Check if this window was opened as a popup
+	 */
+	function isPopupWindow(): boolean {
+		try {
+			return window.opener !== null && window.opener !== undefined;
+		} catch (e) {
+			return false;
+		}
+	}
+
 	onMount(async () => {
 		try {
 			console.log('Callback page: Processing OAuth response...');
@@ -12,12 +23,35 @@
 			const result = await processCallback();
 
 			if (result?.session) {
-				console.log('Callback processed, redirecting to home...');
+				console.log('Callback processed successfully, session:', result.session.sub);
 				status = 'success';
-				// For redirect mode (non-popup), redirect to home after success
-				setTimeout(() => {
-					window.location.href = '/';
-				}, 1000);
+
+				// If this is a popup window (opened by iframe), send message to opener
+				if (isPopupWindow() && window.opener) {
+					console.log('Sending login success message to opener window');
+
+					// Send message to opener (iframe) to notify of successful login
+					window.opener.postMessage(
+						{
+							type: 'juttu-login-success',
+							session: {
+								did: result.session.did,
+								sub: result.session.sub
+							}
+						},
+						window.location.origin
+					);
+
+					// Close popup after a brief delay
+					setTimeout(() => {
+						window.close();
+					}, 1000);
+				} else {
+					// Not a popup, redirect to home after success
+					setTimeout(() => {
+						window.location.href = '/';
+					}, 1000);
+				}
 			}
 		} catch (err: unknown) {
 			const error = err as Error;
@@ -47,7 +81,13 @@
 		{:else if status === 'success'}
 			<div class="mb-4 text-5xl text-success">✓</div>
 			<h1 class="mb-2 text-2xl font-bold">Authentication successful!</h1>
-			<p class="text-gray-600">Redirecting you to the app...</p>
+			<p class="text-gray-600">
+				{#if isPopupWindow()}
+					This window will close automatically...
+				{:else}
+					Redirecting you to the app...
+				{/if}
+			</p>
 		{:else if status === 'popup-closed'}
 			<div class="mb-4 text-5xl text-info">✓</div>
 			<h1 class="mb-2 text-2xl font-bold">Authentication complete</h1>
