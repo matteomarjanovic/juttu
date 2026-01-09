@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { authState } from '$lib/auth.svelte';
+	import { authState, openLoginPopup } from '$lib/auth.svelte';
 	import CommentNode from './CommentNode.svelte';
 	import { RichText } from '@atproto/api';
 
@@ -19,7 +19,6 @@
 		})
 	);
 
-	let modal = props.modal;
 	let sortOrder: SortOption = props.sortOrder || 'newest';
 
 	// Track if the user has liked this post
@@ -77,7 +76,7 @@
 	async function handleLike() {
 		if (!authState.agent) {
 			console.error('No authenticated agent available.');
-			modal?.showModal();
+			openLoginPopup();
 			return;
 		}
 
@@ -101,7 +100,7 @@
 	async function handleRepost() {
 		if (!authState.agent) {
 			console.error('No authenticated agent available.');
-			modal?.showModal();
+			openLoginPopup();
 			return;
 		}
 
@@ -125,7 +124,7 @@
 	function toggleReplyForm() {
 		if (!authState.agent) {
 			console.error('No authenticated agent available.');
-			modal?.showModal();
+			openLoginPopup();
 			return;
 		}
 		showReplyForm = !showReplyForm;
@@ -137,7 +136,7 @@
 	async function handleReply() {
 		if (!authState.agent) {
 			console.error('No authenticated agent available.');
-			modal?.showModal();
+			openLoginPopup();
 			return;
 		}
 
@@ -452,7 +451,7 @@
 		{#if (comment.replies && comment.replies.length > 0) || localReplies.length > 0}
 			<div class="mt-3 border-l-2 border-base-300 pl-3">
 				{#each sortedReplies as reply (reply.post?.uri)}
-					<CommentNode comment={reply} {modal} {sortOrder} />
+					<CommentNode comment={reply} {sortOrder} />
 				{/each}
 			</div>
 		{/if}

@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { authState, logout } from '$lib/auth.svelte';
 	import { type AppBskyFeedGetPostThread } from '@atproto/api';
-	import AuthModal from '$lib/components/AuthModal.svelte';
 	import ArticleLinkCreator from '$lib/components/ArticleLinkCreator.svelte';
 	import type { ThreadViewPost } from '@atproto/api/dist/client/types/app/bsky/feed/defs.js';
 	import CommentNode from '$lib/components/CommentNode.svelte';
@@ -13,7 +12,6 @@
 
 	type SortOption = 'newest' | 'oldest' | 'most-liked';
 
-	let modal = $state<HTMLDialogElement>();
 	const { data } = $props();
 
 	// Check for theme parameter in URL
@@ -93,13 +91,6 @@
 	function handleRootCommentPosted(newComment: any) {
 		localRootComments = [newComment, ...localRootComments];
 	}
-
-	// Close modal when user logs in
-	$effect(() => {
-		if (authState.session) {
-			modal?.close();
-		}
-	});
 
 	async function handleLogout() {
 		try {
@@ -186,7 +177,6 @@
 			</p>
 			<div class="divider mt-0"></div>
 			<RootCommentComposer
-				{modal}
 				rootPostUri={threadData.post.uri}
 				rootPostCid={threadData.post.cid}
 				onCommentPosted={handleRootCommentPosted}
@@ -198,7 +188,7 @@
 					<CommentSortSelect value={sortOrder} onchange={(v) => (sortOrder = v)} />
 				</div>
 				{#each sortedTopLevelReplies as reply (reply.post.uri)}
-					<CommentNode comment={reply} {modal} {sortOrder} />
+					<CommentNode comment={reply} {sortOrder} />
 				{/each}
 			{:else}
 				<p class="py-8 text-center text-base-content/60 italic">
@@ -210,5 +200,3 @@
 		{/if}
 	</div>
 {/if}
-
-<AuthModal bind:modal />

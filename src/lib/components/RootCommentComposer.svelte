@@ -1,14 +1,13 @@
 <script lang="ts">
-	import { authState, logout } from '$lib/auth.svelte';
+	import { authState, logout, openLoginPopup } from '$lib/auth.svelte';
 
 	interface Props {
-		modal: HTMLDialogElement | undefined;
 		rootPostUri: string;
 		rootPostCid: string;
-		onCommentPosted: (newComment: any) => void;
+		onCommentPosted?: (comment: any) => void;
 	}
 
-	const { modal, rootPostUri, rootPostCid, onCommentPosted }: Props = $props();
+	const { rootPostUri, rootPostCid, onCommentPosted }: Props = $props();
 
 	let commentText = $state('');
 	let isSubmitting = $state(false);
@@ -32,7 +31,7 @@
 
 		if (!authState.agent) {
 			console.error('No authenticated agent available.');
-			modal?.showModal();
+			openLoginPopup();
 			return;
 		}
 
@@ -78,7 +77,7 @@
 				replies: []
 			};
 
-			onCommentPosted(newComment);
+			onCommentPosted?.(newComment);
 			commentText = '';
 		} catch (error) {
 			console.error('Error posting comment:', error);
@@ -156,7 +155,7 @@
             </div> -->
 			<button
 				class="btn px-0 text-base-content/90 btn-link btn-sm"
-				onclick={() => modal?.showModal()}
+				onclick={() => openLoginPopup()}
 			>
 				Log in to comment
 			</button>

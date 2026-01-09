@@ -157,6 +157,25 @@ export async function processCallback(): Promise<{
 }
 
 /**
+ * Open login popup for authentication
+ * This is called when user tries to perform an auth-required action
+ */
+export function openLoginPopup(handle?: string): void {
+	// Build login URL
+	const loginUrl = new URL('/login', window.location.origin);
+	if (handle) {
+		loginUrl.searchParams.set('handle', handle);
+	}
+
+	// Open login page as popup
+	window.open(
+		loginUrl.toString(),
+		'juttu-login',
+		'width=600,height=700,menubar=no,toolbar=no,location=no,status=no'
+	);
+}
+
+/**
  * Check if we're running in an iframe
  */
 function isInIframe(): boolean {
@@ -170,32 +189,19 @@ function isInIframe(): boolean {
 
 /**
  * Login from iframe context - opens login page as popup
- * This avoids storage partitioning issues by doing OAuth in top-level context
+ * Polls IndexedDB to detect when session is created in popup
  */
 export async function loginFromIframe(handle?: string): Promise<OAuthSession> {
 	return new Promise((resolve, reject) => {
 		authState.isLoading = true;
 
-		// Build login URL
-		const loginUrl = new URL('/login', window.location.origin);
-		if (handle) {
-			loginUrl.searchParams.set('handle', handle);
-		}
+		// Open login popup
+		openLoginPopup(handle);
 
-		// Open login page as popup
-		const popup = window.open(
-			loginUrl.toString(),
-			'juttu-login',
-			'width=600,height=700,menubar=no,toolbar=no,location=no,status=no'
-		);
+		let pollInterval: NodeJS.Timeout | null = null;
+		let messageReceived = false;
 
-		if (!popup) {
-			authState.isLoading = false;
-			reject(new Error('Failed to open login popup. Please allow popups for this site.'));
-			return;
-		}
-
-		// Listen for session data from login popup
+		// Listen for success message from popup
 		const handleMessage = async (event: MessageEvent) => {
 			// Validate origin
 			if (event.origin !== window.location.origin) {
@@ -204,56 +210,76 @@ export async function loginFromIframe(handle?: string): Promise<OAuthSession> {
 
 			// Handle login success
 			if (event.data?.type === 'juttu-login-success') {
-				console.log('Received login success from popup, session DID:', event.data.session?.did);
-
-				try {
-					// The popup has already completed OAuth and stored the session
-					// Now we need to initialize our OAuth client in the iframe to pick it up
-					const client = await getClient();
-
-					// Initialize the client - it should restore the session that was just created
-					const result = await client.init(false);
-
-					if (result?.session) {
-						console.log('Session restored in iframe context:', result.session.sub);
-						authState.session = result.session;
-						authState.isInitialized = true;
-
-						// Create agent
-						const { Agent } = await import('@atproto/api');
-						authState.agent = new Agent(result.session);
-
-						// Fetch profile info
-						await fetchProfile(result.session);
-
-						window.removeEventListener('message', handleMessage);
-						authState.isLoading = false;
-						resolve(result.session);
-					} else {
-						throw new Error('Failed to restore session in iframe after login');
-					}
-				} catch (err) {
-					console.error('Failed to initialize session in iframe:', err);
-					window.removeEventListener('message', handleMessage);
-					authState.isLoading = false;
-					reject(err);
-				}
+				console.log('Received login success message from popup');
+				messageReceived = true;
+				await attemptRestore();
 			}
 		};
 
+		// Attempt to restore session from IndexedDB
+		const attemptRestore = async () => {
+			try {
+				const client = await getClient();
+				// Initialize client - it should pick up the session from IndexedDB
+				const result = await client.init(false);
+
+				if (result?.session) {
+					console.log('Session restored in iframe context:', result.session.sub);
+					cleanup();
+					authState.session = result.session;
+					authState.isInitialized = true;
+
+					// Create agent
+					const { Agent } = await import('@atproto/api');
+					authState.agent = new Agent(result.session);
+
+					// Fetch profile info
+					await fetchProfile(result.session);
+
+					authState.isLoading = false;
+					resolve(result.session);
+				}
+			} catch (err) {
+				// If message was received but restore failed, that's an error
+				if (messageReceived) {
+					console.error('Failed to restore session after login:', err);
+					cleanup();
+					authState.isLoading = false;
+					reject(err);
+				}
+				// Otherwise, keep polling
+			}
+		};
+
+		// Poll IndexedDB every 500ms to check for session
+		// This provides a fallback if postMessage doesn't arrive
+		pollInterval = setInterval(() => {
+			attemptRestore();
+		}, 500);
+
+		// Cleanup function
+		const cleanup = () => {
+			if (pollInterval) {
+				clearInterval(pollInterval);
+				pollInterval = null;
+			}
+			window.removeEventListener('message', handleMessage);
+		};
+
+		// Listen for postMessage (primary method)
 		window.addEventListener('message', handleMessage);
 
-		// Check if popup was closed without completing login
-		const checkPopupClosed = setInterval(() => {
-			if (popup.closed) {
-				clearInterval(checkPopupClosed);
-				window.removeEventListener('message', handleMessage);
+		// Timeout after 5 minutes
+		setTimeout(
+			() => {
 				if (authState.isLoading) {
+					cleanup();
 					authState.isLoading = false;
-					reject(new Error('Login cancelled'));
+					reject(new Error('Login timeout'));
 				}
-			}
-		}, 500);
+			},
+			5 * 60 * 1000
+		);
 	});
 }
 
