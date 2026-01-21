@@ -1,18 +1,18 @@
 <script lang="ts">
-	import { authState, logout } from '$lib/auth.svelte';
+	import { authState, logout, requestAuth } from '$lib/auth.svelte';
 
 	interface Props {
-		modal: HTMLDialogElement | undefined;
 		rootPostUri: string;
 		rootPostCid: string;
 		onCommentPosted: (newComment: any) => void;
 	}
 
-	const { modal, rootPostUri, rootPostCid, onCommentPosted }: Props = $props();
+	const { rootPostUri, rootPostCid, onCommentPosted }: Props = $props();
 
 	let commentText = $state('');
 	let isSubmitting = $state(false);
 	let loggingOut = $state(false);
+	let popupBlockedUrl = $state<string | null>(null);
 
 	async function handleLogout() {
 		try {
@@ -25,21 +25,29 @@
 		}
 	}
 
+	function handleAuthRequired(): boolean {
+		if (!authState.agent) {
+			const result = requestAuth();
+			if (!result.success && result.fallbackUrl) {
+				popupBlockedUrl = result.fallbackUrl;
+			}
+			return false;
+		}
+		popupBlockedUrl = null;
+		return true;
+	}
+
 	async function handleSubmit() {
 		if (!commentText.trim()) {
 			return;
 		}
 
-		if (!authState.agent) {
-			console.error('No authenticated agent available.');
-			modal?.showModal();
-			return;
-		}
+		if (!handleAuthRequired()) return;
 
 		isSubmitting = true;
 
 		try {
-			const response = await authState.agent.post({
+			const response = await authState.agent!.post({
 				text: commentText.trim(),
 				reply: {
 					root: {
@@ -156,7 +164,7 @@
             </div> -->
 			<button
 				class="btn px-0 text-base-content/90 btn-link btn-sm"
-				onclick={() => modal?.showModal()}
+				onclick={() => handleAuthRequired()}
 			>
 				Log in to comment
 			</button>
@@ -206,4 +214,34 @@
 			{isSubmitting ? 'Posting...' : 'Comment'}
 		</button>
 	</div>
+
+	<!-- Popup Blocked Alert -->
+	{#if popupBlockedUrl}
+		<div class="mt-3 alert text-sm alert-warning">
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				class="h-5 w-5 shrink-0"
+				fill="none"
+				viewBox="0 0 24 24"
+				stroke="currentColor"
+			>
+				<path
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					stroke-width="2"
+					d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+				/>
+			</svg>
+			<span>Popup was blocked.</span>
+			<a
+				href={popupBlockedUrl}
+				target="_blank"
+				rel="noopener noreferrer"
+				class="btn btn-sm"
+				onclick={() => (popupBlockedUrl = null)}
+			>
+				Click here to login
+			</a>
+		</div>
+	{/if}
 </div>

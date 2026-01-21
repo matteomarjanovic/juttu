@@ -1,10 +1,14 @@
 import { PUBLIC_HOSTNAME } from '$env/static/public';
 import type { BrowserOAuthClient as BrowserOAuthClientType, OAuthSession } from '@atproto/oauth-client-browser';
 import type { ProfileViewDetailed } from '@atproto/api/dist/client/types/app/bsky/actor/defs';
+import { SvelteURLSearchParams } from 'svelte/reactivity';
 
 // Singleton client instance
 let clientInstance: BrowserOAuthClientType | null = null;
 let clientPromise: Promise<BrowserOAuthClientType> | null = null;
+
+// Store reference to login popup for cleanup
+let loginPopup: Window | null = null;
 
 // Reactive auth state using Svelte 5's $state pattern for cross-module sharing
 export const authState = $state<{
@@ -160,6 +164,8 @@ export async function loginWithPopup(handle: string): Promise<OAuthSession> {
         const client = await getClient();
         console.log('Initiating popup login for:', handle);
 
+        client.authorize()
+
         const session = await client.signIn(handle.trim(), {
             display: 'popup',
             signal: AbortSignal.timeout(5 * 60 * 1000) // 5 minute timeout
@@ -244,4 +250,135 @@ async function fetchProfile(session: OAuthSession): Promise<void> {
         console.error('Failed to fetch profile:', err);
         authState.profile = null;
     }
+}
+
+/**
+ * Open the login popup for iframe-based authentication.
+ * This opens /login in a popup, which handles the OAuth flow
+ * and relays auth params back via postMessage.
+ * 
+ * @returns true if popup opened successfully, false if blocked
+ */
+export function openLoginPopup(): boolean {
+    const currentOrigin = window.location.origin;
+    const loginUrl = `https://${PUBLIC_HOSTNAME}/login?opener=${encodeURIComponent(currentOrigin)}`;
+
+    // Calculate popup dimensions and position (centered)
+    const width = 500;
+    const height = 600;
+    const left = window.screenX + (window.outerWidth - width) / 2;
+    const top = window.screenY + (window.outerHeight - height) / 2;
+
+    loginPopup = window.open(
+        loginUrl,
+        'juttu-login',
+        `width=${width},height=${height},left=${left},top=${top},popup=true`
+    );
+
+    if (!loginPopup) {
+        console.warn('Login popup was blocked');
+        return false;
+    }
+
+    console.log('Login popup opened');
+    return true;
+}
+
+/**
+ * Request authentication from the user.
+ * Opens the login popup and returns information about the result.
+ * 
+ * @returns Object with success status and optional fallback URL if popup was blocked
+ */
+export function requestAuth(): { success: boolean; fallbackUrl?: string } {
+    const success = openLoginPopup();
+
+    if (!success) {
+        // Return fallback URL for manual opening
+        const currentOrigin = window.location.origin;
+        const fallbackUrl = `https://${PUBLIC_HOSTNAME}/login?opener=${encodeURIComponent(currentOrigin)}`;
+        return { success: false, fallbackUrl };
+    }
+
+    return { success: true };
+}
+
+/**
+ * Process OAuth callback params received via postMessage from the login popup.
+ * This is called in the iframe context to complete authentication using
+ * params relayed from the popup window chain.
+ */
+export async function processCallbackParams(params: string): Promise<OAuthSession | null> {
+    authState.isLoading = true;
+
+    try {
+        const client = await getClient();
+
+        // Parse the query string params
+        const searchParams = new SvelteURLSearchParams(params);
+        console.log('Processing callback params:', params);
+
+        // Use the client's callback method with the params
+        // This processes the OAuth response in the iframe's storage context
+        const result = await client.callback(searchParams);
+
+        if (result?.session) {
+            console.log(`Callback params processed for ${result.session.sub}`);
+            authState.session = result.session;
+            authState.isInitialized = true;
+
+            // Create agent
+            const { Agent } = await import('@atproto/api');
+            authState.agent = new Agent(result.session);
+
+            // Fetch profile info
+            await fetchProfile(result.session);
+
+            return result.session;
+        }
+
+        return null;
+    } catch (err) {
+        console.error('Failed to process callback params:', err);
+        throw err;
+    } finally {
+        authState.isLoading = false;
+    }
+}
+
+/**
+ * Set up the postMessage listener for receiving auth callbacks from the login popup.
+ * This should be called once when the app initializes in an iframe context.
+ */
+export function setupAuthMessageListener(): () => void {
+    const handleMessage = async (event: MessageEvent) => {
+        // Accept messages from our own origin (the login popup)
+        if (event.origin !== `https://${PUBLIC_HOSTNAME}`) {
+            return;
+        }
+
+        if (event.data?.type === 'juttu-auth-callback' && event.data.params) {
+            console.log('Received auth callback params from login popup');
+            try {
+                await processCallbackParams(event.data.params);
+                console.log('Authentication completed successfully');
+            } catch (err) {
+                console.error('Failed to process auth callback:', err);
+            }
+        } else if (event.data?.type === 'juttu-auth-success') {
+            // Auth completed in redirect mode - re-init to check for session
+            console.log('Received auth success signal, re-initializing auth...');
+            // Note: This won't work due to storage partitioning, but we try anyway
+            // The callback params flow is the primary mechanism
+            await initAuth();
+        }
+    };
+
+    window.addEventListener('message', handleMessage);
+    console.log('Auth message listener set up');
+
+    // Return cleanup function
+    return () => {
+        window.removeEventListener('message', handleMessage);
+    };
 }

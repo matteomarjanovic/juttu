@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { authState } from '$lib/auth.svelte';
+	import { authState, requestAuth } from '$lib/auth.svelte';
 	import CommentNode from './CommentNode.svelte';
 	import { RichText } from '@atproto/api';
 
@@ -19,8 +19,10 @@
 		})
 	);
 
-	let modal = props.modal;
 	let sortOrder: SortOption = props.sortOrder || 'newest';
+
+	// Popup blocked fallback state
+	let popupBlockedUrl = $state<string | null>(null);
 
 	// Track if the user has liked this post
 	let likeUri = $state<string | undefined>(comment.post?.viewer?.like);
@@ -74,22 +76,30 @@
 	// Helper to get the post ID for the reply link
 	const getPostId = (uri: string) => uri.split('/').pop();
 
-	async function handleLike() {
+	function handleAuthRequired(): boolean {
 		if (!authState.agent) {
-			console.error('No authenticated agent available.');
-			modal?.showModal();
-			return;
+			const result = requestAuth();
+			if (!result.success && result.fallbackUrl) {
+				popupBlockedUrl = result.fallbackUrl;
+			}
+			return false;
 		}
+		popupBlockedUrl = null;
+		return true;
+	}
+
+	async function handleLike() {
+		if (!handleAuthRequired()) return;
 
 		try {
 			if (isLiked && likeUri) {
 				// Unlike: delete the like record
-				await authState.agent.deleteLike(likeUri);
+				await authState.agent!.deleteLike(likeUri);
 				likeUri = undefined;
 				likeCount--;
 			} else {
 				// Like: create a like record
-				const response = await authState.agent.like(comment.post?.uri, comment.post?.cid);
+				const response = await authState.agent!.like(comment.post?.uri, comment.post?.cid);
 				likeUri = response.uri;
 				likeCount++;
 			}
@@ -99,21 +109,17 @@
 	}
 
 	async function handleRepost() {
-		if (!authState.agent) {
-			console.error('No authenticated agent available.');
-			modal?.showModal();
-			return;
-		}
+		if (!handleAuthRequired()) return;
 
 		try {
 			if (isReposted && repostUri) {
 				// Unrepost: delete the repost record
-				await authState.agent.deleteRepost(repostUri);
+				await authState.agent!.deleteRepost(repostUri);
 				repostUri = undefined;
 				repostCount--;
 			} else {
 				// Repost: create a repost record
-				const response = await authState.agent.repost(comment.post?.uri, comment.post?.cid);
+				const response = await authState.agent!.repost(comment.post?.uri, comment.post?.cid);
 				repostUri = response.uri;
 				repostCount++;
 			}
@@ -123,11 +129,7 @@
 	}
 
 	function toggleReplyForm() {
-		if (!authState.agent) {
-			console.error('No authenticated agent available.');
-			modal?.showModal();
-			return;
-		}
+		if (!handleAuthRequired()) return;
 		showReplyForm = !showReplyForm;
 		if (!showReplyForm) {
 			replyText = '';
@@ -135,11 +137,7 @@
 	}
 
 	async function handleReply() {
-		if (!authState.agent) {
-			console.error('No authenticated agent available.');
-			modal?.showModal();
-			return;
-		}
+		if (!handleAuthRequired()) return;
 
 		if (!replyText.trim()) {
 			return;
@@ -149,7 +147,7 @@
 
 		try {
 			// Create a reply post
-			const response = await authState.agent.post({
+			const response = await authState.agent!.post({
 				text: replyText.trim(),
 				reply: {
 					root: {
@@ -446,13 +444,43 @@
 					</div>
 				</div>
 			{/if}
+
+			<!-- Popup Blocked Alert -->
+			{#if popupBlockedUrl}
+				<div class="mt-3 alert text-sm alert-warning">
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						class="h-5 w-5 shrink-0"
+						fill="none"
+						viewBox="0 0 24 24"
+						stroke="currentColor"
+					>
+						<path
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+						/>
+					</svg>
+					<span>Popup was blocked.</span>
+					<a
+						href={popupBlockedUrl}
+						target="_blank"
+						rel="noopener noreferrer"
+						class="btn btn-sm"
+						onclick={() => (popupBlockedUrl = null)}
+					>
+						Click here to login
+					</a>
+				</div>
+			{/if}
 		</div>
 
 		<!-- Nested Replies -->
 		{#if (comment.replies && comment.replies.length > 0) || localReplies.length > 0}
 			<div class="mt-3 border-l-2 border-base-300 pl-3">
 				{#each sortedReplies as reply (reply.post?.uri)}
-					<CommentNode comment={reply} {modal} {sortOrder} />
+					<CommentNode comment={reply} {sortOrder} />
 				{/each}
 			</div>
 		{/if}
