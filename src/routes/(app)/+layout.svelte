@@ -9,7 +9,7 @@
 		const cleanup = setupAuthMessageListener();
 
 		// Initialize auth (restore existing sessions)
-		initAuth();
+		// initAuth();
 
 		return cleanup;
 	});

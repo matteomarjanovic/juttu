@@ -146,7 +146,8 @@
 	// Load thread data when rootPostUri is available AND auth is initialized
 	// We track authState.isInitialized to wait for auth, but use untrack inside loadThreadData for agent
 	$effect(() => {
-		if (rootPostUri && authState.isInitialized) {
+		// if (rootPostUri && authState.isInitialized) {
+		if (rootPostUri) {
 			loadThreadData(rootPostUri);
 		} else if (!rootPostUri) {
 			isLoading = false;

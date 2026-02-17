@@ -1,11 +1,14 @@
 import { PUBLIC_HOSTNAME } from '$env/static/public';
-import type { BrowserOAuthClient as BrowserOAuthClientType, OAuthSession } from '@atproto/oauth-client-browser';
+import type { BrowserOAuthClient as BrowserOAuthClientType, OAuthSession } from '@juttu/oauth-client-browser';
 import type { ProfileViewDetailed } from '@atproto/api/dist/client/types/app/bsky/actor/defs';
 import { SvelteURLSearchParams } from 'svelte/reactivity';
 
 // Singleton client instance
 let clientInstance: BrowserOAuthClientType | null = null;
 let clientPromise: Promise<BrowserOAuthClientType> | null = null;
+
+// Store the unpartitioned IndexedDB handle obtained via Storage Access API
+let unpartitionedIndexedDB: IDBFactory | null = null;
 
 // Store reference to login popup for cleanup
 let loginPopup: Window | null = null;
@@ -53,10 +56,30 @@ export async function getClient(): Promise<BrowserOAuthClientType> {
     }
 
     clientPromise = (async () => {
-        const { BrowserOAuthClient } = await import('@atproto/oauth-client-browser');
+        // Request storage access before creating the client
+        // so IndexedDB is opened in unpartitioned storage
+        if (!unpartitionedIndexedDB && document.requestStorageAccess) {
+            try {
+                // @ts-expect-error - Storage Access API extended types may not be available
+                const handle = await document.requestStorageAccess({ indexedDB: true });
+                if (handle?.indexedDB) {
+                    unpartitionedIndexedDB = handle.indexedDB;
+                    console.log('Juttu: Obtained unpartitioned IndexedDB handle');
+                }
+            } catch (err) {
+                console.warn('Juttu: Storage access request failed:', err);
+            }
+        }
+
+        const { BrowserOAuthClient } = await import('@juttu/oauth-client-browser');
         clientInstance = new BrowserOAuthClient({
             clientMetadata: getClientMetadata(),
-            handleResolver: 'https://bsky.social'
+            handleResolver: 'https://bsky.social',
+            ...(unpartitionedIndexedDB && {
+                databaseOptions: {
+                    indexedDBFactory: unpartitionedIndexedDB
+                }
+            })
         });
 
         // Listen for session events from the client

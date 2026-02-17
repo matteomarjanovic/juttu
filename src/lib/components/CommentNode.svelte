@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { authState, requestAuth } from '$lib/auth.svelte';
+	import { authState, initAuth, requestAuth } from '$lib/auth.svelte';
 	import CommentNode from './CommentNode.svelte';
 	import { RichText } from '@atproto/api';
 
@@ -89,6 +89,7 @@
 	}
 
 	async function handleLike() {
+		await initAuth();
 		if (!handleAuthRequired()) return;
 
 		try {

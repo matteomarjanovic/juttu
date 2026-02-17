@@ -43,8 +43,8 @@
 	"dependencies": {
 		"@atproto/api": "^0.18.8",
 		"@atproto/lex": "^0.0.7",
-		"@atproto/oauth-client-browser": "^0.3.37",
 		"@fontsource-variable/outfit": "^5.2.8",
-		"@fontsource-variable/recursive": "^5.2.8"
+		"@fontsource-variable/recursive": "^5.2.8",
+		"@juttu/oauth-client-browser": "^0.3.41"
 	}
 }
