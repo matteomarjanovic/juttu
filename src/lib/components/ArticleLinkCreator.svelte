@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { authState, loginWithPopup } from '$lib/auth.svelte';
+	import { authState, requestAuth } from '$lib/auth.svelte';
 	import type { AppBskyFeedDefs } from '@atproto/api';
 	import { l } from '@atproto/lex';
 	import * as app from '$lib/lexicons/app.js';
@@ -43,13 +43,11 @@
 		return authState.profile.handle === userHandle || authState.profile.did === userHandle;
 	});
 
-	async function handleLogin() {
+	function handleLogin() {
 		loginError = null;
-		try {
-			await loginWithPopup(userHandle);
-		} catch (err: unknown) {
-			const e = err as Error;
-			loginError = e.message || 'Login failed';
+		const result = requestAuth();
+		if (!result.success) {
+			loginError = 'Popup was blocked. Please allow popups for this site.';
 		}
 	}
 

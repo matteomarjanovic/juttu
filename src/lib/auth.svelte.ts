@@ -99,81 +99,6 @@ export async function getClient(): Promise<BrowserOAuthClientType> {
 }
 
 /**
- * Initialize auth on app load - restores existing sessions
- * Should NOT be called on the callback page
- */
-export async function initAuth(): Promise<OAuthSession | null> {
-    if (authState.isInitialized) {
-        return authState.session;
-    }
-
-    authState.isLoading = true;
-
-    try {
-        const client = await getClient();
-
-        // Use initRestore to only restore existing sessions without processing callback params
-        const result = await client.init(false);
-
-        if (result?.session) {
-            console.log(`Session restored for ${result.session.sub}`);
-            authState.session = result.session;
-            // Create agent
-            const { Agent } = await import('@atproto/api');
-            authState.agent = new Agent(result.session);
-            // Fetch profile info
-            await fetchProfile(result.session);
-        }
-
-        authState.isInitialized = true;
-        return authState.session;
-    } catch (err) {
-        console.error('Auth initialization failed:', err);
-        authState.isInitialized = true;
-        return null;
-    } finally {
-        authState.isLoading = false;
-    }
-}
-
-/**
- * Process OAuth callback - called ONLY on the callback page
- * For popup mode, this communicates with the parent window
- */
-export async function processCallback(): Promise<{ session: OAuthSession; state?: string | null } | null> {
-    try {
-        const client = await getClient();
-
-        // initCallback processes the OAuth params from the URL
-        // For popup mode, it will communicate with the parent window and throw LoginContinuedInParentWindowError
-        const result = await client.initCallback();
-
-        if (result?.session) {
-            console.log(`Callback processed for ${result.session.sub}`);
-            authState.session = result.session;
-            authState.isInitialized = true;
-            // Create agent
-            const { Agent } = await import('@atproto/api');
-            authState.agent = new Agent(result.session);
-            // Fetch profile info
-            await fetchProfile(result.session);
-        }
-
-        return result ?? null;
-    } catch (err: unknown) {
-        // LoginContinuedInParentWindowError is expected for popup mode
-        // The popup window will close itself, and the parent window handles the session
-        if (err && typeof err === 'object' && 'message' in err &&
-            (err as Error).message === 'Login continued in parent window') {
-            console.log('Popup callback completed, parent window will handle session');
-            throw err; // Re-throw so the UI knows this is expected
-        }
-        console.error('Callback processing failed:', err);
-        throw err;
-    }
-}
-
-/**
  * Login with popup - prompts user for their handle
  */
 export async function loginWithPopup(handle: string): Promise<OAuthSession> {
@@ -186,8 +111,6 @@ export async function loginWithPopup(handle: string): Promise<OAuthSession> {
     try {
         const client = await getClient();
         console.log('Initiating popup login for:', handle);
-
-        client.authorize()
 
         const session = await client.signIn(handle.trim(), {
             display: 'popup',
@@ -234,26 +157,6 @@ export async function logout(): Promise<void> {
         authState.profile = null;
         authState.agent = null;
         throw err;
-    }
-}
-
-/**
- * Restore a specific session by DID
- */
-export async function restoreSession(did: string): Promise<OAuthSession | null> {
-    try {
-        const client = await getClient();
-        const session = await client.restore(did, false);
-        authState.session = session;
-        // Create agent
-        const { Agent } = await import('@atproto/api');
-        authState.agent = new Agent(session);
-        // Fetch profile info
-        await fetchProfile(session);
-        return session;
-    } catch (err) {
-        console.error('Failed to restore session:', err);
-        return null;
     }
 }
 
@@ -388,12 +291,6 @@ export function setupAuthMessageListener(): () => void {
             } catch (err) {
                 console.error('Failed to process auth callback:', err);
             }
-        } else if (event.data?.type === 'juttu-auth-success') {
-            // Auth completed in redirect mode - re-init to check for session
-            console.log('Received auth success signal, re-initializing auth...');
-            // Note: This won't work due to storage partitioning, but we try anyway
-            // The callback params flow is the primary mechanism
-            await initAuth();
         }
     };
 

@@ -61,16 +61,12 @@
 	async function handleBlueskyLogin() {
 		error = null;
 		try {
-			// Set flag so callback page knows to store params in localStorage
 			localStorage.setItem('juttu-auth-mode', 'iframe-popup');
 			await loginWithPopup('https://bsky.social');
-			// If we reach here, popup mode completed and session is in this window
-			// This shouldn't happen in the iframe flow, but handle it just in case
-			forwardSuccessAndClose();
 		} catch (err: unknown) {
 			const e = err as Error;
-			// "Login continued in parent window" means popup mode worked normally
-			// We'll get the params from localStorage polling
+			// "Login continued in parent window" is expected — the OAuth popup completed
+			// and /callback stored params in localStorage for us to relay to the iframe.
 			if (e.message !== 'Login continued in parent window') {
 				error = e.message || 'Login failed';
 				localStorage.removeItem('juttu-auth-mode');
@@ -85,11 +81,8 @@
 		}
 		error = null;
 		try {
-			// Set flag so callback page knows to store params in localStorage
 			localStorage.setItem('juttu-auth-mode', 'iframe-popup');
 			await loginWithPopup(userHandle.trim());
-			// If we reach here, popup mode completed and session is in this window
-			forwardSuccessAndClose();
 		} catch (err: unknown) {
 			const e = err as Error;
 			if (e.message !== 'Login continued in parent window') {
@@ -97,18 +90,6 @@
 				localStorage.removeItem('juttu-auth-mode');
 			}
 		}
-	}
-
-	function forwardSuccessAndClose() {
-		// This is called if auth completed without popup (redirect mode)
-		// In this case, session is in this window's IndexedDB, but we still
-		// need to signal the iframe. For now, just close the window.
-		console.log('Forwarding auth success to opener window...');
-		localStorage.removeItem('juttu-auth-mode');
-		if (window.opener && openerOrigin) {
-			window.opener.postMessage({ type: 'juttu-auth-success' }, openerOrigin);
-		}
-		window.close();
 	}
 </script>
 
