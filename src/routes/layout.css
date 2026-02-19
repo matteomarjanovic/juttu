@@ -15,7 +15,8 @@
   color-scheme: "light";
   --color-base-100: oklch(0.9791 0 0);
   --color-base-200: oklch(0.931 0 0);
-  --color-base-300: oklch(0.8945 0 0);
+  /* --color-base-300: oklch(0.8945 0 0); */
+  --color-base-300: rgba(0 0 0 / 0.2);
   --color-base-content: oklch(0.3093 0.0305 232);
   --color-primary: oklch(0.3093 0.0305 232);
   --color-primary-content: oklch(0.9791 0 0);
@@ -49,10 +50,11 @@
   name: "juttu-dark";
   default: false;
   prefersdark: false;
-  color-scheme: "dark";
+  color-scheme: "normal";
   --color-base-100: oklch(0.3631 0.0317 232.83);
   --color-base-200: oklch(0.3093 0.0305 232);
-  --color-base-300: oklch(0.2229 0.0218 234.67);
+  /* --color-base-300: oklch(0.2229 0.0218 234.67); */
+  --color-base-300: rgba(255 255 255 / 0.2);
   --color-base-content: oklch(0.9791 0 0);
   --color-primary: oklch(0.931 0 0);
   --color-primary-content: oklch(0.3093 0.0305 232);
@@ -87,5 +89,10 @@
 }
 
 html, body {
-    @apply bg-base-200;
+  background-color: var(--color-base-200);
+}
+
+html[data-embedded], html[data-embedded] body {
+  --color-base-100: transparent;
+  --color-base-200: transparent;
 }

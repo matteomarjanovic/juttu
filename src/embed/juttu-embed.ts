@@ -85,6 +85,7 @@ class JuttuEmbed {
         this.iframe.style.display = 'block';
         this.iframe.setAttribute('title', 'Juttu Comments');
         this.iframe.setAttribute('loading', 'lazy');
+        this.iframe.setAttribute('scrolling', 'no');
 
         window.addEventListener('message', this.handleMessage.bind(this));
         this.container.appendChild(this.iframe);

@@ -22,6 +22,13 @@
 		} else {
 			document.documentElement.removeAttribute('data-theme');
 		}
+
+		// Detect iframe embedding and make background transparent
+		if (window.self !== window.top) {
+			document.documentElement.setAttribute('data-embedded', '');
+		} else {
+			document.documentElement.removeAttribute('data-embedded');
+		}
 	});
 
 	// Send height updates to parent window (for iframe embedding)
@@ -156,7 +163,7 @@
 </script>
 
 {#if rootPostUri === null}
-	<div class="mx-auto max-w-xl p-5">
+	<div class="mx-auto max-w-xl">
 		<ArticleLinkCreator
 			userHandle={data.userHandle}
 			articleId={data.articleId}
@@ -164,12 +171,12 @@
 		/>
 	</div>
 {:else if isLoading}
-	<div class="mx-auto max-w-xl p-5">
+	<div class="mx-auto max-w-xl">
 		<CommentsLoading />
 	</div>
 {:else}
 	<!-- Here you would render the comments thread -->
-	<div class="mx-auto max-w-xl p-5">
+	<div class="mx-auto">
 		{#if threadData}
 			<p class="text-end text-sm">
 				<a href="https://juttu.app" class="hover:cursor-pointer hover:underline" target="_blank"

@@ -184,7 +184,7 @@
 		<div class="flex items-center gap-2">
 			<span class="text-xs text-base-content/80">Ctrl+Enter to submit</span>
 			<div
-				class="tooltip tooltip-bottom duration-50"
+				class="tooltip tooltip-right duration-50"
 				data-tip="Every comment you will leave will be posted on your bluesky profile, as a reply to the original post by the author."
 			>
 				<button class="btn btn-circle btn-ghost btn-xs" aria-label="Info">
