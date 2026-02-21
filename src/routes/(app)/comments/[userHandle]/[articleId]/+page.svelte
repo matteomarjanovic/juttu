@@ -76,6 +76,9 @@
 	let sortOrder = $state<SortOption>('most-liked');
 	let localRootComments = $state<any[]>([]);
 
+	const TOP_LEVEL_PAGE_SIZE = 5;
+	let visibleTopLevelCount = $state(TOP_LEVEL_PAGE_SIZE);
+
 	// Sort top-level replies based on sortOrder
 	let sortedTopLevelReplies = $derived.by(() => {
 		if (!threadData?.replies) return [];
@@ -94,6 +97,9 @@
 		// Local root comments always at the top
 		return [...localRootComments, ...sortedFetched];
 	});
+
+	let visibleTopLevelReplies = $derived(sortedTopLevelReplies.slice(0, visibleTopLevelCount));
+	let hiddenTopLevelCount = $derived(sortedTopLevelReplies.length - visibleTopLevelCount);
 
 	function handleRootCommentPosted(newComment: any) {
 		localRootComments = [newComment, ...localRootComments];
@@ -195,9 +201,18 @@
 					<h1 class="grow text-xl font-bold">Comments</h1>
 					<CommentSortSelect value={sortOrder} onchange={(v) => (sortOrder = v)} />
 				</div>
-				{#each sortedTopLevelReplies as reply (reply.post.uri)}
+				{#each visibleTopLevelReplies as reply (reply.post.uri)}
 					<CommentNode comment={reply} {sortOrder} />
 				{/each}
+				{#if hiddenTopLevelCount > 0}
+					<button
+						class="btn mt-2 w-full btn-ghost btn-sm"
+						onclick={() => (visibleTopLevelCount += TOP_LEVEL_PAGE_SIZE)}
+					>
+						Show {Math.min(hiddenTopLevelCount, TOP_LEVEL_PAGE_SIZE)} more comments ({hiddenTopLevelCount}
+						remaining)
+					</button>
+				{/if}
 			{:else}
 				<p class="py-8 text-center text-base-content/60 italic">
 					No comments yet. Be the first to comment!

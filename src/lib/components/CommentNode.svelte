@@ -51,6 +51,9 @@
 		replyCount = comment.post?.replyCount || 0;
 	});
 
+	const NESTED_PAGE_SIZE = 3;
+	let visibleReplyCount = $state(NESTED_PAGE_SIZE);
+
 	// Sort replies: local replies always first, then sort fetched replies by sortOrder
 	let sortedReplies = $derived.by(() => {
 		const fetchedReplies = comment.replies || [];
@@ -67,6 +70,9 @@
 		// Local replies always at the top (newest local first)
 		return [...localReplies, ...sortedFetched];
 	});
+
+	let visibleReplies = $derived(sortedReplies.slice(0, visibleReplyCount));
+	let hiddenReplyCount = $derived(sortedReplies.length - visibleReplyCount);
 
 	// Helper to get the post ID for the reply link
 	const getPostId = (uri: string) => uri.split('/').pop();
@@ -454,9 +460,17 @@
 		<!-- Nested Replies -->
 		{#if (comment.replies && comment.replies.length > 0) || localReplies.length > 0}
 			<div class="mt-3 border-l-2 border-base-300 pl-3">
-				{#each sortedReplies as reply (reply.post?.uri)}
+				{#each visibleReplies as reply (reply.post?.uri)}
 					<CommentNode comment={reply} {sortOrder} />
 				{/each}
+				{#if hiddenReplyCount > 0}
+					<button
+						class="btn mt-2 w-full btn-ghost btn-sm"
+						onclick={() => (visibleReplyCount += NESTED_PAGE_SIZE)}
+					>
+						Show {Math.min(hiddenReplyCount, NESTED_PAGE_SIZE)} more replies
+					</button>
+				{/if}
 			</div>
 		{/if}
 	</div>
