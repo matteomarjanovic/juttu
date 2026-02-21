@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { authState, requestAuth } from '$lib/auth.svelte';
+	import { formatDate } from './post-utils';
 	import type { AppBskyFeedDefs } from '@atproto/api';
 	import { l } from '@atproto/lex';
 	import * as app from '$lib/lexicons/app.js';
@@ -167,16 +168,6 @@
 		await createArticleLink(selectedPost.uri, selectedPost.cid);
 	}
 
-	function formatDate(dateString: string): string {
-		return new Date(dateString).toLocaleDateString(undefined, {
-			year: 'numeric',
-			month: 'short',
-			day: 'numeric',
-			hour: '2-digit',
-			minute: '2-digit'
-		});
-	}
-
 	function truncateText(text: string, maxLength: number = 100): string {
 		if (text.length <= maxLength) return text;
 		return text.slice(0, maxLength) + '...';
@@ -341,7 +332,7 @@
 							<div class="flex w-full flex-col gap-1">
 								<p class="text-sm">{truncateText(record.text || '')}</p>
 								<p class="text-xs text-base-content/50">
-									{formatDate(record.createdAt || post.indexedAt)}
+									{formatDate(record.createdAt || post.indexedAt, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
 								</p>
 							</div>
 						</button>
@@ -362,7 +353,7 @@
 			<div class="rounded-lg border border-base-300 bg-base-200 p-4">
 				<p class="mb-2">{record.text}</p>
 				<p class="text-xs text-base-content/50">
-					{formatDate(record.createdAt || selectedPost.indexedAt)}
+					{formatDate(record.createdAt || selectedPost.indexedAt, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
 				</p>
 			</div>
 

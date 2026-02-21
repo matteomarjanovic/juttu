@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { authState, logout, requestAuth } from '$lib/auth.svelte';
+	import { makeOptimisticPost } from './post-utils';
 
 	interface Props {
 		rootPostUri: string;
@@ -64,27 +65,7 @@
 			console.log('Comment posted:', response);
 
 			// Create a new comment object to add to the UI
-			const newComment = {
-				post: {
-					uri: response.uri,
-					cid: response.cid,
-					author: {
-						did: authState.profile?.did || authState.session?.did,
-						handle: authState.profile?.handle || authState.session?.sub,
-						displayName: authState.profile?.displayName,
-						avatar: authState.profile?.avatar
-					},
-					record: {
-						text: commentText.trim(),
-						createdAt: new Date().toISOString()
-					},
-					indexedAt: new Date().toISOString(),
-					likeCount: 0,
-					repostCount: 0,
-					replyCount: 0
-				},
-				replies: []
-			};
+			const newComment = makeOptimisticPost(response, commentText.trim());
 
 			onCommentPosted(newComment);
 			commentText = '';

@@ -2,6 +2,7 @@
 	import { authState, requestAuth } from '$lib/auth.svelte';
 	import CommentNode from './CommentNode.svelte';
 	import { RichText } from '@atproto/api';
+	import { formatDate, makeOptimisticPost } from './post-utils';
 
 	type SortOption = 'newest' | 'oldest' | 'most-liked';
 
@@ -66,17 +67,6 @@
 		// Local replies always at the top (newest local first)
 		return [...localReplies, ...sortedFetched];
 	});
-
-	// Helper to format dates
-	const formatDate = (dateStr: string | undefined) => {
-		if (!dateStr) return '';
-		return new Date(dateStr).toLocaleDateString(undefined, {
-			month: 'short',
-			day: 'numeric',
-			hour: '2-digit',
-			minute: '2-digit'
-		});
-	};
 
 	// Helper to get the post ID for the reply link
 	const getPostId = (uri: string) => uri.split('/').pop();
@@ -169,27 +159,7 @@
 			console.log('Reply posted:', response);
 
 			// Add the new reply to local state so it appears immediately
-			const newReply = {
-				post: {
-					uri: response.uri,
-					cid: response.cid,
-					author: {
-						did: authState.profile?.did || authState.session?.did,
-						handle: authState.profile?.handle || authState.session?.sub,
-						displayName: authState.profile?.displayName,
-						avatar: authState.profile?.avatar
-					},
-					record: {
-						text: replyText.trim(),
-						createdAt: new Date().toISOString()
-					},
-					indexedAt: new Date().toISOString(),
-					likeCount: 0,
-					repostCount: 0,
-					replyCount: 0
-				},
-				replies: []
-			};
+			const newReply = makeOptimisticPost(response, replyText.trim());
 
 			localReplies = [newReply, ...localReplies];
 			replyCount++;
