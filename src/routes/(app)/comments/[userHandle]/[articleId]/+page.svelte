@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { authState, logout } from '$lib/auth.svelte';
+	import { untrack } from 'svelte';
 	import { type AppBskyFeedGetPostThread } from '@atproto/api';
 	import ArticleLinkCreator from '$lib/components/ArticleLinkCreator.svelte';
 	import type { ThreadViewPost } from '@atproto/api/dist/client/types/app/bsky/feed/defs.js';
 	import CommentNode from '$lib/components/CommentNode.svelte';
 	import CommentSortSelect from '$lib/components/CommentSortSelect.svelte';
 	import RootCommentComposer from '$lib/components/RootCommentComposer.svelte';
-	import { untrack } from 'svelte';
 	import CommentsLoading from '$lib/components/CommentsLoading.svelte';
 	import { page } from '$app/state';
 
@@ -108,12 +108,13 @@
 	}
 
 	async function loadThreadData(rootPostUri: string) {
-		isLoading = true;
+		// Show loading spinner only on initial fetch; re-fetches after login/logout are silent.
+		// Use untrack so reading threadData here doesn't make it a $effect dependency (which would cause an infinite loop).
+		if (!untrack(() => threadData)) isLoading = true;
 		try {
 			console.log('Loading comments for article ID:', rootPostUri, 'by user DID:', data.userDid);
 
-			// Read agent without tracking to avoid re-running on auth changes
-			const currentAgent = untrack(() => authState.agent);
+			const currentAgent = authState.agent;
 
 			if (currentAgent) {
 				// Use authenticated agent - viewer data will be populated
@@ -150,8 +151,7 @@
 		rootPostUriOverride = newRootPostUri;
 	}
 
-	// Load thread data when rootPostUri is available AND auth is initialized
-	// We track authState.isInitialized to wait for auth, but use untrack inside loadThreadData for agent
+	// Re-run whenever rootPostUri changes (new article) or agent changes (user logs in/out)
 	$effect(() => {
 		// if (rootPostUri && authState.isInitialized) {
 		if (rootPostUri) {

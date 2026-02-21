@@ -6,12 +6,8 @@
 	type SortOption = 'newest' | 'oldest' | 'most-liked';
 
 	const props = $props();
-	let comment = props.comment;
-	// Move it to $effect since can't use await at top-level
-	// const rt = new RichText({
-	//     text: comment.post?.record.text || '',
-	// })
-	// const commentFacets = await rt.detectFacets(authState.agent);
+	const initialComment = props.comment;
+	let comment = $derived(props.comment);
 	let loadedFacets = $derived(
 		new RichText({
 			text: comment.post?.record.text,
@@ -25,15 +21,15 @@
 	let popupBlockedUrl = $state<string | null>(null);
 
 	// Track if the user has liked this post
-	let likeUri = $state<string | undefined>(comment.post?.viewer?.like);
-	let likeCount = $state<number>(comment.post?.likeCount || 0);
+	let likeUri = $state<string | undefined>(initialComment.post?.viewer?.like);
+	let likeCount = $state<number>(initialComment.post?.likeCount || 0);
 
 	// Derived: is the post liked?
 	let isLiked = $derived(!!likeUri);
 
 	// Track if the user has reposted this post
-	let repostUri = $state<string | undefined>(comment.post?.viewer?.repost);
-	let repostCount = $state<number>(comment.post?.repostCount || 0);
+	let repostUri = $state<string | undefined>(initialComment.post?.viewer?.repost);
+	let repostCount = $state<number>(initialComment.post?.repostCount || 0);
 
 	// Derived: is the post reposted?
 	let isReposted = $derived(!!repostUri);
@@ -42,8 +38,17 @@
 	let showReplyForm = $state(false);
 	let replyText = $state('');
 	let isSubmittingReply = $state(false);
-	let replyCount = $state<number>(comment.post?.replyCount || 0);
+	let replyCount = $state<number>(initialComment.post?.replyCount || 0);
 	let localReplies = $state<any[]>([]);
+
+	// Sync local state when the comment prop changes (e.g. after authenticated re-fetch)
+	$effect(() => {
+		likeUri = comment.post?.viewer?.like;
+		likeCount = comment.post?.likeCount || 0;
+		repostUri = comment.post?.viewer?.repost;
+		repostCount = comment.post?.repostCount || 0;
+		replyCount = comment.post?.replyCount || 0;
+	});
 
 	// Sort replies: local replies always first, then sort fetched replies by sortOrder
 	let sortedReplies = $derived.by(() => {
