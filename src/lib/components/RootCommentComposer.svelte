@@ -1,6 +1,10 @@
 <script lang="ts">
 	import { authState, logout, requestAuth } from '$lib/auth.svelte';
+	import { getContext } from 'svelte';
 	import { makeOptimisticPost } from './post-utils';
+	import { track } from '$lib/analytics';
+
+	const userHandle = getContext<string>('juttu:userHandle');
 
 	interface Props {
 		rootPostUri: string;
@@ -68,6 +72,7 @@
 			const newComment = makeOptimisticPost(response, commentText.trim());
 
 			onCommentPosted(newComment);
+			track('reply', userHandle);
 			commentText = '';
 		} catch (error) {
 			console.error('Error posting comment:', error);

@@ -1,38 +1,126 @@
-# sv
+# Juttu
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+Juttu is an open-source Bluesky-powered comment widget. Website owners embed it via `<iframe>` to add a comment section backed by Bluesky threads.
 
-## Creating a project
+## How it works
 
-If you're seeing this, you've probably already done this step. Congrats!
+- Each embedded widget links an article (identified by a handle + article ID) to a root Bluesky post via the custom AT Protocol lexicon `app.juttu.articleLink`.
+- Comments are the replies to that Bluesky post, fetched via the Bluesky API.
+- Visitors can log in with their Bluesky account directly inside the widget to like, repost, or reply.
 
-```sh
-# create a new project in the current directory
-npx sv create
+## Getting started
 
-# create a new project in my-app
-npx sv create my-app
-```
+### Prerequisites
 
-## Developing
+- Node.js 20+
+- A Bluesky account (for the site owner, to create article links)
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
-
-```sh
-npm run dev
-
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
-
-## Building
-
-To create a production version of your app:
+### Installation
 
 ```sh
-npm run build
+npm install
 ```
 
-You can preview the production build with `npm run preview`.
+### Environment variables
 
-> To deploy your app, you may need to install an [adapter](https://svelte.dev/docs/kit/adapters) for your target environment.
+Create a `.env` file:
+
+```
+PUBLIC_HOSTNAME=yourapp.example.com
+```
+
+`PUBLIC_HOSTNAME` is required (without `https://`). It is used to:
+- Generate `static/oauth-client-metadata.json` (OAuth client registration)
+- Build `static/embed/juttu-embed.min.js` (the embeddable script, with hostname baked in)
+- Construct OAuth redirect URIs and postMessage origins at runtime
+
+To enable usage telemetry (see [Telemetry](#telemetry)):
+
+```
+PUBLIC_ANALYTICS_ENDPOINT=https://your-analytics-server.example.com/event
+```
+
+## Commands
+
+```sh
+npm run dev          # Start dev server (runs prebuild scripts first)
+npm run build        # Production build (runs prebuild scripts first)
+npm run check        # TypeScript type-check
+npm run lint         # Prettier + ESLint
+npm run format       # Auto-format
+npm test             # Run tests
+npm run test:watch   # Tests in watch mode
+```
+
+## Embedding
+
+Include this script on any page:
+
+```html
+<script
+  src="https://yourapp.example.com/embed/juttu-embed.min.js"
+  data-bsky-user-handle="yourhandle.bsky.social"
+  data-article-id="my-article-slug"
+></script>
+```
+
+The script creates an `<iframe>` pointing to `/comments/{userHandle}/{articleId}` and resizes it dynamically via `postMessage`.
+
+## Telemetry
+
+Juttu includes optional, minimal telemetry to help the hosted service operator understand usage. It is **disabled by default** and opt-in for self-hosters.
+
+### Enabling telemetry
+
+Set `PUBLIC_ANALYTICS_ENDPOINT` in your `.env` to the URL of an HTTP endpoint that accepts `POST` requests with a JSON body:
+
+```
+PUBLIC_ANALYTICS_ENDPOINT=https://your-analytics-server.example.com/event
+```
+
+If the variable is absent, no data is ever sent — there is no default endpoint and no fallback.
+
+### What is collected
+
+| Event | Trigger |
+|-------|---------|
+| `page_view` | Widget iframe is loaded |
+| `like` | A user likes a comment |
+| `unlike` | A user removes a like |
+| `repost` | A user reposts a comment |
+| `unrepost` | A user removes a repost |
+| `reply` | A user posts a reply or root comment |
+
+Each request body:
+
+```json
+{
+  "event": "page_view",
+  "userHandle": "site-owner.bsky.social",
+  "timestamp": "2026-01-01T00:00:00.000Z"
+}
+```
+
+`userHandle` is the handle of the **site owner** who embedded the widget (from the widget URL `/comments/{userHandle}/{articleId}`). It is never the handle of individual commenters.
+
+Requests are fire-and-forget — they never block the UI and errors are silently ignored.
+
+### Opting out (self-hosters)
+
+Do not set `PUBLIC_ANALYTICS_ENDPOINT`. If the variable is absent, no analytics code runs.
+
+## Self-hosting
+
+Juttu is fully self-hostable. Deploy it like any SvelteKit app:
+
+1. Set `PUBLIC_HOSTNAME` to your own domain.
+2. The OAuth client metadata is auto-generated at `/oauth-client-metadata.json` — no manual registration needed beyond pointing your domain.
+3. Optionally set `PUBLIC_ANALYTICS_ENDPOINT` if you want usage tracking sent to your own server.
+
+## Architecture
+
+See [CLAUDE.md](./CLAUDE.md) for a detailed description of the architecture, auth flow, AT Protocol lexicons, and testing strategy.
+
+## License
+
+MIT

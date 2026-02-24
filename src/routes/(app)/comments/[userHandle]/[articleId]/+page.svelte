@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { authState, logout } from '$lib/auth.svelte';
-	import { untrack } from 'svelte';
+	import { onMount, setContext, untrack } from 'svelte';
 	import { type AppBskyFeedGetPostThread } from '@atproto/api';
 	import ArticleLinkCreator from '$lib/components/ArticleLinkCreator.svelte';
 	import type { ThreadViewPost } from '@atproto/api/dist/client/types/app/bsky/feed/defs.js';
@@ -9,10 +9,17 @@
 	import RootCommentComposer from '$lib/components/RootCommentComposer.svelte';
 	import CommentsLoading from '$lib/components/CommentsLoading.svelte';
 	import { page } from '$app/state';
+	import { track } from '$lib/analytics';
 
 	type SortOption = 'newest' | 'oldest' | 'most-liked';
 
 	const { data } = $props();
+
+	setContext('juttu:userHandle', data.userHandle);
+
+	onMount(() => {
+		track('page_view', data.userHandle);
+	});
 
 	// Check for theme parameter in URL
 	$effect(() => {
@@ -84,6 +91,9 @@
 		if (!threadData?.replies) return [];
 		// Filter to only ThreadViewPost items (those with .post)
 		const validReplies = threadData.replies.filter((r) => 'post' in r) as ThreadViewPost[];
+		const fetchedUris = new Set(validReplies.map((r) => r.post.uri));
+		// Drop optimistic entries that have been indexed and are now in the fetched replies
+		const dedupedLocal = localRootComments.filter((c) => !fetchedUris.has(c.post.uri));
 		const sortedFetched = [...validReplies].sort((a, b) => {
 			if (sortOrder === 'most-liked') {
 				return (b.post?.likeCount || 0) - (a.post?.likeCount || 0);
@@ -95,7 +105,7 @@
 			}
 		});
 		// Local root comments always at the top
-		return [...localRootComments, ...sortedFetched];
+		return [...dedupedLocal, ...sortedFetched];
 	});
 
 	let visibleTopLevelReplies = $derived(sortedTopLevelReplies.slice(0, visibleTopLevelCount));
@@ -103,6 +113,9 @@
 
 	function handleRootCommentPosted(newComment: any) {
 		localRootComments = [newComment, ...localRootComments];
+		// Re-fetch after a delay so the Bluesky AppView has time to index the new reply.
+		// Once indexed, the deduplication in sortedTopLevelReplies will drop the optimistic entry.
+		setTimeout(() => loadThreadData(rootPostUri!), 4000);
 	}
 
 	async function handleLogout() {

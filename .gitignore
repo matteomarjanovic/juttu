@@ -30,3 +30,5 @@ static/embed
 
 # Generated OAuth metadata
 static/oauth-client-metadata.json
+
+CLAUDE.md

@@ -1,8 +1,12 @@
 <script lang="ts">
 	import { authState, requestAuth } from '$lib/auth.svelte';
+	import { getContext } from 'svelte';
 	import CommentNode from './CommentNode.svelte';
 	import { RichText } from '@atproto/api';
 	import { formatDate, makeOptimisticPost } from './post-utils';
+	import { track } from '$lib/analytics';
+
+	const userHandle = getContext<string>('juttu:userHandle');
 
 	type SortOption = 'newest' | 'oldest' | 'most-liked';
 
@@ -98,11 +102,13 @@
 				await authState.agent!.deleteLike(likeUri);
 				likeUri = undefined;
 				likeCount--;
+				track('unlike', userHandle);
 			} else {
 				// Like: create a like record
 				const response = await authState.agent!.like(comment.post?.uri, comment.post?.cid);
 				likeUri = response.uri;
 				likeCount++;
+				track('like', userHandle);
 			}
 		} catch (error) {
 			console.error('Error toggling like:', error);
@@ -118,11 +124,13 @@
 				await authState.agent!.deleteRepost(repostUri);
 				repostUri = undefined;
 				repostCount--;
+				track('unrepost', userHandle);
 			} else {
 				// Repost: create a repost record
 				const response = await authState.agent!.repost(comment.post?.uri, comment.post?.cid);
 				repostUri = response.uri;
 				repostCount++;
+				track('repost', userHandle);
 			}
 		} catch (error) {
 			console.error('Error toggling repost:', error);
@@ -169,6 +177,7 @@
 
 			localReplies = [newReply, ...localReplies];
 			replyCount++;
+			track('reply', userHandle);
 
 			// Reset form
 			replyText = '';
