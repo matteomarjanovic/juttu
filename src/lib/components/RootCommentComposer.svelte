@@ -169,11 +169,8 @@
 	<div class="mt-2 flex items-start">
 		<div class="flex items-center gap-2">
 			<span class="text-xs text-base-content/80">Ctrl+Enter to submit</span>
-			<div
-				class="tooltip tooltip-right duration-50"
-				data-tip="Every comment you will leave will be posted on your bluesky profile, as a reply to the original post by the author."
-			>
-				<button class="btn btn-circle btn-ghost btn-xs" aria-label="Info">
+			<div class="dropdown-hover dropdown dropdown-bottom">
+				<div tabindex="0" role="button" class="btn btn-circle text-info btn-ghost btn-xs">
 					<svg
 						xmlns="http://www.w3.org/2000/svg"
 						class="h-4 w-4"
@@ -188,7 +185,15 @@
 							d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
 						/>
 					</svg>
-				</button>
+				</div>
+				<div class="dropdown-content card z-1 w-64 rounded-box bg-base-100 shadow-sm card-sm">
+					<div class="card-body">
+						<p>
+							Every comment you will leave will be posted on your bluesky profile, as a reply to the
+							original post by the author.
+						</p>
+					</div>
+				</div>
 			</div>
 		</div>
 		<div class="flex-grow"></div>
