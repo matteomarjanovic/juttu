@@ -46,7 +46,7 @@
 
 	function handleLogin() {
 		loginError = null;
-		const result = requestAuth();
+		const result = requestAuth(userHandle);
 		if (!result.success) {
 			loginError = 'Popup was blocked. Please allow popups for this site.';
 		}

@@ -185,9 +185,10 @@ async function fetchProfile(session: OAuthSession): Promise<void> {
  * 
  * @returns true if popup opened successfully, false if blocked
  */
-export function openLoginPopup(): boolean {
+export function openLoginPopup(handle?: string): boolean {
     const currentOrigin = window.location.origin;
-    const loginUrl = `https://${PUBLIC_HOSTNAME}/login?opener=${encodeURIComponent(currentOrigin)}`;
+    let loginUrl = `https://${PUBLIC_HOSTNAME}/login?opener=${encodeURIComponent(currentOrigin)}`;
+    if (handle) loginUrl += `&handle=${encodeURIComponent(handle)}`;
 
     // Calculate popup dimensions and position (centered)
     const width = 500;
@@ -216,13 +217,14 @@ export function openLoginPopup(): boolean {
  * 
  * @returns Object with success status and optional fallback URL if popup was blocked
  */
-export function requestAuth(): { success: boolean; fallbackUrl?: string } {
-    const success = openLoginPopup();
+export function requestAuth(handle?: string): { success: boolean; fallbackUrl?: string } {
+    const success = openLoginPopup(handle);
 
     if (!success) {
         // Return fallback URL for manual opening
         const currentOrigin = window.location.origin;
-        const fallbackUrl = `https://${PUBLIC_HOSTNAME}/login?opener=${encodeURIComponent(currentOrigin)}`;
+        let fallbackUrl = `https://${PUBLIC_HOSTNAME}/login?opener=${encodeURIComponent(currentOrigin)}`;
+        if (handle) fallbackUrl += `&handle=${encodeURIComponent(handle)}`;
         return { success: false, fallbackUrl };
     }
 

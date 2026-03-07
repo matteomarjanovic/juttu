@@ -5,6 +5,7 @@
 	let error = $state<string | null>(null);
 	let userHandle = $state<string>('');
 	let openerOrigin = $state<string | null>(null);
+	let autoLoginHandle = $state<string | null>(null);
 
 	let pollInterval: ReturnType<typeof setInterval> | null = null;
 
@@ -12,6 +13,7 @@
 		// Get the opener origin from URL params
 		const params = new URLSearchParams(window.location.search);
 		openerOrigin = params.get('opener');
+		const handleParam = params.get('handle');
 
 		if (!openerOrigin) {
 			error = 'Missing opener origin. This page should be opened from an embedded widget.';
@@ -20,6 +22,19 @@
 		// Start polling localStorage for callback params from the nested popup
 		// The callback page will store params there since window.opener is lost after OAuth redirect
 		pollInterval = setInterval(checkForCallbackParams, 100);
+
+		// Auto-start login if a handle was pre-filled
+		if (handleParam && openerOrigin) {
+			autoLoginHandle = handleParam;
+			localStorage.setItem('juttu-auth-mode', 'iframe-popup');
+			loginWithPopup(handleParam).catch((err: Error) => {
+				if (err.message !== 'Login continued in parent window') {
+					error = err.message || 'Login failed';
+					localStorage.removeItem('juttu-auth-mode');
+					autoLoginHandle = null;
+				}
+			});
+		}
 
 		return () => {
 			if (pollInterval) {
@@ -94,13 +109,21 @@
 </script>
 
 <div class="flex min-h-screen items-center justify-center bg-base-200 p-4">
-	<div class="card w-full max-w-md bg-base-100 shadow-xl">
+	<div class="border-grey card w-full max-w-md border border-base-300 bg-base-100">
 		<div class="card-body">
 			<h2 class="card-title text-2xl font-bold">Authenticate to Juttu</h2>
 
 			{#if error && !openerOrigin}
 				<div class="alert alert-error">
 					<span>{error}</span>
+				</div>
+			{:else if autoLoginHandle}
+				<div class="flex flex-col items-center gap-4 py-4">
+					<span class="loading loading-lg loading-spinner"></span>
+					<p class="font-comment text-sm">Signing in as @{autoLoginHandle}…</p>
+					{#if error}
+						<p class="text-sm text-error">{error}</p>
+					{/if}
 				</div>
 			{:else}
 				<p class="mb-4 font-comment">
