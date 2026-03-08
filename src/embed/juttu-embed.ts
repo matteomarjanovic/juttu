@@ -141,7 +141,7 @@ export { JuttuEmbed };
 
 // Auto-init when loaded as script tag
 if (typeof window !== 'undefined') {
-    (window as any).JuttuEmbed = JuttuEmbed;
+    (window as unknown as { JuttuEmbed: typeof JuttuEmbed }).JuttuEmbed = JuttuEmbed;
 
     // Store reference to script before it might become null
     const currentScript = document.currentScript as HTMLScriptElement;
@@ -174,7 +174,7 @@ function autoInitFromScript(script: HTMLScriptElement): void {
         try {
             const scriptUrl = new URL(script.src);
             hostname = scriptUrl.origin;
-        } catch (e) {
+        } catch {
             console.error('Juttu: Could not determine hostname from script src');
             return;
         }
