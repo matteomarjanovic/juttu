@@ -186,10 +186,12 @@
 						/>
 					</svg>
 				</div>
-				<div class="dropdown-content card z-1 w-64 rounded-box bg-base-100 shadow-sm card-sm">
+				<div
+					class="dropdown-content card z-1 w-36 rounded-box bg-accent text-accent-content shadow-sm card-sm sm:w-62"
+				>
 					<div class="card-body">
 						<p>
-							Every comment you will leave will be posted on your bluesky profile, as a reply to the
+							Every comment you will leave will be posted on your Bluesky profile, as a reply to the
 							original post by the author.
 						</p>
 					</div>
