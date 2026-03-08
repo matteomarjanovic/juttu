@@ -39,6 +39,10 @@
 	// Derived: is the post reposted?
 	let isReposted = $derived(!!repostUri);
 
+	function isSafeUri(uri: string | undefined): boolean {
+		return !!uri && (uri.startsWith('https://') || uri.startsWith('http://'));
+	}
+
 	// Reply form state
 	let showReplyForm = $state(false);
 	let replyText = $state('');
@@ -251,14 +255,18 @@
 				<!-- {comment.post?.record.text} -->
 				{#each loadedFacets?.segments() as segment}
 					{#if segment.isLink()}
-						<a
-							href={segment.link?.uri}
-							target="_blank"
-							rel="noopener noreferrer"
-							class="text-blue-500 hover:underline"
-						>
+						{#if isSafeUri(segment.link?.uri)}
+							<a
+								href={segment.link?.uri}
+								target="_blank"
+								rel="noopener noreferrer"
+								class="text-blue-500 hover:underline"
+							>
+								{segment.text}
+							</a>
+						{:else}
 							{segment.text}
-						</a>
+						{/if}
 					{:else if segment.isMention()}
 						<a
 							href={`https://bsky.app/profile/${segment.mention?.did}`}

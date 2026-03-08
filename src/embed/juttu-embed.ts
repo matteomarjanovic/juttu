@@ -75,7 +75,7 @@ class JuttuEmbed {
 
         const { userHandle, articleId, hostname } = this.config;
         const theme = this.getTheme();
-        const iframeUrl = `${hostname}/comments/${userHandle}/${articleId}?theme=${theme}`;
+        const iframeUrl = `${hostname}/comments/${encodeURIComponent(userHandle)}/${encodeURIComponent(articleId)}?theme=${theme}`;
 
         this.iframe = document.createElement('iframe');
         this.iframe.src = iframeUrl;
@@ -93,7 +93,7 @@ class JuttuEmbed {
     }
 
     private handleMessage(event: MessageEvent): void {
-        if (!event.origin.includes(new URL(this.config.hostname!).hostname)) {
+        if (event.origin !== new URL(this.config.hostname!).origin) {
             return;
         }
 
