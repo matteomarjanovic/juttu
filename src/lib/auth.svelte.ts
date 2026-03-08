@@ -60,8 +60,10 @@ export async function getClient(): Promise<BrowserOAuthClientType> {
         // so IndexedDB is opened in unpartitioned storage
         if (!unpartitionedIndexedDB && document.requestStorageAccess) {
             try {
-                // @ts-expect-error - Storage Access API extended types may not be available
-                const handle = await document.requestStorageAccess({ indexedDB: true });
+                const requestWithHandles = document.requestStorageAccess as unknown as (
+                    opts: { indexedDB: true }
+                ) => Promise<{ indexedDB?: IDBFactory }>;
+                const handle = await requestWithHandles({ indexedDB: true });
                 if (handle?.indexedDB) {
                     unpartitionedIndexedDB = handle.indexedDB;
                     console.log('Juttu: Obtained unpartitioned IndexedDB handle');
