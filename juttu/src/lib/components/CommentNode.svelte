@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { authState, requestAuth } from '$lib/auth.svelte';
-	import { getContext } from 'svelte';
+	import { getContext, untrack } from 'svelte';
 	import CommentNode from './CommentNode.svelte';
 	import { RichText } from '@atproto/api';
 	import { formatDate, makeOptimisticPost } from './post-utils';
@@ -10,9 +10,10 @@
 
 	type SortOption = 'newest' | 'oldest' | 'most-liked';
 
-	const props = $props();
-	const initialComment = props.comment;
-	let comment = $derived(props.comment);
+	let { comment, sortOrder = 'newest' as SortOption } = $props<{
+		comment: any;
+		sortOrder?: SortOption;
+	}>();
 	let loadedFacets = $derived(
 		new RichText({
 			text: comment.post?.record.text,
@@ -20,21 +21,19 @@
 		})
 	);
 
-	let sortOrder: SortOption = props.sortOrder || 'newest';
-
 	// Popup blocked fallback state
 	let popupBlockedUrl = $state<string | null>(null);
 
 	// Track if the user has liked this post
-	let likeUri = $state<string | undefined>(initialComment.post?.viewer?.like);
-	let likeCount = $state<number>(initialComment.post?.likeCount || 0);
+	let likeUri = $state<string | undefined>(untrack(() => comment.post?.viewer?.like));
+	let likeCount = $state<number>(untrack(() => comment.post?.likeCount || 0));
 
 	// Derived: is the post liked?
 	let isLiked = $derived(!!likeUri);
 
 	// Track if the user has reposted this post
-	let repostUri = $state<string | undefined>(initialComment.post?.viewer?.repost);
-	let repostCount = $state<number>(initialComment.post?.repostCount || 0);
+	let repostUri = $state<string | undefined>(untrack(() => comment.post?.viewer?.repost));
+	let repostCount = $state<number>(untrack(() => comment.post?.repostCount || 0));
 
 	// Derived: is the post reposted?
 	let isReposted = $derived(!!repostUri);
@@ -47,7 +46,7 @@
 	let showReplyForm = $state(false);
 	let replyText = $state('');
 	let isSubmittingReply = $state(false);
-	let replyCount = $state<number>(initialComment.post?.replyCount || 0);
+	let replyCount = $state<number>(untrack(() => comment.post?.replyCount || 0));
 	let localReplies = $state<any[]>([]);
 
 	// Sync local state when the comment prop changes (e.g. after authenticated re-fetch)

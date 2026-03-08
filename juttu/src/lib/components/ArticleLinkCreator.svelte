@@ -107,7 +107,7 @@
 			// Build the articleLink record using the lexicon schema
 			const record = app.juttu.articleLink.$build({
 				articleId: articleId,
-				createdAt: new Date().toISOString(),
+				createdAt: new Date().toISOString() as l.DatetimeString,
 				commentsThread: {
 					uri: postUri as l.AtUriString,
 					cid: postCid as l.CidString
