@@ -155,7 +155,7 @@
 				Log in to comment
 			</button>
 		{/if}
-		<div class="flex-grow"></div>
+		<div class="grow"></div>
 		<!-- <span class="text-sm text-base-content/90 pb-[2px]">Powered by Juttu</span> -->
 	</div>
 	<textarea
@@ -198,7 +198,7 @@
 				</div>
 			</div>
 		</div>
-		<div class="flex-grow"></div>
+		<div class="grow"></div>
 		<button
 			class="btn btn-sm btn-primary"
 			onclick={handleSubmit}

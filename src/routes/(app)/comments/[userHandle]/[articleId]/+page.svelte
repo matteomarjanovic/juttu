@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { authState, logout } from '$lib/auth.svelte';
+	import { authState } from '$lib/auth.svelte';
 	import { onMount, setContext, untrack } from 'svelte';
 	import { type AppBskyFeedGetPostThread } from '@atproto/api';
 	import ArticleLinkCreator from '$lib/components/ArticleLinkCreator.svelte';
@@ -16,7 +16,10 @@
 
 	const { data } = $props();
 
-	setContext('juttu:userHandle', data.userHandle);
+	setContext(
+		'juttu:userHandle',
+		untrack(() => data.userHandle)
+	);
 
 	onMount(() => {
 		track('page_view', data.userHandle);
@@ -117,14 +120,6 @@
 		// Re-fetch after a delay so the Bluesky AppView has time to index the new reply.
 		// Once indexed, the deduplication in sortedTopLevelReplies will drop the optimistic entry.
 		setTimeout(() => loadThreadData(rootPostUri!), 4000);
-	}
-
-	async function handleLogout() {
-		try {
-			await logout();
-		} catch (err: unknown) {
-			console.error('Logout error:', err);
-		}
 	}
 
 	async function loadThreadData(rootPostUri: string) {
