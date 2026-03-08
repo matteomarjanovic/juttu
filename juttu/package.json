@@ -12,8 +12,8 @@
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"format": "prettier --write .",
 		"lint": "prettier --check . && eslint .",
-		"prebuild": "node scripts/generate-oauth-metadata.js && lex build --lexicons ./lexicons --out ./src/lib/lexicons && node scripts/build-embed.js",
-		"predev": "node scripts/generate-oauth-metadata.js && lex build --lexicons ./lexicons --out ./src/lib/lexicons --override --clear && node scripts/build-embed.js",
+		"prebuild": "svelte-kit sync && node scripts/generate-oauth-metadata.js && lex build --lexicons ./lexicons --out ./src/lib/lexicons && node scripts/build-embed.js",
+		"predev": "svelte-kit sync && node scripts/generate-oauth-metadata.js && lex build --lexicons ./lexicons --out ./src/lib/lexicons --override --clear && node scripts/build-embed.js",
 		"test": "vitest run",
 		"test:watch": "vitest"
 	},

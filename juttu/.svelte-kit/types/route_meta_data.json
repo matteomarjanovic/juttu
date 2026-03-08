@@ -1,0 +1,9 @@
+{
+	"/(app)": [],
+	"/": [],
+	"/callback": [],
+	"/(app)/comments/[userHandle]/[articleId]": [
+		"src/routes/(app)/comments/[userHandle]/[articleId]/+page.ts"
+	],
+	"/login": []
+}
