@@ -3,7 +3,7 @@
 	import { getContext, untrack } from 'svelte';
 	import CommentNode from './CommentNode.svelte';
 	import { RichText } from '@atproto/api';
-	import { formatDate, makeOptimisticPost } from './post-utils';
+	import { formatDate, makeOptimisticPost } from '$lib/post-utils';
 	import { track } from '$lib/analytics';
 
 	const userHandle = getContext<string>('juttu:userHandle');

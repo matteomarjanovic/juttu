@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { authState, logout, requestAuth } from '$lib/auth.svelte';
 	import { getContext } from 'svelte';
-	import { makeOptimisticPost } from './post-utils';
+	import { makeOptimisticPost } from '$lib/post-utils';
 	import { track } from '$lib/analytics';
 
 	const userHandle = getContext<string>('juttu:userHandle');

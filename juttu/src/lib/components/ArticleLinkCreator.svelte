@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { authState, requestAuth } from '$lib/auth.svelte';
-	import { formatDate } from './post-utils';
+	import { formatDate } from '$lib/post-utils';
 	import type { AppBskyFeedDefs } from '@atproto/api';
 	import { l } from '@atproto/lex';
 	import * as app from '$lib/lexicons/app.js';

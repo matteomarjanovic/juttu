@@ -1,8 +1,9 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import CommentNode from '$lib/components/CommentNode.svelte';
 
 	let { comment: initial } = $props();
-	let comment = $state(initial);
+	let comment = $state(untrack(() => initial));
 
 	export const setComment = (next: any) => {
 		comment = next;

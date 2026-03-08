@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { mount, unmount, flushSync } from 'svelte';
-import CommentNodeTestWrapper from './CommentNodeTestWrapper.svelte';
+import CommentNodeTestWrapper from '../../tests/CommentNodeTestWrapper.svelte';
 
 vi.mock('$lib/auth.svelte', () => ({
 	authState: {
