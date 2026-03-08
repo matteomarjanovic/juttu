@@ -18,21 +18,21 @@
 		"test:watch": "vitest"
 	},
 	"devDependencies": {
-		"@eslint/compat": "^1.4.0",
-		"@eslint/js": "^9.39.1",
+		"@eslint/compat": "^2.0.3",
+		"@eslint/js": "^10.0.1",
 		"@sveltejs/adapter-auto": "^7.0.0",
 		"@sveltejs/kit": "^2.49.1",
 		"@sveltejs/vite-plugin-svelte": "^6.2.1",
 		"@tailwindcss/typography": "^0.5.19",
 		"@tailwindcss/vite": "^4.1.17",
-		"@types/node": "^24",
+		"@types/node": "^25.3.5",
 		"@vitest/coverage-v8": "^4.0.18",
 		"daisyui": "^5.5.14",
 		"dotenv": "^17.2.3",
-		"eslint": "^9.39.1",
+		"eslint": "^10.0.3",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-svelte": "^3.13.1",
-		"globals": "^16.5.0",
+		"globals": "^17.4.0",
 		"jsdom": "^28.1.0",
 		"prettier": "^3.7.4",
 		"prettier-plugin-svelte": "^3.4.0",
@@ -46,8 +46,8 @@
 		"vitest": "^4.0.18"
 	},
 	"dependencies": {
-		"@atproto/api": "^0.18.8",
-		"@atproto/lex": "^0.0.7",
+		"@atproto/api": "^0.19.3",
+		"@atproto/lex": "^0.0.20",
 		"@fontsource-variable/outfit": "^5.2.8",
 		"@fontsource-variable/recursive": "^5.2.8",
 		"@juttu/oauth-client-browser": "^0.3.41"
