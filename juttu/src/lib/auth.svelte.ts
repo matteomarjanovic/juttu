@@ -66,7 +66,6 @@ export async function getClient(): Promise<BrowserOAuthClientType> {
                 if (handle?.indexedDB) {
                     // @ts-expect-error - Storage Access API extended types may not be available
                     unpartitionedIndexedDB = handle.indexedDB;
-                    console.log('Juttu: Obtained unpartitioned IndexedDB handle');
                 }
             } catch (err) {
                 console.warn('Juttu: Storage access request failed:', err);
@@ -86,7 +85,6 @@ export async function getClient(): Promise<BrowserOAuthClientType> {
 
         // Listen for session events from the client
         clientInstance.addEventListener('deleted', ({ detail: { sub } }) => {
-            console.log(`Session deleted for ${sub}`);
             if (authState.session?.sub === sub) {
                 authState.session = null;
                 authState.profile = null;
@@ -112,14 +110,11 @@ export async function loginWithPopup(handle: string): Promise<OAuthSession> {
 
     try {
         const client = await getClient();
-        console.log('Initiating popup login for:', handle);
-
         const session = await client.signIn(handle.trim(), {
             display: 'popup',
             signal: AbortSignal.timeout(5 * 60 * 1000) // 5 minute timeout
         });
 
-        console.log('Login completed successfully!', session.sub);
         authState.session = session;
         authState.isInitialized = true;
         // Create agent
@@ -151,7 +146,6 @@ export async function logout(): Promise<void> {
         authState.session = null;
         authState.profile = null;
         authState.agent = null;
-        console.log('Logged out successfully');
     } catch (err) {
         console.error('Logout failed:', err);
         // Clear session anyway
@@ -173,7 +167,6 @@ async function fetchProfile(session: OAuthSession): Promise<void> {
         }
         const response = await authState.agent.getProfile({ actor: session.did });
         authState.profile = response.data;
-        console.log('Profile fetched:', authState.profile.handle);
     } catch (err) {
         console.error('Failed to fetch profile:', err);
         authState.profile = null;
@@ -209,7 +202,6 @@ export function openLoginPopup(handle?: string): boolean {
         return false;
     }
 
-    console.log('Login popup opened');
     return true;
 }
 
@@ -246,14 +238,12 @@ export async function processCallbackParams(params: string): Promise<OAuthSessio
 
         // Parse the query string params
         const searchParams = new SvelteURLSearchParams(params);
-        console.log('Processing callback params:', params);
 
         // Use the client's callback method with the params
         // This processes the OAuth response in the iframe's storage context
         const result = await client.callback(searchParams);
 
         if (result?.session) {
-            console.log(`Callback params processed for ${result.session.sub}`);
             authState.session = result.session;
             authState.isInitialized = true;
 
@@ -288,10 +278,8 @@ export function setupAuthMessageListener(): () => void {
         }
 
         if (event.data?.type === 'juttu-auth-callback' && event.data.params) {
-            console.log('Received auth callback params from login popup');
             try {
                 await processCallbackParams(event.data.params);
-                console.log('Authentication completed successfully');
             } catch (err) {
                 console.error('Failed to process auth callback:', err);
             }
@@ -299,7 +287,6 @@ export function setupAuthMessageListener(): () => void {
     };
 
     window.addEventListener('message', handleMessage);
-    console.log('Auth message listener set up');
 
     // Return cleanup function
     return () => {

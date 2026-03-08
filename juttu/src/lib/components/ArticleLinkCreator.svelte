@@ -130,7 +130,6 @@
 				record: validation.value
 			});
 
-			console.log('ArticleLink created successfully');
 			onArticleLinkCreated?.(postUri);
 		} catch (err) {
 			console.error('Error creating articleLink:', err);
@@ -152,7 +151,6 @@
 				text: newPostText.trim()
 			});
 
-			console.log('Post created:', response);
 
 			// Now create the articleLink with this new post
 			await createArticleLink(response.uri, response.cid);

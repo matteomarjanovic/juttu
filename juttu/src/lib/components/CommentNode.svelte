@@ -173,8 +173,6 @@
 				}
 			});
 
-			console.log('Reply posted:', response);
-
 			// Add the new reply to local state so it appears immediately
 			const newReply = makeOptimisticPost(response, replyText.trim());
 

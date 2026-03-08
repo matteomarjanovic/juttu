@@ -48,7 +48,6 @@
 	function checkForCallbackParams() {
 		const params = localStorage.getItem('juttu-auth-callback-params');
 		if (params) {
-			console.log('Found auth callback params in localStorage, forwarding to iframe...');
 			// Clear the params from localStorage
 			localStorage.removeItem('juttu-auth-callback-params');
 

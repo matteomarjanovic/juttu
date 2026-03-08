@@ -66,8 +66,6 @@
 				}
 			});
 
-			console.log('Comment posted:', response);
-
 			// Create a new comment object to add to the UI
 			const newComment = makeOptimisticPost(response, commentText.trim());
 

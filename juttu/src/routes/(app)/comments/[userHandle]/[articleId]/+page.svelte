@@ -127,14 +127,12 @@
 		// Use untrack so reading threadData here doesn't make it a $effect dependency (which would cause an infinite loop).
 		if (!untrack(() => threadData)) isLoading = true;
 		try {
-			console.log('Loading comments for article ID:', rootPostUri, 'by user DID:', data.userDid);
 
 			const currentAgent = authState.agent;
 
 			if (currentAgent) {
 				// Use authenticated agent - viewer data will be populated
 				const response = await currentAgent.getPostThread({ uri: rootPostUri, parentHeight: 0 });
-				console.log('Loaded thread data (authenticated):', response.data);
 				threadData = response.data.thread as ThreadViewPost;
 			} else {
 				// Fall back to public API - no viewer data
@@ -151,7 +149,6 @@
 					}
 				);
 				const threadDataJson = (await response.json()) as AppBskyFeedGetPostThread.OutputSchema;
-				console.log('Loaded thread data (public):', threadDataJson);
 				threadData = threadDataJson.thread as ThreadViewPost;
 			}
 		} catch (error) {
