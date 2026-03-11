@@ -5,9 +5,6 @@ interface JuttuConfig {
     theme?: 'light' | 'dark' | 'auto';
 }
 
-// Injected at build time from PUBLIC_HOSTNAME env var
-declare const __JUTTU_HOSTNAME__: string;
-
 class JuttuEmbed {
     private config: JuttuConfig;
     private iframe: HTMLIFrameElement | null = null;
@@ -16,7 +13,6 @@ class JuttuEmbed {
 
     constructor(config: JuttuConfig) {
         this.config = {
-            hostname: __JUTTU_HOSTNAME__,
             theme: 'light',
             ...config
         };

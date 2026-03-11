@@ -29,10 +29,7 @@ Create a `.env` file:
 PUBLIC_HOSTNAME=yourapp.example.com
 ```
 
-`PUBLIC_HOSTNAME` is required (without `https://`). It is used to:
-- Generate `static/oauth-client-metadata.json` (OAuth client registration)
-- Build `static/embed/juttu-embed.min.js` (the embeddable script, with hostname baked in)
-- Construct OAuth redirect URIs and postMessage origins at runtime
+`PUBLIC_HOSTNAME` is required (without `https://`). It is used to construct OAuth redirect URIs, postMessage origins, and the OAuth client metadata served at `/oauth-client-metadata.json`.
 
 To enable usage telemetry (see [Telemetry](#telemetry)):
 
@@ -111,11 +108,43 @@ Do not set `PUBLIC_ANALYTICS_ENDPOINT`. If the variable is absent, no analytics 
 
 ## Self-hosting
 
-Juttu is fully self-hostable. Deploy it like any SvelteKit app:
+### Docker (recommended)
+
+A pre-built image requires no code changes — just set `PUBLIC_HOSTNAME` at runtime:
+
+```sh
+docker run -d \
+  -e PUBLIC_HOSTNAME=comments.example.com \
+  -p 3000:3000 \
+  ghcr.io/your-org/juttu:latest
+```
+
+`ORIGIN` is automatically derived as `https://$PUBLIC_HOSTNAME`. To override it explicitly:
+
+```sh
+docker run -d \
+  -e PUBLIC_HOSTNAME=comments.example.com \
+  -e ORIGIN=https://comments.example.com \
+  -p 3000:3000 \
+  ghcr.io/your-org/juttu:latest
+```
+
+To build the image yourself:
+
+```sh
+docker build -t juttu ./juttu
+docker run -d -e PUBLIC_HOSTNAME=comments.example.com -p 3000:3000 juttu
+```
+
+### Manual deploy
+
+Deploy it like any SvelteKit (`adapter-node`) app:
 
 1. Set `PUBLIC_HOSTNAME` to your own domain.
-2. The OAuth client metadata is auto-generated at `/oauth-client-metadata.json` — no manual registration needed beyond pointing your domain.
-3. Optionally set `PUBLIC_ANALYTICS_ENDPOINT` if you want usage tracking sent to your own server.
+2. Set `ORIGIN` to `https://<your-domain>` (required by `adapter-node`).
+3. Run `npm run build` then `node build`.
+4. The OAuth client metadata is served dynamically at `/oauth-client-metadata.json` — no static file generation needed.
+5. Optionally set `PUBLIC_ANALYTICS_ENDPOINT` if you want usage tracking sent to your own server.
 
 ## Architecture
 

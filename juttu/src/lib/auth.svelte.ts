@@ -1,4 +1,4 @@
-import { PUBLIC_HOSTNAME } from '$env/static/public';
+import { env } from '$env/dynamic/public';
 import type { BrowserOAuthClient as BrowserOAuthClientType, OAuthSession } from '@juttu/oauth-client-browser';
 import type { ProfileViewDetailed } from '@atproto/api/dist/client/types/app/bsky/actor/defs';
 import { SvelteURLSearchParams } from 'svelte/reactivity';
@@ -30,13 +30,13 @@ export const authState = $state<{
 
 function getClientMetadata() {
     return {
-        client_id: `https://${PUBLIC_HOSTNAME}/oauth-client-metadata.json`,
+        client_id: `https://${env.PUBLIC_HOSTNAME}/oauth-client-metadata.json`,
         client_name: "My App",
-        client_uri: `https://${PUBLIC_HOSTNAME}`,
-        logo_uri: `https://${PUBLIC_HOSTNAME}/logo.png`,
-        tos_uri: `https://${PUBLIC_HOSTNAME}/tos`,
-        policy_uri: `https://${PUBLIC_HOSTNAME}/policy`,
-        redirect_uris: [`https://${PUBLIC_HOSTNAME}/callback`] as [string, ...string[]],
+        client_uri: `https://${env.PUBLIC_HOSTNAME}`,
+        logo_uri: `https://${env.PUBLIC_HOSTNAME}/logo.png`,
+        tos_uri: `https://${env.PUBLIC_HOSTNAME}/tos`,
+        policy_uri: `https://${env.PUBLIC_HOSTNAME}/policy`,
+        redirect_uris: [`https://${env.PUBLIC_HOSTNAME}/callback`] as [string, ...string[]],
         scope: "atproto transition:generic",
         grant_types: ["authorization_code", "refresh_token"] as ["authorization_code", "refresh_token"],
         response_types: ["code"] as ["code"],
@@ -182,7 +182,7 @@ async function fetchProfile(session: OAuthSession): Promise<void> {
  */
 export function openLoginPopup(handle?: string): boolean {
     const currentOrigin = window.location.origin;
-    let loginUrl = `https://${PUBLIC_HOSTNAME}/login?opener=${encodeURIComponent(currentOrigin)}`;
+    let loginUrl = `https://${env.PUBLIC_HOSTNAME}/login?opener=${encodeURIComponent(currentOrigin)}`;
     if (handle) loginUrl += `&handle=${encodeURIComponent(handle)}`;
 
     // Calculate popup dimensions and position (centered)
@@ -217,7 +217,7 @@ export function requestAuth(handle?: string): { success: boolean; fallbackUrl?: 
     if (!success) {
         // Return fallback URL for manual opening
         const currentOrigin = window.location.origin;
-        let fallbackUrl = `https://${PUBLIC_HOSTNAME}/login?opener=${encodeURIComponent(currentOrigin)}`;
+        let fallbackUrl = `https://${env.PUBLIC_HOSTNAME}/login?opener=${encodeURIComponent(currentOrigin)}`;
         if (handle) fallbackUrl += `&handle=${encodeURIComponent(handle)}`;
         return { success: false, fallbackUrl };
     }
@@ -273,7 +273,7 @@ export async function processCallbackParams(params: string): Promise<OAuthSessio
 export function setupAuthMessageListener(): () => void {
     const handleMessage = async (event: MessageEvent) => {
         // Accept messages from our own origin (the login popup)
-        if (event.origin !== `https://${PUBLIC_HOSTNAME}`) {
+        if (event.origin !== `https://${env.PUBLIC_HOSTNAME}`) {
             return;
         }
 

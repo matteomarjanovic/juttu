@@ -29,8 +29,6 @@ juttu/src/lib/lexicons
 # Embed script output
 juttu/static/embed
 
-# Generated OAuth metadata
-juttu/static/oauth-client-metadata.json
 
 AGENTS.md
 CLAUDE.md
