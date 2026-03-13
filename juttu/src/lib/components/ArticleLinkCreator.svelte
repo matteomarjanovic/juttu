@@ -1,9 +1,12 @@
 <script lang="ts">
 	import { authState, requestAuth } from '$lib/auth.svelte';
 	import { formatDate } from '$lib/post-utils';
+	import { RichText } from '@atproto/api';
+	import RichTextEditor from './RichTextEditor.svelte';
 	import type { AppBskyFeedDefs } from '@atproto/api';
 	import { l } from '@atproto/lex';
 	import * as app from '$lib/lexicons/app.js';
+	import JuttuLogo from './JuttuLogo.svelte';
 
 	interface Props {
 		userHandle: string;
@@ -146,11 +149,14 @@
 		error = null;
 
 		try {
+			const rt = new RichText({ text: newPostText.trim() });
+			await rt.detectFacets(authState.agent);
+
 			// Create a new post
 			const response = await authState.agent.post({
-				text: newPostText.trim()
+				text: rt.text,
+				facets: rt.facets
 			});
-
 
 			// Now create the articleLink with this new post
 			await createArticleLink(response.uri, response.cid);
@@ -172,10 +178,13 @@
 	}
 </script>
 
-<p class="mb-2 text-end text-sm">
-	<a href="https://juttu.app" class="hover:cursor-pointer hover:underline" target="_blank"
-		>Powered by (Juttu)</a
-	>
+<p class="text-end text-sm">
+	<a href="https://juttu.app" class="hover:cursor-pointer" target="_blank">
+		Powered by
+		<span class="inline-block h-full w-9">
+			<JuttuLogo />
+		</span>
+	</a>
 </p>
 <div class="mx-auto max-w-xl rounded-lg border border-base-300 bg-base-100 p-6">
 	<h2 class="mb-4 text-xl font-bold">Link Article to Bluesky</h2>
@@ -280,12 +289,12 @@
 			<p class="text-sm text-base-content/70">
 				Create a new post on Bluesky that will serve as the comments thread for this article.
 			</p>
-			<textarea
-				class="textarea-bordered textarea min-h-32 w-full font-comment"
+			<RichTextEditor
+				class="min-h-32"
 				placeholder="Write your post... (e.g., 'Comments thread for my new article!')"
 				bind:value={newPostText}
-				maxlength="300"
-			></textarea>
+				maxlength={300}
+			/>
 			<div class="flex items-center justify-between">
 				<span class="text-sm text-base-content/50">{newPostText.length}/300</span>
 				<button
@@ -330,7 +339,13 @@
 							<div class="flex w-full flex-col gap-1">
 								<p class="text-sm">{truncateText(record.text || '')}</p>
 								<p class="text-xs text-base-content/50">
-									{formatDate(record.createdAt || post.indexedAt, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+									{formatDate(record.createdAt || post.indexedAt, {
+										year: 'numeric',
+										month: 'short',
+										day: 'numeric',
+										hour: '2-digit',
+										minute: '2-digit'
+									})}
 								</p>
 							</div>
 						</button>
@@ -351,7 +366,13 @@
 			<div class="rounded-lg border border-base-300 bg-base-200 p-4">
 				<p class="mb-2">{record.text}</p>
 				<p class="text-xs text-base-content/50">
-					{formatDate(record.createdAt || selectedPost.indexedAt, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+					{formatDate(record.createdAt || selectedPost.indexedAt, {
+						year: 'numeric',
+						month: 'short',
+						day: 'numeric',
+						hour: '2-digit',
+						minute: '2-digit'
+					})}
 				</p>
 			</div>
 

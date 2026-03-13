@@ -5,6 +5,7 @@
 	import { RichText } from '@atproto/api';
 	import { formatDate, makeOptimisticPost } from '$lib/post-utils';
 	import { track } from '$lib/analytics';
+	import RichTextEditor from './RichTextEditor.svelte';
 
 	const userHandle = getContext<string>('juttu:userHandle');
 
@@ -158,9 +159,13 @@
 		isSubmittingReply = true;
 
 		try {
+			const rt = new RichText({ text: replyText.trim() });
+			await rt.detectFacets(authState.agent!);
+
 			// Create a reply post
 			const response = await authState.agent!.post({
-				text: replyText.trim(),
+				text: rt.text,
+				facets: rt.facets,
 				reply: {
 					root: {
 						uri: comment.post?.record.reply?.root?.uri || comment.post?.uri,
@@ -174,7 +179,7 @@
 			});
 
 			// Add the new reply to local state so it appears immediately
-			const newReply = makeOptimisticPost(response, replyText.trim());
+			const newReply = makeOptimisticPost(response, rt.text, rt.facets);
 
 			localReplies = [newReply, ...localReplies];
 			replyCount++;
@@ -407,14 +412,14 @@
 			<!-- Reply Form -->
 			{#if showReplyForm}
 				<div class="mt-3">
-					<textarea
+					<RichTextEditor
 						bind:value={replyText}
 						onkeydown={handleReplyKeydown}
 						placeholder="Write a reply..."
-						class="textarea-bordered textarea min-h-16 w-full font-comment text-sm"
+						class="min-h-16 text-sm"
 						disabled={isSubmittingReply}
-						rows="3"
-					></textarea>
+						rows={3}
+					/>
 					<div class="mt-2 flex items-start justify-between">
 						<span class="text-xs text-base-content/80">The reply will also appear on Bluesky</span>
 						<div class="flex gap-2">

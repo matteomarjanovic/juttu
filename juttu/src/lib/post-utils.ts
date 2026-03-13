@@ -13,7 +13,11 @@ export function formatDate(
 	return new Date(dateStr).toLocaleDateString(undefined, options);
 }
 
-export function makeOptimisticPost(response: { uri: string; cid: string }, text: string) {
+export function makeOptimisticPost(
+	response: { uri: string; cid: string },
+	text: string,
+	facets?: unknown[]
+) {
 	return {
 		post: {
 			uri: response.uri,
@@ -24,7 +28,7 @@ export function makeOptimisticPost(response: { uri: string; cid: string }, text:
 				displayName: authState.profile?.displayName,
 				avatar: authState.profile?.avatar
 			},
-			record: { text, createdAt: new Date().toISOString() },
+			record: { text, facets, createdAt: new Date().toISOString() },
 			indexedAt: new Date().toISOString(),
 			likeCount: 0,
 			repostCount: 0,

@@ -3,6 +3,8 @@
 	import { getContext } from 'svelte';
 	import { makeOptimisticPost } from '$lib/post-utils';
 	import { track } from '$lib/analytics';
+	import { RichText } from '@atproto/api';
+	import RichTextEditor from './RichTextEditor.svelte';
 
 	const userHandle = getContext<string>('juttu:userHandle');
 
@@ -52,8 +54,12 @@
 		isSubmitting = true;
 
 		try {
+			const rt = new RichText({ text: commentText.trim() });
+			await rt.detectFacets(authState.agent!);
+
 			const response = await authState.agent!.post({
-				text: commentText.trim(),
+				text: rt.text,
+				facets: rt.facets,
 				reply: {
 					root: {
 						uri: rootPostUri,
@@ -67,7 +73,7 @@
 			});
 
 			// Create a new comment object to add to the UI
-			const newComment = makeOptimisticPost(response, commentText.trim());
+			const newComment = makeOptimisticPost(response, rt.text, rt.facets);
 
 			onCommentPosted(newComment);
 			track('reply', userHandle);
@@ -156,14 +162,14 @@
 		<div class="grow"></div>
 		<!-- <span class="text-sm text-base-content/90 pb-[2px]">Powered by Juttu</span> -->
 	</div>
-	<textarea
+	<RichTextEditor
 		bind:value={commentText}
 		onkeydown={handleKeydown}
 		placeholder="Add a comment..."
-		class="textarea-bordered textarea min-h-20 w-full font-comment"
+		class="min-h-20"
 		disabled={isSubmitting}
-		rows="3"
-	></textarea>
+		rows={3}
+	/>
 	<div class="mt-2 flex items-start">
 		<div class="flex items-center gap-2">
 			<span class="text-xs text-base-content/80">Ctrl+Enter to submit</span>
