@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { loginWithPopup, authState } from '$lib/auth.svelte';
+	import JuttuLogo from '$lib/components/JuttuLogo.svelte';
 
 	let error = $state<string | null>(null);
 	let userHandle = $state<string>('');
@@ -107,7 +108,10 @@
 	}
 </script>
 
-<div class="flex min-h-screen items-center justify-center bg-base-200 p-4">
+<div class="flex min-h-screen flex-col items-center justify-center gap-12 bg-base-200 p-4">
+	<div class="w-32">
+		<JuttuLogo />
+	</div>
 	<div class="border-grey card w-full max-w-md border border-base-300 bg-base-100">
 		<div class="card-body">
 			<h2 class="card-title text-2xl font-bold">Authenticate to Juttu</h2>

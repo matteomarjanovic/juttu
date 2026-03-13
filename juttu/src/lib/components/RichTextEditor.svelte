@@ -214,7 +214,7 @@
 	-->
 	<div
 		bind:this={backdropEl}
-		class="wrap-break-words pointer-events-none absolute inset-0 overflow-hidden whitespace-pre-wrap"
+		class="wrap-break-words pointer-events-none absolute inset-0 overflow-hidden whitespace-pre-wrap border-transparent"
 		aria-hidden="true"
 	>
 		{#each segments as seg, i (i)}{#if seg.type !== 'plain'}<span class="text-blue-500"
@@ -232,7 +232,7 @@
 		oninput={onInput}
 		onscroll={syncScroll}
 		onkeydown={handleKeydown}
-		class="textarea-bordered relative textarea w-full bg-transparent font-comment placeholder:text-base-content/40 {extraClass}"
+		class="relative textarea w-full bg-transparent font-comment placeholder:text-base-content/40 {extraClass}"
 		style="color: transparent; caret-color: var(--color-base-content); resize: none;"
 	></textarea>
 
