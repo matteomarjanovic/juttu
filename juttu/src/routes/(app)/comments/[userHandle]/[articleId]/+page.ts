@@ -42,7 +42,7 @@ export const load: PageLoad = async ({ params, setHeaders }) => {
 
         const rootPostUri = articleLink?.commentsThread?.uri;
         setHeaders({
-            'cache-control': 'public, max-age=3600',
+            'cache-control': 'public, max-age=3600, stale-while-revalidate=86400',
         });
 
         return {
