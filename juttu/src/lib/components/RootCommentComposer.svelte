@@ -124,7 +124,7 @@
 					</div>
 				{:else}
 					<!-- Logout button -->
-					<div class="tooltip tooltip-right" data-tip="Logout">
+					<div class="tooltip tooltip-right tooltip-accent" data-tip="Logout">
 						<button
 							class="btn btn-circle text-error btn-ghost btn-xs"
 							aria-label="Logout"

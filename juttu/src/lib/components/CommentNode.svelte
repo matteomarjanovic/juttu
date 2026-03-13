@@ -317,7 +317,6 @@
 
 			<!-- Actions -->
 			<div class="mt-2 flex gap-4 text-xs text-base-content/80">
-				<!-- <div class="tooltip duration-50" data-tip="Like comment"> -->
 				<button
 					class="group flex cursor-pointer items-center gap-1 border-none bg-transparent p-0"
 					onclick={handleLike}
@@ -339,8 +338,6 @@
 					>
 					<span class={isLiked ? 'text-[#e0245e]' : ''}>{likeCount}</span>
 				</button>
-				<!-- </div> -->
-				<!-- <div class="tooltip" data-tip="Repost comment"> -->
 				<button
 					class="group flex cursor-pointer items-center gap-1 border-none bg-transparent p-0"
 					onclick={handleRepost}
@@ -362,8 +359,6 @@
 					>
 					<span class={isReposted ? 'text-[#17bf63]' : ''}>{repostCount}</span>
 				</button>
-				<!-- </div> -->
-				<!-- <div class="tooltip" data-tip="Reply to comment"> -->
 				<button
 					class="group flex cursor-pointer items-center gap-1 border-none bg-transparent p-0"
 					onclick={toggleReplyForm}
@@ -383,9 +378,8 @@
 					>
 					<span>{replyCount}</span>
 				</button>
-				<!-- </div> -->
 				<!-- Bluesky logo for "View on Bluesky" -->
-				<div class="tooltip tooltip-right duration-50" data-tip="View on Bluesky">
+				<div class="tooltip tooltip-right tooltip-accent duration-50" data-tip="View on Bluesky">
 					<a
 						class="group flex cursor-pointer items-center gap-1 border-none bg-transparent p-0 text-blue-500 no-underline transition-transform duration-150 hover:scale-105"
 						href={`https://bsky.app/profile/${comment.post?.author?.did}/post/${getPostId(comment.post?.uri || '')}`}
