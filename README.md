@@ -1,3 +1,5 @@
+![Juttu logo](assets/juttu_logo.png)
+
 # Juttu
 
 Juttu is an open-source Bluesky-powered comment widget. Website owners embed it via `<iframe>` to add a comment section backed by Bluesky threads.
@@ -8,22 +10,81 @@ Juttu is an open-source Bluesky-powered comment widget. Website owners embed it 
 - Comments are the replies to that Bluesky post, fetched via the Bluesky API.
 - Visitors can log in with their Bluesky account directly inside the widget to like, repost, or reply.
 
-## Getting started
+## Installation
+
+Add a comment section to any article by placing the following snippet where you want comments to appear. Replace `your-handle.bsky.social` with your Bluesky handle and `article-id` with a unique identifier for the article (e.g. its slug).
+
+```html
+<div id="juttu-comments"></div>
+<script
+  defer
+  src="https://juttu.app/embed/juttu-embed.min.js"
+  data-bsky-user-handle="your-handle.bsky.social"
+  data-article-id="article-id"
+  data-theme="auto"
+></script>
+```
+
+The script creates an `<iframe>` that resizes itself dynamically. On first load, you'll be prompted to log in with your Bluesky account to link the article to a Bluesky post — that post's reply thread becomes the comment section.
+
+`data-theme` accepts `light`, `dark`, or `auto` (follows the visitor's system preference).
+
+## Self-hosting
+
+Run your own instance if you prefer not to use the hosted service.
+
+### Docker (recommended)
+
+A pre-built image requires no code changes — just set `PUBLIC_HOSTNAME` to your domain:
+
+```sh
+docker run -d \
+  -e PUBLIC_HOSTNAME=comments.example.com \
+  -p 3000:3000 \
+  ghcr.io/your-org/juttu:latest
+```
+
+`ORIGIN` is automatically derived as `https://$PUBLIC_HOSTNAME`. To override it explicitly:
+
+```sh
+docker run -d \
+  -e PUBLIC_HOSTNAME=comments.example.com \
+  -e ORIGIN=https://comments.example.com \
+  -p 3000:3000 \
+  ghcr.io/your-org/juttu:latest
+```
+
+To build the image yourself:
+
+```sh
+docker build -t juttu ./juttu
+docker run -d -e PUBLIC_HOSTNAME=comments.example.com -p 3000:3000 juttu
+```
+
+Then point your embed snippet at your own domain instead of `juttu.app`.
+
+### Manual deploy
+
+Deploy it like any SvelteKit (`adapter-node`) app:
+
+1. Set `PUBLIC_HOSTNAME` to your own domain.
+2. Set `ORIGIN` to `https://<your-domain>` (required by `adapter-node`).
+3. Run `npm run build` then `node build`.
+4. Optionally set `PUBLIC_ANALYTICS_ENDPOINT` if you want usage tracking sent to your own server.
+
+## Development
 
 ### Prerequisites
 
 - Node.js 20+
-- A Bluesky account (for the site owner, to create article links)
 
-### Installation
+### Setup
 
 ```sh
-npm install
+cd juttu && npm install
 ```
 
-### Environment variables
-
-Create a `.env` file:
+Create `juttu/.env`:
 
 ```
 PUBLIC_HOSTNAME=yourapp.example.com
@@ -31,13 +92,7 @@ PUBLIC_HOSTNAME=yourapp.example.com
 
 `PUBLIC_HOSTNAME` is required (without `https://`). It is used to construct OAuth redirect URIs, postMessage origins, and the OAuth client metadata served at `/oauth-client-metadata.json`.
 
-To enable usage telemetry (see [Telemetry](#telemetry)):
-
-```
-PUBLIC_ANALYTICS_ENDPOINT=https://your-analytics-server.example.com/event
-```
-
-## Commands
+### Commands
 
 ```sh
 npm run dev          # Start dev server (runs prebuild scripts first)
@@ -48,20 +103,6 @@ npm run format       # Auto-format
 npm test             # Run tests
 npm run test:watch   # Tests in watch mode
 ```
-
-## Embedding
-
-Include this script on any page:
-
-```html
-<script
-  src="https://yourapp.example.com/embed/juttu-embed.min.js"
-  data-bsky-user-handle="yourhandle.bsky.social"
-  data-article-id="my-article-slug"
-></script>
-```
-
-The script creates an `<iframe>` pointing to `/comments/{userHandle}/{articleId}` and resizes it dynamically via `postMessage`.
 
 ## Telemetry
 
@@ -106,50 +147,6 @@ Requests are fire-and-forget — they never block the UI and errors are silently
 
 Do not set `PUBLIC_ANALYTICS_ENDPOINT`. If the variable is absent, no analytics code runs.
 
-## Self-hosting
-
-### Docker (recommended)
-
-A pre-built image requires no code changes — just set `PUBLIC_HOSTNAME` at runtime:
-
-```sh
-docker run -d \
-  -e PUBLIC_HOSTNAME=comments.example.com \
-  -p 3000:3000 \
-  ghcr.io/your-org/juttu:latest
-```
-
-`ORIGIN` is automatically derived as `https://$PUBLIC_HOSTNAME`. To override it explicitly:
-
-```sh
-docker run -d \
-  -e PUBLIC_HOSTNAME=comments.example.com \
-  -e ORIGIN=https://comments.example.com \
-  -p 3000:3000 \
-  ghcr.io/your-org/juttu:latest
-```
-
-To build the image yourself:
-
-```sh
-docker build -t juttu ./juttu
-docker run -d -e PUBLIC_HOSTNAME=comments.example.com -p 3000:3000 juttu
-```
-
-### Manual deploy
-
-Deploy it like any SvelteKit (`adapter-node`) app:
-
-1. Set `PUBLIC_HOSTNAME` to your own domain.
-2. Set `ORIGIN` to `https://<your-domain>` (required by `adapter-node`).
-3. Run `npm run build` then `node build`.
-4. The OAuth client metadata is served dynamically at `/oauth-client-metadata.json` — no static file generation needed.
-5. Optionally set `PUBLIC_ANALYTICS_ENDPOINT` if you want usage tracking sent to your own server.
-
-## Architecture
-
-See [CLAUDE.md](./CLAUDE.md) for a detailed description of the architecture, auth flow, AT Protocol lexicons, and testing strategy.
-
 ## License
 
-MIT
+AGPL-3.0 License. See [LICENSE](LICENSE).
