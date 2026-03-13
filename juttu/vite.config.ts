@@ -6,7 +6,7 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
     plugins: [tailwindcss(), sveltekit()],
     server: {
-        allowedHosts: ['.ngrok-free.app'],
+        allowedHosts: ['.ngrok-free.app', '.share.zrok.io'],
     },
     test: {
         include: ['src/**/*.test.ts'],

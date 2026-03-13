@@ -244,7 +244,7 @@
 			{#if isFetching && suggestions.length === 0}
 				<!-- Skeleton placeholders for initial load -->
 				{#each [0, 1, 2] as i (i)}
-					<li class="flex items-center gap-2 px-3 py-2">
+					<li class="flex items-center gap-2 bg-primary-content px-3 py-2">
 						<div class="h-6 w-6 shrink-0 skeleton rounded-full"></div>
 						<div class="flex flex-1 flex-col gap-1">
 							<div class="h-3 w-24 skeleton rounded"></div>
@@ -256,7 +256,7 @@
 				{#each suggestions as actor (actor.did)}
 					<li>
 						<button
-							class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm hover:bg-base-200"
+							class="flex w-full cursor-pointer items-center gap-2 bg-primary-content px-3 py-2 text-left text-sm"
 							type="button"
 							onmousedown={(e) => {
 								e.preventDefault();

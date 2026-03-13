@@ -291,7 +291,7 @@
 			</p>
 			<RichTextEditor
 				class="min-h-32"
-				placeholder="Write your post... (e.g., 'Comments thread for my new article!')"
+				placeholder="Check out my new article at mywebsite.com/new-article!"
 				bind:value={newPostText}
 				maxlength={300}
 			/>
