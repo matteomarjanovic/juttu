@@ -7,6 +7,7 @@
 	import RichTextEditor from './RichTextEditor.svelte';
 
 	const userHandle = getContext<string>('juttu:userHandle');
+const userDid = getContext<string | null>('juttu:userDid');
 
 	interface Props {
 		rootPostUri: string;
@@ -76,7 +77,7 @@
 			const newComment = makeOptimisticPost(response, rt.text, rt.facets);
 
 			onCommentPosted(newComment);
-			track('reply', userHandle);
+			track('reply', userHandle, userDid);
 			commentText = '';
 		} catch (error) {
 			console.error('Error posting comment:', error);
