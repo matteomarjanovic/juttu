@@ -14,6 +14,7 @@
 		"lint": "prettier --check . && eslint .",
 		"prebuild": "svelte-kit sync && lex build --lexicons ./lexicons --out ./src/lib/lexicons --override && node scripts/build-embed.js",
 		"predev": "svelte-kit sync && lex build --lexicons ./lexicons --out ./src/lib/lexicons --override --clear && node scripts/build-embed.js",
+		"pretest": "svelte-kit sync && lex build --lexicons ./lexicons --out ./src/lib/lexicons --override",
 		"test": "vitest run",
 		"test:watch": "vitest"
 	},
