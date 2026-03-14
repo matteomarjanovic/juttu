@@ -9,6 +9,9 @@ export default defineConfig({
     integrations: [
         starlight({
             title: 'Juttu',
+            components: {
+                SiteTitle: './src/components/SiteTitle.astro',
+            },
             customCss: [
                 './src/styles/global.css',
             ],

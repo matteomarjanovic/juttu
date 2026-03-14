@@ -1,5 +1,66 @@
 @layer base, starlight, theme, components, utilities;
 
+@import '@fontsource-variable/outfit';
+@import '@fontsource-variable/recursive/full.css';
 @import '@astrojs/starlight-tailwind';
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/utilities.css' layer(utilities);
+
+@theme {
+  /*
+   * Recursive for body text; Outfit for headings (overridden below).
+   * --font-mono also points to Recursive — MONO=1 is activated on code elements below.
+   */
+  --font-sans: 'Recursive Variable', sans-serif;
+  --font-mono: 'Recursive Variable', monospace;
+
+  /*
+   * Accent scale — built around the daisyUI primary hue (232, low chroma navy).
+   * --color-accent-800 matches the app's light-theme --color-primary exactly.
+   * Used by Starlight for links, active nav items, and highlights.
+   */
+  --color-accent-50:  oklch(0.975 0.008 232);
+  --color-accent-100: oklch(0.940 0.014 232);
+  --color-accent-200: oklch(0.880 0.020 232);
+  --color-accent-300: oklch(0.790 0.025 232);
+  --color-accent-400: oklch(0.660 0.030 232);
+  --color-accent-500: oklch(0.530 0.033 232);
+  --color-accent-600: oklch(0.440 0.034 232);
+  --color-accent-700: oklch(0.370 0.033 232);
+  --color-accent-800: oklch(0.309 0.031 232);
+  --color-accent-900: oklch(0.245 0.025 232);
+  --color-accent-950: oklch(0.185 0.018 232);
+
+  /*
+   * Gray scale — cool blue-tinted neutrals matching the app's navy base palette (hue ~232).
+   * Light end (50–400) comes from the light theme; dark end (700–950) from the dark theme.
+   */
+  --color-gray-50:  oklch(0.979 0.002 232);
+  --color-gray-100: oklch(0.950 0.005 232);
+  --color-gray-200: oklch(0.920 0.008 232);
+  --color-gray-300: oklch(0.850 0.012 232);
+  --color-gray-400: oklch(0.720 0.020 232);
+  --color-gray-500: oklch(0.590 0.030 232);
+  --color-gray-600: oklch(0.470 0.035 232);
+  --color-gray-700: oklch(0.410 0.030 232);
+  --color-gray-800: oklch(0.363 0.032 232);
+  --color-gray-900: oklch(0.309 0.031 232);
+  --color-gray-950: oklch(0.223 0.022 234);
+}
+
+/* Headings use Outfit — short display text where its geometric clarity works best. */
+h1, h2, h3, h4, h5, h6,
+/* Sidebar group/section labels */
+.group-label,
+/* Prev/next pagination card titles */
+.link-title {
+  font-family: 'Outfit Variable', sans-serif;
+}
+
+/*
+ * Activate Recursive's monospace axis for code contexts.
+ * MONO=1 switches the same typeface from proportional to monospaced.
+ */
+code, pre, kbd, samp {
+  font-variation-settings: 'MONO' 1;
+}
