@@ -85,7 +85,9 @@
 
 @theme {
     --font-sans: 'Outfit Variable', sans-serif;
+    --font-heading: var(--font-sans);
     --font-comment: 'Recursive Variable', serif;
+    --font-body: var(--font-comment);
 }
 
 html, body {
@@ -95,4 +97,8 @@ html, body {
 html[data-embedded], html[data-embedded] body {
   --color-base-100: transparent;
   --color-base-200: transparent;
+}
+
+p {
+  @apply font-body;
 }

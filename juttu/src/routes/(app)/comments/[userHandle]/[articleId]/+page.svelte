@@ -127,7 +127,6 @@
 		// Use untrack so reading threadData here doesn't make it a $effect dependency (which would cause an infinite loop).
 		if (!untrack(() => threadData)) isLoading = true;
 		try {
-
 			const currentAgent = authState.agent;
 
 			if (currentAgent) {

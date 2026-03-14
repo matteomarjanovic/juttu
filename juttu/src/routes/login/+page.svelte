@@ -191,4 +191,8 @@
 			{/if}
 		</div>
 	</div>
+	<p class="text-center text-xs text-base-content/50">
+		By logging in, you agree to our
+		<a href="/policy" target="_blank" rel="noopener noreferrer" class="underline">Privacy Policy</a>.
+	</p>
 </div>

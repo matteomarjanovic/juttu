@@ -196,7 +196,14 @@
 					<div class="card-body">
 						<p>
 							Every comment you will leave will be posted on your Bluesky profile, as a reply to the
-							original post by the author.
+							original post by the author. <a
+								href="https://juttu.app/policy"
+								class="text-base-content/80 underline hover:text-base-content"
+								target="_blank"
+								rel="noopener noreferrer"
+							>
+								Privacy policy
+							</a>
 						</p>
 					</div>
 				</div>
