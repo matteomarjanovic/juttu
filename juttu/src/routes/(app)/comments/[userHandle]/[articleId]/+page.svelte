@@ -20,9 +20,10 @@
 		'juttu:userHandle',
 		untrack(() => data.userHandle)
 	);
+	setContext('juttu:userDid', untrack(() => data.userDid));
 
 	onMount(() => {
-		track('page_view', data.userHandle);
+		track('page_view', data.userHandle, data.userDid);
 	});
 
 	// Check for theme parameter in URL
