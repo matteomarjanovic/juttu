@@ -52,9 +52,16 @@
 h1, h2, h3, h4, h5, h6,
 /* Sidebar group/section labels */
 .group-label,
+/* Sidebar links */
+li a span,
 /* Prev/next pagination card titles */
 .link-title {
   font-family: 'Outfit Variable', sans-serif;
+}
+
+/* Sidebar nested links */
+li details ul li a span {
+  font-family: 'Recursive Variable', sans-serif;
 }
 
 /*
