@@ -41,7 +41,7 @@ A pre-built image requires no code changes — just set `PUBLIC_HOSTNAME` to you
 docker run -d \
   -e PUBLIC_HOSTNAME=comments.example.com \
   -p 3000:3000 \
-  ghcr.io/your-org/juttu:latest
+  ghcr.io/matteomarjanovic/juttu:latest
 ```
 
 `ORIGIN` is automatically derived as `https://$PUBLIC_HOSTNAME`. To override it explicitly:
@@ -51,7 +51,7 @@ docker run -d \
   -e PUBLIC_HOSTNAME=comments.example.com \
   -e ORIGIN=https://comments.example.com \
   -p 3000:3000 \
-  ghcr.io/your-org/juttu:latest
+  ghcr.io/matteomarjanovic/juttu:latest
 ```
 
 To build the image yourself:
