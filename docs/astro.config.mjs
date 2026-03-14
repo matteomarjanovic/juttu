@@ -14,17 +14,9 @@ export default defineConfig({
             ],
             social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/matteomarjanovic/juttu' }],
             sidebar: [
-                {
-                    label: 'Guides',
-                    items: [
-                        // Each item here is one entry in the navigation menu.
-                        { label: 'Example Guide', slug: 'guides/example' },
-                    ],
-                },
-                {
-                    label: 'Reference',
-                    autogenerate: { directory: 'reference' },
-                },
+                { label: 'Why Juttu', link: '/why-juttu' },
+                { label: 'Getting Started', autogenerate: { directory: 'getting-started' } },
+                { label: 'Self-Hosting', link: '/self-hosting' },
             ],
         }),
     ],
