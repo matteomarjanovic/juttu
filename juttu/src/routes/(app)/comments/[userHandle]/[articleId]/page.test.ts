@@ -43,7 +43,7 @@ describe('load', () => {
 			userDid: 'did:plc:alice123',
 			rootPostUri: 'at://did:plc:alice123/app.bsky.feed.post/abc123',
 		});
-		expect(setHeaders).toHaveBeenCalledWith({ 'cache-control': 'public, max-age=3600' });
+		expect(setHeaders).toHaveBeenCalledWith({ 'cache-control': 'public, max-age=3600, stale-while-revalidate=86400' });
 	});
 
 	it('returns null userDid when handle resolution fails', async () => {

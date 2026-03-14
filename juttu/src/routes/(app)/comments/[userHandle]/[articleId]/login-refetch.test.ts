@@ -20,6 +20,10 @@ vi.mock('@atproto/api', () => ({
 			{ text: this.text, isLink: () => false, isMention: () => false, isTag: () => false },
 		];
 	}),
+	MENTION_REGEX: /(^|\s|\()(@)([a-zA-Z0-9.-]+)(\b)/g,
+	URL_REGEX: /https?:\/\/[\S]+/g,
+	TAG_REGEX: /(^|\s)(#[^\d\s]\S*)(\b|$)/g,
+	TRAILING_PUNCTUATION_REGEX: /\p{P}+$/u,
 }));
 
 vi.mock('$app/state', () => ({
