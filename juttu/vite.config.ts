@@ -18,6 +18,10 @@ export default defineConfig({
                 find: /^svelte$/,
                 replacement: path.resolve(__dirname, 'node_modules/svelte/src/index-client.js'),
             },
+            {
+                find: '$env/dynamic/public',
+                replacement: path.resolve(__dirname, 'src/tests/env-dynamic-public-stub.ts'),
+            },
         ],
     },
 });
