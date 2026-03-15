@@ -1,4 +1,6 @@
-const endpoint = import.meta.env.PUBLIC_ANALYTICS_ENDPOINT as string | undefined;
+import { env } from '$env/dynamic/public';
+
+const endpoint = env.PUBLIC_ANALYTICS_ENDPOINT;
 
 export type AnalyticsEvent = 'page_view' | 'like' | 'unlike' | 'repost' | 'unrepost' | 'reply';
 
