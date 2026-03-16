@@ -1,13 +1,13 @@
 <script lang="ts">
-    import './layout.css';
-    import favicon from '$lib/assets/favicon.svg';
+	import './layout.css';
+	import favicon from '$lib/assets/favicon.ico';
 
-    let { children } = $props();
+	let { children } = $props();
 </script>
 
 <svelte:head>
-    <link rel="icon" href={favicon} />
-    <title>Juttu - A comment section powered by Bluesky</title>
+	<link rel="icon" href={favicon} />
+	<title>Juttu - A comment section powered by Bluesky</title>
 </svelte:head>
 
 {@render children()}
