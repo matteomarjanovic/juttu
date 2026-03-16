@@ -191,8 +191,8 @@
 	<!-- Here you would render the comments thread -->
 	<div class="mx-auto">
 		{#if threadData}
-			<p class="text-end font-sans text-sm">
-				<a href="https://juttu.app" class="hover:cursor-pointer" target="_blank">
+			<p class="text-end text-sm">
+				<a href="https://juttu.app" class="font-sans hover:cursor-pointer" target="_blank">
 					Powered by
 					<span class="inline-block h-full w-9">
 						<JuttuLogo />
