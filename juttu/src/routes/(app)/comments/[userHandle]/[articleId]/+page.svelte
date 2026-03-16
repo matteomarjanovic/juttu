@@ -20,7 +20,10 @@
 		'juttu:userHandle',
 		untrack(() => data.userHandle)
 	);
-	setContext('juttu:userDid', untrack(() => data.userDid));
+	setContext(
+		'juttu:userDid',
+		untrack(() => data.userDid)
+	);
 
 	onMount(() => {
 		track('page_view', data.userHandle, data.userDid);
@@ -188,7 +191,7 @@
 	<!-- Here you would render the comments thread -->
 	<div class="mx-auto">
 		{#if threadData}
-			<p class="text-end text-sm">
+			<p class="text-end font-sans text-sm">
 				<a href="https://juttu.app" class="hover:cursor-pointer" target="_blank">
 					Powered by
 					<span class="inline-block h-full w-9">

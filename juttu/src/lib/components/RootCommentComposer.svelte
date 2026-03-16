@@ -7,7 +7,7 @@
 	import RichTextEditor from './RichTextEditor.svelte';
 
 	const userHandle = getContext<string>('juttu:userHandle');
-const userDid = getContext<string | null>('juttu:userDid');
+	const userDid = getContext<string | null>('juttu:userDid');
 
 	interface Props {
 		rootPostUri: string;
@@ -161,7 +161,6 @@ const userDid = getContext<string | null>('juttu:userDid');
 			</button>
 		{/if}
 		<div class="grow"></div>
-		<!-- <span class="text-sm text-base-content/90 pb-[2px]">Powered by Juttu</span> -->
 	</div>
 	<RichTextEditor
 		bind:value={commentText}
