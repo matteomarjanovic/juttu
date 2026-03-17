@@ -86,11 +86,6 @@
 		}
 	}
 
-	function handleKeydown(event: KeyboardEvent) {
-		if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
-			handleSubmit();
-		}
-	}
 </script>
 
 <div class="mb-6">
@@ -164,15 +159,13 @@
 	</div>
 	<RichTextEditor
 		bind:value={commentText}
-		onkeydown={handleKeydown}
-		placeholder="Add a comment..."
+			placeholder="Add a comment..."
 		class="min-h-20"
 		disabled={isSubmitting}
 		rows={3}
 	/>
 	<div class="mt-2 flex items-start">
 		<div class="flex items-center gap-2">
-			<span class="text-xs text-base-content/80">Ctrl+Enter to submit</span>
 			<div class="dropdown-hover dropdown dropdown-bottom">
 				<div tabindex="0" role="button" class="btn btn-circle text-info btn-ghost btn-xs">
 					<svg
