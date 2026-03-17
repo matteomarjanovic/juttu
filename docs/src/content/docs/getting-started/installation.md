@@ -24,7 +24,7 @@ Place the following snippet where you want the comment section to appear:
 ></script>
 ```
 
-The script creates a self-resizing `<iframe>` — no fixed height required.
+The comment section resizes itself dynamically — no fixed height required.
 
 ## Attributes
 

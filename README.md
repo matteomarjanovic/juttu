@@ -2,7 +2,7 @@
 
 # Juttu
 
-Juttu is an open-source Bluesky-powered comment widget. Website owners embed it via `<iframe>` to add a comment section backed by Bluesky threads.
+Juttu is an open-source Bluesky-powered comment widget. Add a comment section to any article with two lines of HTML — comments are backed by Bluesky threads.
 
 ## How it works
 
@@ -25,7 +25,7 @@ Add a comment section to any article by placing the following snippet where you 
 ></script>
 ```
 
-The script creates an `<iframe>` that resizes itself dynamically. On first load, you'll be prompted to log in with your Bluesky account to link the article to a Bluesky post — that post's reply thread becomes the comment section.
+The comment section resizes itself dynamically — no fixed height needed. On first load, you'll be prompted to log in with your Bluesky account to link the article to a Bluesky post — that post's reply thread becomes the comment section.
 
 `data-theme` accepts `light`, `dark`, or `auto` (follows the visitor's system preference).
 
