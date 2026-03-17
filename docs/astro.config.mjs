@@ -25,6 +25,10 @@ export default defineConfig({
         }),
     ],
 
+    redirects: {
+        '/': '/getting-started/installation/',
+    },
+
     vite: {
         plugins: [tailwindcss()],
     },
