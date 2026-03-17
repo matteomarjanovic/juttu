@@ -21,6 +21,7 @@ export default defineConfig({
                 { label: 'Getting Started', autogenerate: { directory: 'getting-started' } },
                 { label: 'Self-Hosting', link: '/self-hosting' },
             ],
+            favicon: 'favicon.ico',
         }),
     ],
 
