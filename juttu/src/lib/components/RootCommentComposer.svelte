@@ -5,6 +5,7 @@
 	import { track } from '$lib/analytics';
 	import { RichText } from '@atproto/api';
 	import RichTextEditor from './RichTextEditor.svelte';
+	import JuttuLogo from './JuttuLogo.svelte';
 
 	const userHandle = getContext<string>('juttu:userHandle');
 	const userDid = getContext<string | null>('juttu:userDid');
@@ -85,7 +86,6 @@
 			isSubmitting = false;
 		}
 	}
-
 </script>
 
 <div class="mb-6">
@@ -159,13 +159,21 @@
 	</div>
 	<RichTextEditor
 		bind:value={commentText}
-			placeholder="Add a comment..."
+		placeholder="Add a comment..."
 		class="min-h-20"
 		disabled={isSubmitting}
 		rows={3}
 	/>
 	<div class="mt-2 flex items-start">
-		<div class="flex items-center gap-2">
+		<div class="flex items-center justify-center gap-2">
+			<p class="mt-0.5 text-sm">
+				<a href="https://juttu.app" class="font-sans hover:cursor-pointer" target="_blank">
+					Powered by
+					<span class="inline-block h-full w-9">
+						<JuttuLogo />
+					</span>
+				</a>
+			</p>
 			<div class="dropdown-hover dropdown dropdown-bottom">
 				<div tabindex="0" role="button" class="btn btn-circle text-info btn-ghost btn-xs">
 					<svg

@@ -191,15 +191,6 @@
 	<!-- Here you would render the comments thread -->
 	<div class="mx-auto">
 		{#if threadData}
-			<p class="text-end text-sm">
-				<a href="https://juttu.app" class="font-sans hover:cursor-pointer" target="_blank">
-					Powered by
-					<span class="inline-block h-full w-9">
-						<JuttuLogo />
-					</span>
-				</a>
-			</p>
-			<div class="divider mt-0"></div>
 			<RootCommentComposer
 				rootPostUri={threadData.post.uri}
 				rootPostCid={threadData.post.cid}
