@@ -5,7 +5,7 @@ description: The philosophy and motivation behind Juttu.
 
 ## The problem with existing comment systems
 
-Most comment systems — Disqus, Commento, and similar tools — share the same structural problems:
+Most comment systems (Disqus and similar tools) share the same structural problems:
 
 - **Heavyweight**: they bring a bundle of JavaScript, ads, or tracking pixels into your page.
 - **Privacy-invasive**: user data is collected and monetized by a third-party platform you don't control.
