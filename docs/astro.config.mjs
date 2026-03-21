@@ -16,7 +16,10 @@ export default defineConfig({
             customCss: [
                 './src/styles/global.css',
             ],
-            social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/matteomarjanovic/juttu' }],
+            social: [
+                { icon: 'github', label: 'GitHub', href: 'https://github.com/matteomarjanovic/juttu' },
+                { icon: 'blueSky', label: 'Bluesky', href: 'https://bsky.app/profile/juttu.app' }
+            ],
             sidebar: [
                 { label: 'Why Juttu', link: '/why-juttu' },
                 { label: 'Getting Started', autogenerate: { directory: 'getting-started' } },
