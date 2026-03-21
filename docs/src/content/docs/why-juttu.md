@@ -23,6 +23,16 @@ Juttu uses this directly. When you embed Juttu on an article, you link that arti
 
 Visitors authenticate with their existing Bluesky identity. There is no Juttu account, no separate password, and no profile to maintain. Login happens via AT Protocol OAuth, and the session is stored only in the user's browser.
 
+## Built on open standards
+
+Juttu uses [standard.site](https://standard.site) lexicons to connect articles to Bluesky threads. `site.standard.document` is an AT Protocol standard for long-form publishing being adopted across Bluesky-native blogging platforms.
+
+This means:
+
+- **No proprietary lock-in.** Article–post links are stored in a public, interoperable format — not in a Juttu-specific database.
+- **Works with compatible platforms.** If your blogging platform already emits `site.standard.document` records, Juttu just works with no extra setup.
+- **Owned by you.** The link between your article and its Bluesky thread is a record in *your* AT Protocol repository, not ours.
+
 ## Open source
 
 Juttu is licensed under [AGPL-3.0](https://github.com/matteomarjanovic/juttu/blob/main/LICENSE). The source code is public, auditable, and forkable. You can run your own instance on your own infrastructure with full control over the data.
