@@ -4,33 +4,51 @@
 	import { RichText } from '@atproto/api';
 	import RichTextEditor from './RichTextEditor.svelte';
 	import type { AppBskyFeedDefs } from '@atproto/api';
-	import { l } from '@atproto/lex';
-	import * as app from '$lib/lexicons/app.js';
+	import * as site from '$lib/lexicons/site.js';
 	import JuttuLogo from './JuttuLogo.svelte';
 
+	// AT Protocol rkey charset validation
+	const RKEY_RE = /^[A-Za-z0-9._~-]{1,512}$/;
+
 	interface Props {
-		userHandle: string;
-		articleId: string;
-		onArticleLinkCreated?: (rootPostUri: string) => void;
+		documentAtUri: string;
+		did: string;
+		rkey: string;
+		documentRecord: site.standard.document.Main | null;
+		pageOrigin: string | null;
+		pagePath: string | null;
+		onDocumentLinked?: (rootPostUri: string) => void;
 	}
 
-	const { userHandle, articleId, onArticleLinkCreated }: Props = $props();
+	const {
+		documentAtUri,
+		did,
+		rkey,
+		documentRecord,
+		pageOrigin,
+		pagePath,
+		onDocumentLinked
+	}: Props = $props();
 
-	type Step =
-		| 'login'
-		| 'loading-profile'
-		| 'choose-method'
-		| 'create-post'
-		| 'select-post'
-		| 'confirm';
+	// Mode A: record exists but has no bskyPostRef
+	// Mode B: record doesn't exist at all (documentRecord === null)
+	const isValidRkey = $derived(RKEY_RE.test(rkey));
 
 	// Determine current step based on auth state
-	let currentStep = $derived.by<Step>(() => {
+	let currentStep = $derived.by<
+		'login' | 'loading-profile' | 'metadata-form' | 'choose-method' | 'create-post' | 'select-post' | 'confirm'
+	>(() => {
 		if (!authState.agent) return 'login';
-		// Wait for profile to load before showing options or wrong-account warning
 		if (!authState.profile) return 'loading-profile';
+		// In Mode B, show metadata form before choose-method (if not yet completed)
+		if (documentRecord === null && !metadataCompleted) return 'metadata-form';
 		return 'choose-method';
 	});
+
+	let metadataCompleted = $state(false);
+	// Mode B metadata fields
+	let title = $state('');
+	let description = $state('');
 
 	let selectedMethod = $state<'new' | 'existing' | null>(null);
 	let newPostText = $state('');
@@ -41,15 +59,12 @@
 	let error = $state<string | null>(null);
 	let loginError = $state<string | null>(null);
 
-	// Check if logged-in user matches the URL handle
-	let isCorrectUser = $derived.by(() => {
-		if (!authState.profile) return false;
-		return authState.profile.handle === userHandle || authState.profile.did === userHandle;
-	});
+	// Check if logged-in user is the document owner
+	let isCorrectUser = $derived(authState.profile?.did === did);
 
 	function handleLogin() {
 		loginError = null;
-		const result = requestAuth(userHandle);
+		const result = requestAuth(did);
 		if (!result.success) {
 			loginError = 'Popup was blocked. Please allow popups for this site.';
 		}
@@ -97,7 +112,7 @@
 		}
 	}
 
-	async function createArticleLink(postUri: string, postCid: string) {
+	async function linkDocument(postUri: string, postCid: string) {
 		if (!authState.agent) {
 			error = 'Not authenticated';
 			return;
@@ -107,36 +122,40 @@
 		error = null;
 
 		try {
-			// Build the articleLink record using the lexicon schema
-			const record = app.juttu.articleLink.$build({
-				articleId: articleId,
-				createdAt: new Date().toISOString() as l.DatetimeString,
-				commentsThread: {
-					uri: postUri as l.AtUriString,
-					cid: postCid as l.CidString
-				}
-			});
-
-			// Validate the record before creating
-			const validation = app.juttu.articleLink.$safeParse(record);
-			if (!validation.success) {
-				console.error('Validation failed:', validation.reason);
-				error = `Invalid article link data: ${validation.reason?.message || 'Unknown error'}`;
-				isSubmitting = false;
-				return;
+			if (documentRecord !== null) {
+				// Mode A: record exists, add bskyPostRef to the existing record
+				await authState.agent.com.atproto.repo.putRecord({
+					repo: authState.session!.did,
+					collection: 'site.standard.document',
+					rkey,
+					record: {
+						...documentRecord,
+						bskyPostRef: { uri: postUri, cid: postCid }
+					}
+				});
+			} else {
+				// Mode B: create full document record
+				await authState.agent.com.atproto.repo.putRecord({
+					repo: authState.session!.did,
+					collection: 'site.standard.document',
+					rkey,
+					record: {
+						$type: 'site.standard.document',
+						site: pageOrigin ?? documentAtUri.split('/')[2] ?? did,
+						title,
+						description: description || undefined,
+						path: pagePath || undefined,
+						publishedAt: new Date().toISOString(),
+						updatedAt: new Date().toISOString(),
+						bskyPostRef: { uri: postUri, cid: postCid }
+					}
+				});
 			}
 
-			await authState.agent.com.atproto.repo.putRecord({
-				repo: authState.session!.did,
-				collection: 'app.juttu.articleLink',
-				rkey: articleId,
-				record: validation.value
-			});
-
-			onArticleLinkCreated?.(postUri);
+			onDocumentLinked?.(postUri);
 		} catch (err) {
-			console.error('Error creating articleLink:', err);
-			error = 'Failed to link article. Please try again.';
+			console.error('Error linking document:', err);
+			error = 'Failed to link document. Please try again.';
 		} finally {
 			isSubmitting = false;
 		}
@@ -152,14 +171,12 @@
 			const rt = new RichText({ text: newPostText.trim() });
 			await rt.detectFacets(authState.agent);
 
-			// Create a new post
 			const response = await authState.agent.post({
 				text: rt.text,
 				facets: rt.facets
 			});
 
-			// Now create the articleLink with this new post
-			await createArticleLink(response.uri, response.cid);
+			await linkDocument(response.uri, response.cid);
 		} catch (err) {
 			console.error('Error creating post:', err);
 			error = 'Failed to create post. Please try again.';
@@ -169,7 +186,7 @@
 
 	async function handleConfirmExistingPost() {
 		if (!selectedPost) return;
-		await createArticleLink(selectedPost.uri, selectedPost.cid);
+		await linkDocument(selectedPost.uri, selectedPost.cid);
 	}
 
 	function truncateText(text: string, maxLength: number = 100): string {
@@ -192,11 +209,32 @@
 		Connect this article to a Bluesky post to enable comments.
 	</p>
 
-	{#if currentStep === 'login'}
+	{#if !isValidRkey}
+		<div class="alert alert-error">
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				class="h-6 w-6 shrink-0 stroke-current"
+				fill="none"
+				viewBox="0 0 24 24"
+			>
+				<path
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					stroke-width="2"
+					d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+				/>
+			</svg>
+			<div>
+				<p class="font-semibold">Invalid record key</p>
+				<p class="text-sm">
+					The document rkey <span class="font-mono">"{rkey}"</span> contains invalid characters. Only
+					letters, digits, <span class="font-mono">. _ ~ -</span> are allowed (max 512 chars).
+				</p>
+			</div>
+		</div>
+	{:else if currentStep === 'login'}
 		<div class="text-center">
-			<p class="mb-4 text-base-content/70">
-				Sign in as <span class="font-semibold">@{userHandle}</span> to link this article.
-			</p>
+			<p class="mb-4 text-base-content/70">Sign in as the document owner to link this article.</p>
 			<button class="btn text-lg btn-accent" disabled={authState.isLoading} onclick={handleLogin}>
 				{#if authState.isLoading}
 					<span class="loading loading-sm loading-spinner"></span>
@@ -213,7 +251,7 @@
 						d="M123.121 33.664C188.241 82.553 258.281 181.68 284 234.873c25.719-53.192 95.759-152.32 160.879-201.21C491.866-1.611 568-28.906 568 57.947c0 17.346-9.945 145.713-15.778 166.555-20.275 72.453-94.155 90.933-159.875 79.748C507.222 323.8 536.444 388.56 473.333 453.32c-119.86 122.992-172.272-30.859-185.702-70.281-2.462-7.227-3.614-10.608-3.631-7.733-.017-2.875-1.169.506-3.631 7.733-13.43 39.422-65.842 193.273-185.702 70.281-63.111-64.76-33.89-129.52 80.986-149.071-65.72 11.185-139.6-7.295-159.875-79.748C9.945 203.659 0 75.291 0 57.946 0-28.906 76.135-1.612 123.121 33.664Z"
 					></path>
 				</svg>
-				Login as @{userHandle}
+				Login with Bluesky
 			</button>
 			{#if loginError}
 				<p class="mt-2 text-sm text-error">{loginError}</p>
@@ -242,9 +280,48 @@
 				<p class="font-semibold">Wrong account</p>
 				<p class="text-sm">
 					You're logged in as <span class="font-mono">@{authState.profile?.handle}</span>, but this
-					article belongs to <span class="font-mono">@{userHandle}</span>.
+					document belongs to <span class="font-mono">{did}</span>.
 				</p>
 			</div>
+		</div>
+	{:else if currentStep === 'metadata-form'}
+		<!-- Mode B: collect title/description before choosing a post -->
+		<div class="flex flex-col gap-4">
+			<p class="text-sm text-base-content/70">
+				This article doesn't have a document record yet. Fill in some details to create one.
+			</p>
+			<div class="flex flex-col gap-1">
+				<label class="text-sm font-semibold" for="doc-title">Title <span class="text-error">*</span></label>
+				<input
+					id="doc-title"
+					type="text"
+					class="input input-bordered w-full"
+					placeholder="My Article Title"
+					bind:value={title}
+				/>
+			</div>
+			<div class="flex flex-col gap-1">
+				<label class="text-sm font-semibold" for="doc-description">Description <span class="text-base-content/50">(optional)</span></label>
+				<textarea
+					id="doc-description"
+					class="textarea textarea-bordered w-full"
+					placeholder="A brief description of this article…"
+					rows="3"
+					bind:value={description}
+				></textarea>
+			</div>
+			<div class="rounded-lg border border-base-300 bg-base-200 p-3 text-sm text-base-content/70">
+				<p><span class="font-semibold">Site:</span> {pageOrigin ?? '(unknown)'}</p>
+				<p><span class="font-semibold">Path:</span> {pagePath ?? '(unknown)'}</p>
+				<p><span class="font-semibold">Record key:</span> <span class="font-mono">{rkey}</span></p>
+			</div>
+			<button
+				class="btn btn-primary"
+				disabled={!title.trim()}
+				onclick={() => (metadataCompleted = true)}
+			>
+				Continue
+			</button>
 		</div>
 	{:else if selectedMethod === null}
 		<div class="flex flex-col gap-3">

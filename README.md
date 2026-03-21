@@ -2,28 +2,30 @@
 
 # Juttu
 
-Juttu is an open-source Bluesky-powered comment widget. Add a comment section to any article with two lines of HTML — comments are backed by Bluesky threads.
+Juttu is an open-source Bluesky-powered comment widget. Add a comment section to any article with three lines of HTML — comments are backed by Bluesky threads.
 
 ## How it works
 
-- Each embedded widget links an article (identified by a handle + article ID) to a root Bluesky post via the custom AT Protocol lexicon `app.juttu.articleLink`.
+- Each embedded widget links an article to a root Bluesky post via the [`site.standard.document`](https://standard.site) AT Protocol lexicon from [standard.site](https://standard.site).
 - Comments are the replies to that Bluesky post, fetched via the Bluesky API.
 - Visitors can log in with their Bluesky account directly inside the widget to like, repost, or reply.
 
 ## Installation
 
-Add a comment section to any article by placing the following snippet where you want comments to appear. Replace `your-handle.bsky.social` with your Bluesky handle and `article-id` with a unique identifier for the article (e.g. its slug).
+Add the following to your page. The `<link>` and `<script>` tags go in `<head>`; the `<div>` goes in `<body>` where you want comments to appear:
 
 ```html
+<!-- in <head> -->
+<link rel="site.standard.document" href="at://did:plc:abc123/site.standard.document/my-article-slug" />
+<script defer src="https://juttu.app/embed/juttu-embed.min.js" data-theme="auto"></script>
+
+<!-- in <body>, where you want comments -->
 <div id="juttu-comments"></div>
-<script
-  defer
-  src="https://juttu.app/embed/juttu-embed.min.js"
-  data-bsky-user-handle="your-handle.bsky.social"
-  data-article-id="article-id"
-  data-theme="auto"
-></script>
 ```
+
+The AT URI (`at://…`) identifies your article using the `site.standard.document` standard. Replace `did:plc:abc123` with your Bluesky DID and `my-article-slug` with a stable, unique slug for the article (letters, digits, `.`, `_`, `~`, `-`, up to 512 chars).
+
+To find your DID: go to [this docs page](https://docs.bsky.app/getting-started/installation/#get-your-did).
 
 The comment section resizes itself dynamically — no fixed height needed. On first load, you'll be prompted to log in with your Bluesky account to link the article to a Bluesky post — that post's reply thread becomes the comment section.
 
@@ -139,7 +141,7 @@ Each request body:
 }
 ```
 
-`userHandle` is the handle of the **site owner** who embedded the widget (from the widget URL `/comments/{userHandle}/{articleId}`). It is never the handle of individual commenters.
+`userHandle` is the handle of the **site owner** who embedded the widget (from the widget URL `/comments/{atPath}`). It is never the handle of individual commenters.
 
 Requests are fire-and-forget — they never block the UI and errors are silently ignored.
 

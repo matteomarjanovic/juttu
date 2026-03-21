@@ -2,7 +2,7 @@
 	import { authState } from '$lib/auth.svelte';
 	import { onMount, setContext, untrack } from 'svelte';
 	import { type AppBskyFeedGetPostThread } from '@atproto/api';
-	import ArticleLinkCreator from '$lib/components/ArticleLinkCreator.svelte';
+	import DocumentLinker from '$lib/components/DocumentLinker.svelte';
 	import type { ThreadViewPost } from '@atproto/api/dist/client/types/app/bsky/feed/defs.js';
 	import CommentNode from '$lib/components/CommentNode.svelte';
 	import CommentSortSelect from '$lib/components/CommentSortSelect.svelte';
@@ -10,23 +10,18 @@
 	import CommentsLoading from '$lib/components/CommentsLoading.svelte';
 	import { page } from '$app/state';
 	import { track } from '$lib/analytics';
-	import JuttuLogo from '$lib/components/JuttuLogo.svelte';
 
 	type SortOption = 'newest' | 'oldest' | 'most-liked';
 
 	const { data } = $props();
 
 	setContext(
-		'juttu:userHandle',
-		untrack(() => data.userHandle)
-	);
-	setContext(
-		'juttu:userDid',
-		untrack(() => data.userDid)
+		'juttu:did',
+		untrack(() => data.did)
 	);
 
 	onMount(() => {
-		track('page_view', data.userHandle, data.userDid);
+		track('page_view', data.did, null);
 	});
 
 	// Check for theme parameter in URL
@@ -82,7 +77,7 @@
 		};
 	});
 
-	// Local override for rootPostUri after creating an article link
+	// Local override for rootPostUri after linking a document
 	let rootPostUriOverride = $state<string | null>(null);
 	// Effective rootPostUri: use override if set, otherwise use data from server
 	let rootPostUri = $derived(rootPostUriOverride ?? data.rootPostUri);
@@ -161,14 +156,13 @@
 		}
 	}
 
-	// Handle article link creation
-	function handleArticleLinkCreated(newRootPostUri: string) {
+	// Handle document linking
+	function handleDocumentLinked(newRootPostUri: string) {
 		rootPostUriOverride = newRootPostUri;
 	}
 
 	// Re-run whenever rootPostUri changes (new article) or agent changes (user logs in/out)
 	$effect(() => {
-		// if (rootPostUri && authState.isInitialized) {
 		if (rootPostUri) {
 			loadThreadData(rootPostUri);
 		} else if (!rootPostUri) {
@@ -179,10 +173,14 @@
 
 {#if rootPostUri === null}
 	<div class="mx-auto max-w-xl">
-		<ArticleLinkCreator
-			userHandle={data.userHandle}
-			articleId={data.articleId}
-			onArticleLinkCreated={handleArticleLinkCreated}
+		<DocumentLinker
+			documentAtUri={data.documentAtUri}
+			did={data.did}
+			rkey={data.rkey}
+			documentRecord={data.documentRecord}
+			pageOrigin={data.pageOrigin}
+			pagePath={data.pagePath}
+			onDocumentLinked={handleDocumentLinked}
 		/>
 	</div>
 {:else if isLoading}
