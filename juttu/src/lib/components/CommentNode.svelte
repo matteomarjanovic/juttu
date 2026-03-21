@@ -7,8 +7,7 @@
 	import { track } from '$lib/analytics';
 	import RichTextEditor from './RichTextEditor.svelte';
 
-	const userHandle = getContext<string>('juttu:userHandle');
-	const userDid = getContext<string | null>('juttu:userDid');
+	const did = getContext<string>('juttu:did');
 
 	type SortOption = 'newest' | 'oldest' | 'most-liked';
 
@@ -107,13 +106,13 @@
 				await authState.agent!.deleteLike(likeUri);
 				likeUri = undefined;
 				likeCount--;
-				track('unlike', userHandle, userDid);
+				track('unlike', did, null);
 			} else {
 				// Like: create a like record
 				const response = await authState.agent!.like(comment.post?.uri, comment.post?.cid);
 				likeUri = response.uri;
 				likeCount++;
-				track('like', userHandle, userDid);
+				track('like', did, null);
 			}
 		} catch (error) {
 			console.error('Error toggling like:', error);
@@ -129,13 +128,13 @@
 				await authState.agent!.deleteRepost(repostUri);
 				repostUri = undefined;
 				repostCount--;
-				track('unrepost', userHandle, userDid);
+				track('unrepost', did, null);
 			} else {
 				// Repost: create a repost record
 				const response = await authState.agent!.repost(comment.post?.uri, comment.post?.cid);
 				repostUri = response.uri;
 				repostCount++;
-				track('repost', userHandle, userDid);
+				track('repost', did, null);
 			}
 		} catch (error) {
 			console.error('Error toggling repost:', error);
@@ -184,7 +183,7 @@
 
 			localReplies = [newReply, ...localReplies];
 			replyCount++;
-			track('reply', userHandle, userDid);
+			track('reply', did, null);
 
 			// Reset form
 			replyText = '';

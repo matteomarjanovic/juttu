@@ -155,7 +155,7 @@
 		if (match) {
 			mentionQuery = match[1];
 			clearTimeout(debounceTimer);
-			debounceTimer = setTimeout(() => fetchSuggestions(match[1]), 1000);
+			debounceTimer = setTimeout(() => fetchSuggestions(match[1]), 300);
 		} else {
 			dismissSuggestions();
 		}
@@ -214,7 +214,7 @@
 	-->
 	<div
 		bind:this={backdropEl}
-		class="wrap-break-words pointer-events-none absolute inset-0 overflow-hidden whitespace-pre-wrap border-transparent"
+		class="wrap-break-words pointer-events-none absolute inset-0 overflow-hidden border-transparent whitespace-pre-wrap"
 		aria-hidden="true"
 	>
 		{#each segments as seg, i (i)}{#if seg.type !== 'plain'}<span class="text-blue-500"

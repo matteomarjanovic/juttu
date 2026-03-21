@@ -9,7 +9,7 @@ One environment variable is required:
 
 - **`PUBLIC_HOSTNAME`** — your domain, without `https://` (e.g. `comments.example.com`)
 
-This value is baked into the embed script at build time and used to construct OAuth redirect URIs and the OAuth client metadata served at `/oauth-client-metadata.json`.
+This value is read at runtime and used to construct OAuth redirect URIs and the OAuth client metadata served at `/oauth-client-metadata.json`.
 
 ## Docker (recommended)
 

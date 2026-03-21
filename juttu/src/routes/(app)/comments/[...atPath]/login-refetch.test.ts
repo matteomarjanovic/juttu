@@ -3,10 +3,10 @@ import { mount, unmount, flushSync } from 'svelte';
 import Page from './+page.svelte';
 
 // Import the same reactive object the mock will expose, so we can mutate it in tests.
-import { authState as mockAuthState } from '../../../../../tests/mocks/auth.reactive.svelte.ts';
+import { authState as mockAuthState } from '../../../../tests/mocks/auth.reactive.svelte.ts';
 
 vi.mock('$lib/auth.svelte', async () =>
-	await import('../../../../../tests/mocks/auth.reactive.svelte.ts'),
+	await import('../../../../tests/mocks/auth.reactive.svelte.ts')
 );
 
 vi.mock('@atproto/api', () => ({
@@ -17,17 +17,17 @@ vi.mock('@atproto/api', () => ({
 		this.text = opts?.text ?? '';
 		this.facets = opts?.facets ?? [];
 		this.segments = () => [
-			{ text: this.text, isLink: () => false, isMention: () => false, isTag: () => false },
+			{ text: this.text, isLink: () => false, isMention: () => false, isTag: () => false }
 		];
 	}),
 	MENTION_REGEX: /(^|\s|\()(@)([a-zA-Z0-9.-]+)(\b)/g,
 	URL_REGEX: /https?:\/\/[\S]+/g,
 	TAG_REGEX: /(^|\s)(#[^\d\s]\S*)(\b|$)/g,
-	TRAILING_PUNCTUATION_REGEX: /\p{P}+$/u,
+	TRAILING_PUNCTUATION_REGEX: /\p{P}+$/u
 }));
 
 vi.mock('$app/state', () => ({
-	page: { url: { searchParams: new URLSearchParams() } },
+	page: { url: { searchParams: new URLSearchParams() } }
 }));
 
 const ROOT_URI = 'at://did:plc:owner/app.bsky.feed.post/rootpost';
@@ -44,15 +44,15 @@ function makeReply(viewerLike?: string) {
 				did: 'did:plc:commenter',
 				handle: 'commenter.bsky.social',
 				displayName: 'Commenter',
-				avatar: undefined,
+				avatar: undefined
 			},
 			likeCount: 1,
 			repostCount: 0,
 			replyCount: 0,
 			indexedAt: '2024-01-01T00:00:00.000Z',
-			viewer: viewerLike ? { like: viewerLike } : {},
+			viewer: viewerLike ? { like: viewerLike } : {}
 		},
-		replies: [],
+		replies: []
 	};
 }
 
@@ -67,15 +67,15 @@ function makeThread(viewerLike?: string) {
 				did: 'did:plc:owner',
 				handle: 'owner.bsky.social',
 				displayName: 'Owner',
-				avatar: undefined,
+				avatar: undefined
 			},
 			likeCount: 0,
 			repostCount: 0,
 			replyCount: 1,
 			indexedAt: '2024-01-01T00:00:00.000Z',
-			viewer: {},
+			viewer: {}
 		},
-		replies: [makeReply(viewerLike)],
+		replies: [makeReply(viewerLike)]
 	};
 }
 
@@ -95,13 +95,13 @@ describe('+page – re-fetches thread with authenticated agent after login', () 
 			'fetch',
 			vi.fn(async () => ({
 				ok: true,
-				json: async () => ({ thread: makeThread() }),
-			})),
+				json: async () => ({ thread: makeThread() })
+			}))
 		);
 
 		// Authenticated agent returns thread with viewer.like set
 		const mockAgent = {
-			getPostThread: vi.fn(async () => ({ data: { thread: makeThread(LIKE_URI) } })),
+			getPostThread: vi.fn(async () => ({ data: { thread: makeThread(LIKE_URI) } }))
 		};
 
 		mockAuthState.agent = null;
@@ -111,11 +111,14 @@ describe('+page – re-fetches thread with authenticated agent after login', () 
 			props: {
 				data: {
 					rootPostUri: ROOT_URI,
-					userHandle: 'owner.bsky.social',
-					articleId: 'my-article',
-					userDid: 'did:plc:owner',
-				},
-			},
+					documentAtUri: 'at://did:plc:owner/site.standard.document/my-article',
+					did: 'did:plc:owner',
+					rkey: 'my-article',
+					documentRecord: null,
+					pageOrigin: null,
+					pagePath: null
+				} as never
+			}
 		});
 
 		// Wait for the initial unauthenticated fetch via public API
