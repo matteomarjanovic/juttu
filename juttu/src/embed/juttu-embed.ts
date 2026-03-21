@@ -1,6 +1,5 @@
 interface JuttuConfig {
-    userHandle: string;
-    articleId: string;
+    atPath: string;
     hostname?: string;
     theme?: 'light' | 'dark' | 'auto';
 }
@@ -69,9 +68,11 @@ class JuttuEmbed {
             return;
         }
 
-        const { userHandle, articleId, hostname } = this.config;
+        const { atPath, hostname } = this.config;
         const theme = this.getTheme();
-        const iframeUrl = `${hostname}/comments/${encodeURIComponent(userHandle)}/${encodeURIComponent(articleId)}?theme=${theme}`;
+        const pageOrigin = encodeURIComponent(window.location.origin);
+        const pagePath = encodeURIComponent(window.location.pathname);
+        const iframeUrl = `${hostname}/comments/${atPath}?theme=${theme}&pageOrigin=${pageOrigin}&pagePath=${pagePath}`;
 
         this.iframe = document.createElement('iframe');
         this.iframe.src = iframeUrl;
@@ -153,17 +154,8 @@ if (typeof window !== 'undefined') {
 }
 
 function autoInitFromScript(script: HTMLScriptElement): void {
-    const userHandle = script.getAttribute('data-bsky-user-handle');
-    const articleId = script.getAttribute('data-article-id');
     const theme = script.getAttribute('data-theme') as 'light' | 'dark' | 'auto' | null;
     let hostname = script.getAttribute('data-hostname');
-
-    if (!userHandle || !articleId) {
-        console.error(
-            'Juttu: Missing required attributes data-bsky-user-handle and/or data-article-id'
-        );
-        return;
-    }
 
     // If hostname not provided, derive it from the script's src URL
     if (!hostname && script.src) {
@@ -176,9 +168,35 @@ function autoInitFromScript(script: HTMLScriptElement): void {
         }
     }
 
+    const linkTag = document.querySelector('link[rel="site.standard.document"]');
+    if (!linkTag) {
+        const container = document.getElementById('juttu-comments');
+        if (container) {
+            container.innerHTML =
+                '<p style="color:red;font-family:sans-serif;padding:1rem;">Juttu: Missing &lt;link rel="site.standard.document"&gt; tag on this page. Add it to enable comments.</p>';
+        } else {
+            console.error('Juttu: Missing <link rel="site.standard.document"> tag on this page.');
+        }
+        return;
+    }
+
+    const href = linkTag.getAttribute('href');
+    if (!href || !href.startsWith('at://')) {
+        const container = document.getElementById('juttu-comments');
+        if (container) {
+            container.innerHTML =
+                '<p style="color:red;font-family:sans-serif;padding:1rem;">Juttu: Invalid &lt;link rel="site.standard.document" href&gt; — must be an AT URI (at://).</p>';
+        } else {
+            console.error('Juttu: Invalid <link rel="site.standard.document" href> — must be an AT URI.');
+        }
+        return;
+    }
+
+    // Strip at:// prefix to build the iframe path
+    const atPath = href.slice('at://'.length);
+
     new JuttuEmbed({
-        userHandle,
-        articleId,
+        atPath,
         theme: theme || 'light',
         hostname: hostname || undefined
     });
