@@ -5,6 +5,8 @@ sidebar:
   order: 1
 ---
 
+import HandleResolver from '../../../components/HandleResolver.astro';
+
 ## Prerequisites
 
 - A [Bluesky](https://bsky.app) account (this will be the article owner)
@@ -34,13 +36,17 @@ The `<link rel="site.standard.document">` tag tells Juttu which article to show 
 at://YOUR_DID/site.standard.document/YOUR_ARTICLE_SLUG
 ```
 
-- **`YOUR_DID`** — your Bluesky DID, e.g. `did:plc:abc123`. Find it by looking up your handle at:
-  ```
-  https://bsky.social/xrpc/com.atproto.identity.resolveHandle?handle=your.handle.bsky.social
-  ```
-- **`YOUR_ARTICLE_SLUG`** — a stable, unique identifier for this article. Allowed characters: letters, digits, `.`, `_`, `~`, `-` (max 512 chars). Must not change after setup.
-
+:::note
 If a platform you use (e.g. a Bluesky-native blogging tool) already emits `<link rel="site.standard.document">` tags, no manual configuration is needed.
+:::
+
+### Get your DID
+
+Enter your Bluesky handle to generate your personalised `<link>` tag:
+
+<HandleResolver />
+
+Replace **`YOUR_ARTICLE_SLUG`** with a stable, unique identifier for this article. Allowed characters: letters, digits, `-` (max 512 chars). Must not change after setup.
 
 ## The `<script>` tag (required)
 The `<script>` tag loads the Juttu embed code. The `src` must be exactly `https://juttu.app/embed/juttu-embed.min.js` if you want to use the hosted version. Self-hosters can change the `src` to their own hosted domain.
@@ -56,3 +62,6 @@ Controls the color theme. Accepted values:
 | `auto` | Follow the visitor's system preference (default) |
 
 Example: `data-theme="dark"`
+
+## The `<div>` tag (required)
+The `<div id="juttu-comments">` is where the widget will be rendered. The `id` must be exactly `juttu-comments`.

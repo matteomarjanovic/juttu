@@ -2,7 +2,7 @@
 
 # Juttu
 
-Juttu is an open-source Bluesky-powered comment widget. Add a comment section to any article with two lines of HTML — comments are backed by Bluesky threads.
+Juttu is an open-source Bluesky-powered comment widget. Add a comment section to any article with three lines of HTML — comments are backed by Bluesky threads.
 
 ## How it works
 
@@ -25,7 +25,7 @@ Add the following to your page. The `<link>` and `<script>` tags go in `<head>`;
 
 The AT URI (`at://…`) identifies your article using the `site.standard.document` standard. Replace `did:plc:abc123` with your Bluesky DID and `my-article-slug` with a stable, unique slug for the article (letters, digits, `.`, `_`, `~`, `-`, up to 512 chars).
 
-To find your DID: go to your Bluesky profile, open the three-dot menu, and look up your handle at `https://bsky.social/xrpc/com.atproto.identity.resolveHandle?handle=your.handle.bsky.social`.
+To find your DID: go to [this docs page](https://docs.bsky.app/getting-started/installation/#get-your-did).
 
 The comment section resizes itself dynamically — no fixed height needed. On first load, you'll be prompted to log in with your Bluesky account to link the article to a Bluesky post — that post's reply thread becomes the comment section.
 
