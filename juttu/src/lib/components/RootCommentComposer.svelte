@@ -77,7 +77,7 @@
 			const newComment = makeOptimisticPost(response, rt.text, rt.facets);
 
 			onCommentPosted(newComment);
-			track('reply', did, null);
+			track('reply', did);
 			commentText = '';
 		} catch (error) {
 			console.error('Error posting comment:', error);
