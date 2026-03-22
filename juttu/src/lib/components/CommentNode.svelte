@@ -106,13 +106,13 @@
 				await authState.agent!.deleteLike(likeUri);
 				likeUri = undefined;
 				likeCount--;
-				track('unlike', did, null);
+				track('unlike', did);
 			} else {
 				// Like: create a like record
 				const response = await authState.agent!.like(comment.post?.uri, comment.post?.cid);
 				likeUri = response.uri;
 				likeCount++;
-				track('like', did, null);
+				track('like', did);
 			}
 		} catch (error) {
 			console.error('Error toggling like:', error);
@@ -128,13 +128,13 @@
 				await authState.agent!.deleteRepost(repostUri);
 				repostUri = undefined;
 				repostCount--;
-				track('unrepost', did, null);
+				track('unrepost', did);
 			} else {
 				// Repost: create a repost record
 				const response = await authState.agent!.repost(comment.post?.uri, comment.post?.cid);
 				repostUri = response.uri;
 				repostCount++;
-				track('repost', did, null);
+				track('repost', did);
 			}
 		} catch (error) {
 			console.error('Error toggling repost:', error);
@@ -183,7 +183,7 @@
 
 			localReplies = [newReply, ...localReplies];
 			replyCount++;
-			track('reply', did, null);
+			track('reply', did);
 
 			// Reset form
 			replyText = '';

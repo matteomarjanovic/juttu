@@ -21,7 +21,7 @@
 	);
 
 	onMount(() => {
-		track('page_view', data.did, null);
+		track('page_view', data.did);
 	});
 
 	// Check for theme parameter in URL
