@@ -1,0 +1,30 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      SESSION_SECRET: ${SESSION_SECRET}
+      REDIS_URL: redis://redis:6379/0
+      CLIENT_HOSTNAME: ${CLIENT_HOSTNAME:-}
+      CLIENT_SECRET_KEY: ${CLIENT_SECRET_KEY:-}
+      CLIENT_SECRET_KEY_ID: ${CLIENT_SECRET_KEY_ID:-primary}
+      DEVELOPMENT: ${DEVELOPMENT:-false}
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  redis_data:

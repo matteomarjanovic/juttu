@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Bluesky API Service</title>
+<style>
+  body { font-family: monospace; max-width: 600px; margin: 40px auto; padding: 0 16px; }
+  input, textarea { width: 100%; box-sizing: border-box; padding: 6px; margin: 4px 0; }
+  button { padding: 6px 14px; cursor: pointer; }
+  #status { margin-top: 16px; padding: 10px; background: #f0f0f0; white-space: pre-wrap; }
+  section { margin-top: 24px; border-top: 1px solid #ccc; padding-top: 16px; }
+  h2 { margin: 0 0 12px; font-size: 1rem; }
+</style>
+</head>
+<body>
+<h1>Bluesky API Service</h1>
+
+<section id="login-section">
+  <h2>Login</h2>
+  <input id="handle" type="text" placeholder="alice.bsky.social" />
+  <button onclick="login()">Login with Bluesky</button>
+</section>
+
+<section id="me-section">
+  <h2>Session</h2>
+  <button onclick="me()">Check /auth/me</button>
+  <button onclick="logout()">Logout</button>
+</section>
+
+<section>
+  <h2>Create Post</h2>
+  <textarea id="post-text" rows="3" placeholder="Hello #world"></textarea>
+  <button onclick="createPost()">Post</button>
+</section>
+
+<section>
+  <h2>Delete Post</h2>
+  <input id="delete-rkey" type="text" placeholder="rkey (e.g. 3abc...)" />
+  <button onclick="deletePost()">Delete</button>
+</section>
+
+<section>
+  <h2>Like</h2>
+  <input id="like-uri" type="text" placeholder="at://did:.../app.bsky.feed.post/rkey" />
+  <input id="like-cid" type="text" placeholder="bafyrei..." />
+  <button onclick="createLike()">Like</button>
+  &nbsp;
+  <input id="unlike-rkey" type="text" placeholder="like rkey to remove" />
+  <button onclick="deleteLike()">Unlike</button>
+</section>
+
+<section>
+  <h2>Repost</h2>
+  <input id="repost-uri" type="text" placeholder="at://did:.../app.bsky.feed.post/rkey" />
+  <input id="repost-cid" type="text" placeholder="bafyrei..." />
+  <button onclick="createRepost()">Repost</button>
+  &nbsp;
+  <input id="unrepost-rkey" type="text" placeholder="repost rkey to remove" />
+  <button onclick="deleteRepost()">Unrepost</button>
+</section>
+
+<div id="status">Output will appear here.</div>
+
+<script>
+function show(v) {
+  document.getElementById('status').textContent = JSON.stringify(v, null, 2);
+}
+
+async function api(method, path, body) {
+  const opts = { method, credentials: 'include', headers: { 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(path, opts);
+  return r.json();
+}
+
+async function login() {
+  const handle = document.getElementById('handle').value.trim();
+  const data = await api('POST', '/auth/login', { handle });
+  if (data.redirect_url) {
+    window.location.href = data.redirect_url;
+  } else {
+    show(data);
+  }
+}
+
+async function me() { show(await api('GET', '/auth/me')); }
+async function logout() { show(await api('POST', '/auth/logout')); }
+
+async function createPost() {
+  const text = document.getElementById('post-text').value;
+  show(await api('POST', '/bsky/post', { text }));
+}
+
+async function deletePost() {
+  const rkey = document.getElementById('delete-rkey').value.trim();
+  show(await api('DELETE', '/bsky/post', { rkey }));
+}
+
+async function createLike() {
+  const uri = document.getElementById('like-uri').value.trim();
+  const cid = document.getElementById('like-cid').value.trim();
+  show(await api('POST', '/bsky/like', { uri, cid }));
+}
+
+async function deleteLike() {
+  const rkey = document.getElementById('unlike-rkey').value.trim();
+  show(await api('DELETE', '/bsky/like', { rkey }));
+}
+
+async function createRepost() {
+  const uri = document.getElementById('repost-uri').value.trim();
+  const cid = document.getElementById('repost-cid').value.trim();
+  show(await api('POST', '/bsky/repost', { uri, cid }));
+}
+
+async function deleteRepost() {
+  const rkey = document.getElementById('unrepost-rkey').value.trim();
+  show(await api('DELETE', '/bsky/repost', { rkey }));
+}
+</script>
+</body>
+</html>
