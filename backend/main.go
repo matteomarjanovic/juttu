@@ -87,6 +87,8 @@ func runServer(ctx context.Context, cmd *cli.Command) error {
 		"repo:app.bsky.feed.like?action=delete",
 		"repo:app.bsky.feed.repost?action=create",
 		"repo:app.bsky.feed.repost?action=delete",
+		"repo:site.standard.document?action=create",
+		"repo:site.standard.document?action=update",
 	}
 	bind := ":8080"
 
@@ -180,6 +182,8 @@ func runServer(ctx context.Context, cmd *cli.Command) error {
 	mux.HandleFunc("POST /bsky/repost", srv.CreateRepost)
 	mux.HandleFunc("DELETE /bsky/repost", srv.DeleteRepost)
 
+	mux.HandleFunc("PUT /atproto/document", srv.PutDocument)
+
 	slog.Info("starting http server", "bind", bind)
 	if err := http.ListenAndServe(bind, corsMiddleware(mux)); err != nil {
 		slog.Error("http shutdown", "err", err)
@@ -193,7 +197,7 @@ func corsMiddleware(next http.Handler) http.Handler {
 		if origin != "" {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
 			w.Header().Set("Access-Control-Allow-Credentials", "true")
-			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 		}
 		if r.Method == http.MethodOptions {

@@ -82,8 +82,14 @@ interface CurrentUser {
 }
 
 interface DocumentRecord {
+	$type?: string;
 	bskyPostRef?: { uri: string; cid: string };
 	path?: string;
+	site?: string;
+	title?: string;
+	description?: string;
+	publishedAt?: string;
+	updatedAt?: string;
 }
 
 interface ViewerState {
@@ -391,6 +397,62 @@ const STYLES = `
 .juttu-error { padding: 1rem; color: #c0392b; font-size: 0.875rem; background: #fdf0ee; border-radius: var(--juttu-radius); border: 1px solid #f5c6c0; }
 @keyframes juttu-pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.06); } }
 .juttu-login-btn--pulse { animation: juttu-pulse 0.35s ease-in-out 2; }
+.juttu-linking { padding: 0.5rem 0; }
+.juttu-linking-title { font-size: 0.9375rem; font-weight: 600; margin: 0 0 0.375rem; color: var(--juttu-text); }
+.juttu-linking-desc { font-size: 0.875rem; color: var(--juttu-text-muted); margin: 0 0 1rem; }
+.juttu-linking-start-btn {
+  background: var(--juttu-accent-color); color: #fff; border: none;
+  border-radius: var(--juttu-radius); padding: 0.45rem 1.1rem;
+  cursor: pointer; font-size: 0.875rem; font-family: var(--juttu-font-family);
+  font-weight: 500; transition: opacity 0.15s;
+}
+.juttu-linking-start-btn:hover { opacity: 0.88; }
+.juttu-linking-methods { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+.juttu-linking-method-btn {
+  flex: 1; min-width: 140px; border: 1px solid var(--juttu-border-color);
+  border-radius: var(--juttu-radius); padding: 0.75rem 1rem;
+  background: var(--juttu-surface); cursor: pointer; text-align: left;
+  font-family: var(--juttu-font-family); color: var(--juttu-text); transition: border-color 0.15s;
+}
+.juttu-linking-method-btn:hover { border-color: var(--juttu-accent-color); }
+.juttu-linking-method-title { font-size: 0.875rem; font-weight: 600; margin-bottom: 0.2rem; }
+.juttu-linking-method-desc { font-size: 0.75rem; color: var(--juttu-text-muted); }
+.juttu-linking-field { margin-bottom: 0.75rem; }
+.juttu-linking-label { display: block; font-size: 0.8rem; font-weight: 500; margin-bottom: 0.3rem; color: var(--juttu-text); }
+.juttu-linking-input {
+  width: 100%; border: 1px solid var(--juttu-border-color); border-radius: var(--juttu-radius);
+  padding: 0.4rem 0.65rem; font-family: var(--juttu-font-family); font-size: 0.875rem;
+  background: var(--juttu-surface); color: var(--juttu-text); transition: border-color 0.15s;
+}
+.juttu-linking-input:focus { outline: none; border-color: var(--juttu-accent-color); }
+.juttu-linking-input::placeholder { color: var(--juttu-text-muted); }
+.juttu-linking-textarea {
+  width: 100%; border: 1px solid var(--juttu-border-color); border-radius: var(--juttu-radius);
+  padding: 0.5rem 0.65rem; font-family: var(--juttu-font-family); font-size: 0.875rem;
+  background: var(--juttu-surface); color: var(--juttu-text); resize: vertical;
+  min-height: 5rem; transition: border-color 0.15s;
+}
+.juttu-linking-textarea:focus { outline: none; border-color: var(--juttu-accent-color); }
+.juttu-linking-textarea::placeholder { color: var(--juttu-text-muted); }
+.juttu-linking-continue-btn {
+  background: var(--juttu-accent-color); color: #fff; border: none;
+  border-radius: var(--juttu-radius); padding: 0.4rem 1rem;
+  cursor: pointer; font-size: 0.875rem; font-family: var(--juttu-font-family);
+  font-weight: 500; transition: opacity 0.15s;
+}
+.juttu-linking-continue-btn:hover:not(:disabled) { opacity: 0.88; }
+.juttu-linking-continue-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.juttu-linking-post-list { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem; }
+.juttu-linking-post-item {
+  border: 1px solid var(--juttu-border-color); border-radius: var(--juttu-radius);
+  padding: 0.6rem 0.75rem; cursor: pointer; background: var(--juttu-surface);
+  text-align: left; width: 100%; font-family: var(--juttu-font-family); transition: border-color 0.15s;
+}
+.juttu-linking-post-item:hover { border-color: var(--juttu-accent-color); }
+.juttu-linking-post-text { font-size: 0.875rem; color: var(--juttu-text); margin-bottom: 0.2rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+.juttu-linking-post-date { font-size: 0.75rem; color: var(--juttu-text-muted); }
+.juttu-linking-error { font-size: 0.8rem; color: #c0392b; margin-top: 0.5rem; }
+.juttu-linking-spinner { font-size: 0.875rem; color: var(--juttu-text-muted); }
 `;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -425,13 +487,14 @@ async function resolveDid(did: string): Promise<string> {
 	return pds.serviceEndpoint;
 }
 
-async function fetchDocumentRecord(pdsUrl: string, atUri: AtUri): Promise<DocumentRecord> {
+async function fetchDocumentRecord(pdsUrl: string, atUri: AtUri): Promise<DocumentRecord | null> {
 	const url =
 		`${pdsUrl}/xrpc/com.atproto.repo.getRecord` +
 		`?repo=${encodeURIComponent(atUri.did)}` +
 		`&collection=${encodeURIComponent(atUri.collection)}` +
 		`&rkey=${encodeURIComponent(atUri.rkey)}`;
 	const res = await fetch(url);
+	if (res.status >= 400 && res.status < 500) return null;
 	if (!res.ok) throw new Error(`Failed to fetch document record: ${res.status}`);
 	const data = await res.json();
 	return data.value as DocumentRecord;
@@ -608,6 +671,13 @@ export class JuttuWidget {
 	private loginPollInterval: ReturnType<typeof setInterval> | null = null;
 	private loginPollStartTime = 0;
 	private authMessageHandler: ((e: MessageEvent) => void) | null = null;
+	// Document linking state
+	private documentAtUri: AtUri | null = null;
+	private documentRecord: DocumentRecord | null = null;
+	private linkingStep: 'setup' | 'login' | 'metadata' | 'choose-method' | 'write-post' | 'select-post' = 'setup';
+	private linkingTitle = '';
+	private linkingDescription = '';
+	private userPosts: Array<{ uri: string; cid: string; text: string; createdAt: string }> = [];
 
 	constructor(container: HTMLElement, config: JuttuConfig) {
 		this.container = container;
@@ -648,21 +718,29 @@ export class JuttuWidget {
 			}
 			const pdsUrl = await resolveDid(atUri.did);
 			const docRecord = await fetchDocumentRecord(pdsUrl, atUri);
-			if (!docRecord.bskyPostRef?.uri) {
-				this.renderError('This article has no linked Bluesky post yet.');
-				return;
+			if (docRecord?.bskyPostRef?.uri) {
+				this.rootPostUri = docRecord.bskyPostRef.uri;
+				this.rootPostCid = docRecord.bskyPostRef.cid;
+				const [user, thread] = await Promise.all([
+					checkCurrentUser(this.config.apiUrl),
+					fetchThread(docRecord.bskyPostRef.uri)
+				]);
+				this.currentUser = user;
+				this.threadData = thread;
+				collectViewerState(thread, this.viewerState);
+				this.renderWidget();
+			} else {
+				// No bskyPostRef (or no record) — enter document linking flow
+				this.documentAtUri = atUri;
+				this.documentRecord = docRecord;
+				this.linkingStep = 'setup';
+				const user = await checkCurrentUser(this.config.apiUrl);
+				if (user) {
+					const avatar = await fetchUserAvatar(user.handle);
+					this.currentUser = { ...user, avatar };
+				}
+				this.renderLinkingUI();
 			}
-			this.rootPostUri = docRecord.bskyPostRef.uri;
-			this.rootPostCid = docRecord.bskyPostRef.cid;
-
-			const [user, thread] = await Promise.all([
-				checkCurrentUser(this.config.apiUrl),
-				fetchThread(docRecord.bskyPostRef.uri)
-			]);
-			this.currentUser = user;
-			this.threadData = thread;
-			collectViewerState(thread, this.viewerState);
-			this.renderWidget();
 		} catch (err) {
 			const message = err instanceof Error ? err.message : 'Unknown error';
 			this.renderError(`Could not load comments: ${message}`);
@@ -1107,7 +1185,10 @@ export class JuttuWidget {
 	// ─── Login ───────────────────────────────────────────────────────────────────
 
 	private getComposer(): HTMLElement | null {
-		return this.container.querySelector<HTMLElement>('.juttu-composer');
+		return (
+			this.container.querySelector<HTMLElement>('.juttu-composer') ??
+			this.container.querySelector<HTMLElement>('.juttu-linking')
+		);
 	}
 
 	private showLoginForm(): void {
@@ -1239,18 +1320,24 @@ export class JuttuWidget {
 		const avatar = await fetchUserAvatar(user.handle);
 		this.currentUser = { ...user, avatar };
 
-		// Swap composer in-place
-		const composer = this.getComposer();
-		if (composer) {
-			composer.innerHTML = '';
-			composer.appendChild(this.makeComposeArea());
-			// Re-attach input listener for the new textarea
-			const textarea = composer.querySelector<HTMLTextAreaElement>('.juttu-compose-input');
-			const submitBtn = composer.querySelector<HTMLButtonElement>('.juttu-submit-btn');
-			if (textarea && submitBtn) {
-				textarea.addEventListener('input', () => {
-					submitBtn.disabled = !textarea.value.trim();
-				});
+		if (this.documentAtUri) {
+			// Linking mode: advance to the appropriate step
+			this.linkingStep = !this.documentRecord ? 'metadata' : 'choose-method';
+			this.renderLinkingUI();
+		} else {
+			// Normal mode: swap composer in-place
+			const composer = this.getComposer();
+			if (composer) {
+				composer.innerHTML = '';
+				composer.appendChild(this.makeComposeArea());
+				// Re-attach input listener for the new textarea
+				const textarea = composer.querySelector<HTMLTextAreaElement>('.juttu-compose-input');
+				const submitBtn = composer.querySelector<HTMLButtonElement>('.juttu-submit-btn');
+				if (textarea && submitBtn) {
+					textarea.addEventListener('input', () => {
+						submitBtn.disabled = !textarea.value.trim();
+					});
+				}
 			}
 		}
 	}
@@ -1267,10 +1354,16 @@ export class JuttuWidget {
 		try { this.loginPopup?.close(); } catch { /* ignore */ }
 		this.loginPopup = null;
 
-		const composer = this.getComposer();
-		if (composer) {
-			composer.innerHTML = '';
-			composer.appendChild(this.makeLoginArea());
+		if (this.documentAtUri) {
+			// Linking mode: stay on login step so user can retry
+			this.linkingStep = 'login';
+			this.renderLinkingUI();
+		} else {
+			const composer = this.getComposer();
+			if (composer) {
+				composer.innerHTML = '';
+				composer.appendChild(this.makeLoginArea());
+			}
 		}
 	}
 
@@ -1596,6 +1689,461 @@ export class JuttuWidget {
 		errEl.textContent = message;
 		nearEl.insertAdjacentElement('afterend', errEl);
 		setTimeout(() => errEl.remove(), 4000);
+	}
+
+	// ─── Document Linking ────────────────────────────────────────────────────────
+
+	private renderLinkingUI(): void {
+		this.container.innerHTML = '';
+		const root = this.makeRoot();
+
+		const linking = document.createElement('div');
+		linking.className = 'juttu-linking';
+
+		switch (this.linkingStep) {
+			case 'setup':
+				linking.appendChild(this.makeLinkingSetup());
+				break;
+			case 'login':
+				linking.appendChild(this.makeLinkingLoginForm());
+				break;
+			case 'metadata':
+				linking.appendChild(this.makeLinkingMetadata());
+				break;
+			case 'choose-method':
+				linking.appendChild(this.makeLinkingChooseMethod());
+				break;
+			case 'write-post':
+				linking.appendChild(this.makeLinkingWritePost());
+				break;
+			case 'select-post':
+				linking.appendChild(this.makeLinkingSelectPost());
+				break;
+		}
+
+		root.appendChild(linking);
+
+		root.addEventListener('click', (e) => this.handleLinkingClick(e));
+		root.addEventListener('keydown', (e) => {
+			const target = e.target as HTMLElement;
+			if (target.classList.contains('juttu-handle-input') && (e as KeyboardEvent).key === 'Enter') {
+				this.handleLoginSubmit();
+			}
+		});
+
+		const footer = document.createElement('div');
+		footer.className = 'juttu-footer';
+		const poweredBy = document.createElement('a');
+		poweredBy.className = 'juttu-powered-by';
+		poweredBy.href = 'https://juttu.app';
+		poweredBy.target = '_blank';
+		poweredBy.rel = 'noopener noreferrer';
+		poweredBy.textContent = 'Powered by Juttu';
+		footer.appendChild(poweredBy);
+		root.appendChild(footer);
+
+		this.container.appendChild(root);
+	}
+
+	private makeLinkingSetup(): HTMLElement {
+		const el = document.createElement('div');
+		const title = document.createElement('p');
+		title.className = 'juttu-linking-title';
+		const desc = document.createElement('p');
+		desc.className = 'juttu-linking-desc';
+		if (this.documentRecord) {
+			title.textContent = 'Comments not linked yet';
+			desc.textContent = 'Link this article to a Bluesky post to enable the comment thread.';
+		} else {
+			title.textContent = 'Comments not set up yet';
+			desc.textContent = 'Set up a Bluesky-powered comment thread for this article.';
+		}
+		el.appendChild(title);
+		el.appendChild(desc);
+		const btn = document.createElement('button');
+		btn.className = 'juttu-linking-start-btn';
+		btn.textContent = this.documentRecord ? 'Link comments' : 'Set up comments';
+		el.appendChild(btn);
+		return el;
+	}
+
+	private makeLinkingLoginForm(): HTMLElement {
+		const el = document.createElement('div');
+		const title = document.createElement('p');
+		title.className = 'juttu-linking-title';
+		title.textContent = 'Sign in as the document owner';
+		el.appendChild(title);
+
+		const form = document.createElement('div');
+		form.className = 'juttu-login-form';
+		const input = document.createElement('input');
+		input.type = 'text';
+		input.className = 'juttu-handle-input';
+		input.placeholder = 'yourhandle.bsky.social';
+		input.autocomplete = 'username';
+		form.appendChild(input);
+		const submit = document.createElement('button');
+		submit.className = 'juttu-login-submit';
+		submit.textContent = 'Login →';
+		form.appendChild(submit);
+		el.appendChild(form);
+		return el;
+	}
+
+	private makeLinkingMetadata(): HTMLElement {
+		const el = document.createElement('div');
+		const title = document.createElement('p');
+		title.className = 'juttu-linking-title';
+		title.textContent = 'Article details';
+		el.appendChild(title);
+
+		const titleField = document.createElement('div');
+		titleField.className = 'juttu-linking-field';
+		const titleLabel = document.createElement('label');
+		titleLabel.className = 'juttu-linking-label';
+		titleLabel.textContent = 'Title *';
+		titleField.appendChild(titleLabel);
+		const titleInput = document.createElement('input');
+		titleInput.type = 'text';
+		titleInput.className = 'juttu-linking-input juttu-linking-title-input';
+		titleInput.placeholder = 'Article title';
+		titleInput.value = this.linkingTitle;
+		titleField.appendChild(titleInput);
+		el.appendChild(titleField);
+
+		const descField = document.createElement('div');
+		descField.className = 'juttu-linking-field';
+		const descLabel = document.createElement('label');
+		descLabel.className = 'juttu-linking-label';
+		descLabel.textContent = 'Description (optional)';
+		descField.appendChild(descLabel);
+		const descInput = document.createElement('input');
+		descInput.type = 'text';
+		descInput.className = 'juttu-linking-input juttu-linking-desc-input';
+		descInput.placeholder = 'Short description';
+		descInput.value = this.linkingDescription;
+		descField.appendChild(descInput);
+		el.appendChild(descField);
+
+		const continueBtn = document.createElement('button');
+		continueBtn.className = 'juttu-linking-continue-btn';
+		continueBtn.textContent = 'Continue';
+		continueBtn.disabled = !this.linkingTitle.trim();
+		el.appendChild(continueBtn);
+
+		// Keep continue button state in sync with title input
+		titleInput.addEventListener('input', () => {
+			continueBtn.disabled = !titleInput.value.trim();
+		});
+
+		return el;
+	}
+
+	private makeLinkingChooseMethod(): HTMLElement {
+		const el = document.createElement('div');
+		const title = document.createElement('p');
+		title.className = 'juttu-linking-title';
+		title.textContent = 'Link a Bluesky post';
+		el.appendChild(title);
+		const desc = document.createElement('p');
+		desc.className = 'juttu-linking-desc';
+		desc.textContent = 'This post becomes the root of the comment thread.';
+		el.appendChild(desc);
+
+		const methods = document.createElement('div');
+		methods.className = 'juttu-linking-methods';
+
+		const writeBtn = document.createElement('button');
+		writeBtn.className = 'juttu-linking-method-btn';
+		writeBtn.dataset.method = 'write';
+		const writeTitle = document.createElement('div');
+		writeTitle.className = 'juttu-linking-method-title';
+		writeTitle.textContent = 'Write a new post';
+		const writeDesc = document.createElement('div');
+		writeDesc.className = 'juttu-linking-method-desc';
+		writeDesc.textContent = 'Compose a post to announce this article';
+		writeBtn.appendChild(writeTitle);
+		writeBtn.appendChild(writeDesc);
+		methods.appendChild(writeBtn);
+
+		const selectBtn = document.createElement('button');
+		selectBtn.className = 'juttu-linking-method-btn';
+		selectBtn.dataset.method = 'select';
+		const selectTitle = document.createElement('div');
+		selectTitle.className = 'juttu-linking-method-title';
+		selectTitle.textContent = 'Use an existing post';
+		const selectDesc = document.createElement('div');
+		selectDesc.className = 'juttu-linking-method-desc';
+		selectDesc.textContent = 'Pick from your recent Bluesky posts';
+		selectBtn.appendChild(selectTitle);
+		selectBtn.appendChild(selectDesc);
+		methods.appendChild(selectBtn);
+
+		el.appendChild(methods);
+		return el;
+	}
+
+	private makeLinkingWritePost(): HTMLElement {
+		const el = document.createElement('div');
+		const title = document.createElement('p');
+		title.className = 'juttu-linking-title';
+		title.textContent = 'Write a post';
+		el.appendChild(title);
+
+		const textarea = document.createElement('textarea');
+		textarea.className = 'juttu-linking-textarea';
+		textarea.placeholder = 'Share this article on Bluesky…';
+		el.appendChild(textarea);
+
+		const actions = document.createElement('div');
+		actions.style.cssText = 'display:flex;gap:0.5rem;margin-top:0.5rem;';
+		const backBtn = document.createElement('button');
+		backBtn.className = 'juttu-linking-back-btn';
+		backBtn.style.cssText = 'background:none;border:1px solid var(--juttu-border-color);border-radius:var(--juttu-radius);padding:0.4rem 0.75rem;cursor:pointer;font-size:0.875rem;color:var(--juttu-text-muted);font-family:var(--juttu-font-family);';
+		backBtn.textContent = '← Back';
+		actions.appendChild(backBtn);
+		const submitBtn = document.createElement('button');
+		submitBtn.className = 'juttu-linking-continue-btn juttu-linking-write-submit';
+		submitBtn.textContent = 'Post & Link';
+		submitBtn.disabled = true;
+		actions.appendChild(submitBtn);
+		el.appendChild(actions);
+
+		textarea.addEventListener('input', () => {
+			submitBtn.disabled = !textarea.value.trim();
+		});
+
+		return el;
+	}
+
+	private makeLinkingSelectPost(): HTMLElement {
+		const el = document.createElement('div');
+		const title = document.createElement('p');
+		title.className = 'juttu-linking-title';
+		title.textContent = 'Select a post';
+		el.appendChild(title);
+
+		const backBtn = document.createElement('button');
+		backBtn.className = 'juttu-linking-back-btn';
+		backBtn.style.cssText = 'background:none;border:1px solid var(--juttu-border-color);border-radius:var(--juttu-radius);padding:0.3rem 0.65rem;cursor:pointer;font-size:0.8rem;color:var(--juttu-text-muted);font-family:var(--juttu-font-family);margin-bottom:0.75rem;';
+		backBtn.textContent = '← Back';
+		el.appendChild(backBtn);
+
+		const list = document.createElement('div');
+		list.className = 'juttu-linking-post-list';
+
+		if (this.userPosts.length === 0) {
+			const empty = document.createElement('p');
+			empty.className = 'juttu-linking-spinner';
+			empty.textContent = 'Loading posts…';
+			list.appendChild(empty);
+		} else {
+			for (const post of this.userPosts) {
+				const item = document.createElement('button');
+				item.className = 'juttu-linking-post-item';
+				item.dataset.uri = post.uri;
+				item.dataset.cid = post.cid;
+				const text = document.createElement('div');
+				text.className = 'juttu-linking-post-text';
+				text.textContent = post.text.length > 180 ? post.text.slice(0, 180) + '…' : post.text;
+				const date = document.createElement('div');
+				date.className = 'juttu-linking-post-date';
+				date.textContent = formatRelativeTime(post.createdAt);
+				item.appendChild(text);
+				item.appendChild(date);
+				list.appendChild(item);
+			}
+		}
+		el.appendChild(list);
+		return el;
+	}
+
+	private handleLinkingClick(e: MouseEvent): void {
+		const target = e.target as HTMLElement;
+
+		// Start linking
+		if (target.closest('.juttu-linking-start-btn')) {
+			if (!this.currentUser) {
+				this.linkingStep = 'login';
+			} else if (!this.documentRecord) {
+				this.linkingStep = 'metadata';
+			} else {
+				this.linkingStep = 'choose-method';
+			}
+			this.renderLinkingUI();
+			return;
+		}
+
+		// Login form (reuses existing handlers)
+		if (target.closest('.juttu-login-submit')) { this.handleLoginSubmit(); return; }
+
+		// Metadata continue
+		if (target.closest('.juttu-linking-continue-btn') && !target.closest('.juttu-linking-write-submit')) {
+			const titleInput = this.container.querySelector<HTMLInputElement>('.juttu-linking-title-input');
+			const descInput = this.container.querySelector<HTMLInputElement>('.juttu-linking-desc-input');
+			const title = titleInput?.value.trim() ?? '';
+			if (!title) return;
+			this.linkingTitle = title;
+			this.linkingDescription = descInput?.value.trim() ?? '';
+			this.linkingStep = 'choose-method';
+			this.renderLinkingUI();
+			return;
+		}
+
+		// Choose method
+		const methodBtn = target.closest<HTMLElement>('.juttu-linking-method-btn');
+		if (methodBtn) {
+			if (methodBtn.dataset.method === 'write') {
+				this.linkingStep = 'write-post';
+				this.renderLinkingUI();
+			} else if (methodBtn.dataset.method === 'select') {
+				this.linkingStep = 'select-post';
+				this.userPosts = [];
+				this.renderLinkingUI();
+				this.fetchUserPostsAndRender();
+			}
+			return;
+		}
+
+		// Write post submit
+		if (target.closest('.juttu-linking-write-submit')) {
+			const textarea = this.container.querySelector<HTMLTextAreaElement>('.juttu-linking-textarea');
+			const text = textarea?.value.trim() ?? '';
+			if (!text) return;
+			this.handleLinkingCreatePost(text);
+			return;
+		}
+
+		// Select post item
+		const postItem = target.closest<HTMLElement>('.juttu-linking-post-item');
+		if (postItem) {
+			const uri = postItem.dataset.uri;
+			const cid = postItem.dataset.cid;
+			if (uri && cid) this.callPutDocument(uri, cid);
+			return;
+		}
+
+		// Back button
+		if (target.closest('.juttu-linking-back-btn')) {
+			this.linkingStep = 'choose-method';
+			this.renderLinkingUI();
+			return;
+		}
+	}
+
+	private async fetchUserPostsAndRender(): Promise<void> {
+		if (!this.currentUser) return;
+		try {
+			const res = await fetch(
+				`https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed` +
+					`?actor=${encodeURIComponent(this.currentUser.handle)}` +
+					`&filter=posts_no_replies&limit=20`
+			);
+			if (!res.ok) throw new Error(`Failed to fetch posts: ${res.status}`);
+			const data = await res.json() as { feed: Array<{ post: BskyPost; reason?: { $type: string } }> };
+			this.userPosts = data.feed
+				.filter((item) => !item.reason) // exclude reposts
+				.map((item) => ({
+					uri: item.post.uri,
+					cid: item.post.cid,
+					text: item.post.record.text,
+					createdAt: item.post.record.createdAt
+				}));
+			if (this.linkingStep === 'select-post') this.renderLinkingUI();
+		} catch (err) {
+			if (this.linkingStep === 'select-post') {
+				const list = this.container.querySelector('.juttu-linking-post-list');
+				if (list) {
+					list.innerHTML = '';
+					const errEl = document.createElement('p');
+					errEl.className = 'juttu-linking-error';
+					errEl.textContent = err instanceof Error ? err.message : 'Failed to load posts';
+					list.appendChild(errEl);
+				}
+			}
+		}
+	}
+
+	private async handleLinkingCreatePost(text: string): Promise<void> {
+		const submitBtn = this.container.querySelector<HTMLButtonElement>('.juttu-linking-write-submit');
+		if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Posting…'; }
+
+		try {
+			const res = await fetch(`${this.config.apiUrl}/bsky/post`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				credentials: 'include',
+				body: JSON.stringify({ text })
+			}).then(this.checkApiResponse);
+			const data = await res.json() as { uri: string; cid: string };
+			await this.callPutDocument(data.uri, data.cid);
+		} catch (err) {
+			if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Post & Link'; }
+			const errEl = document.createElement('p');
+			errEl.className = 'juttu-linking-error';
+			errEl.textContent = err instanceof Error ? err.message : 'Failed to post';
+			this.container.querySelector('.juttu-linking')?.appendChild(errEl);
+		}
+	}
+
+	private async callPutDocument(postUri: string, postCid: string): Promise<void> {
+		if (!this.documentAtUri) return;
+
+		// Show loading indicator
+		const linking = this.container.querySelector('.juttu-linking');
+		if (linking) {
+			const spinner = document.createElement('p');
+			spinner.className = 'juttu-linking-spinner';
+			spinner.textContent = 'Linking…';
+			linking.appendChild(spinner);
+		}
+
+		const bskyPostRef = { uri: postUri, cid: postCid };
+		const now = new Date().toISOString();
+
+		let record: Record<string, unknown>;
+		if (this.documentRecord) {
+			// Mode A: update existing record — preserve all fields, add bskyPostRef
+			record = { ...this.documentRecord, bskyPostRef, updatedAt: now };
+		} else {
+			// Mode B: create new record
+			record = {
+				$type: 'site.standard.document',
+				site: window.location.origin,
+				title: this.linkingTitle,
+				description: this.linkingDescription || undefined,
+				path: window.location.pathname || undefined,
+				publishedAt: now,
+				updatedAt: now,
+				bskyPostRef
+			};
+		}
+
+		try {
+			await fetch(`${this.config.apiUrl}/atproto/document`, {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				credentials: 'include',
+				body: JSON.stringify({ rkey: this.documentAtUri.rkey, record })
+			}).then(this.checkApiResponse);
+
+			// Success — transition to comments view
+			this.documentAtUri = null;
+			this.documentRecord = null;
+			this.rootPostUri = postUri;
+			this.rootPostCid = postCid;
+			const thread = await fetchThread(postUri);
+			this.threadData = thread;
+			collectViewerState(thread, this.viewerState);
+			this.renderWidget();
+		} catch (err) {
+			const linking2 = this.container.querySelector('.juttu-linking');
+			linking2?.querySelector('.juttu-linking-spinner')?.remove();
+			const errEl = document.createElement('p');
+			errEl.className = 'juttu-linking-error';
+			errEl.textContent = err instanceof Error ? err.message : 'Failed to link document';
+			linking2?.appendChild(errEl);
+		}
 	}
 
 	public destroy(): void {
