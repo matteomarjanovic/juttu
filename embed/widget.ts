@@ -55,7 +55,6 @@ export class JuttuWidget {
 	private loginPopup: Window | null = null;
 	private loginPollInterval: ReturnType<typeof setInterval> | null = null;
 	private loginPollStartTime = 0;
-	private authMessageHandler: ((e: MessageEvent) => void) | null = null;
 	// Document linking state
 	private documentAtUri: AtUri | null = null;
 	private documentRecord: DocumentRecord | null = null;
@@ -194,13 +193,6 @@ export class JuttuWidget {
 				if (btn) btn.disabled = !(target as HTMLTextAreaElement).value.trim();
 			}
 		});
-		root.addEventListener('keydown', (e) => {
-			const target = e.target as HTMLElement;
-			if (target.classList.contains('juttu-handle-input') && (e as KeyboardEvent).key === 'Enter') {
-				this.handleLoginSubmit();
-			}
-		});
-
 		this.container.appendChild(root);
 	}
 
@@ -233,12 +225,7 @@ export class JuttuWidget {
 		}
 
 		// Login flow
-		if (target.closest('.juttu-login-btn')) { this.showLoginForm(); return; }
-		if (target.closest('.juttu-login-submit')) { this.handleLoginSubmit(); return; }
-		if (target.closest('.juttu-login-cancel') || target.closest('.juttu-login-cancel-poll')) {
-			this.cancelLogin();
-			return;
-		}
+		if (target.closest('.juttu-login-btn')) { this.openLoginPopup(); return; }
 
 		// Logout
 		if (target.closest('.juttu-logout-btn')) { this.handleLogout(); return; }
@@ -576,102 +563,14 @@ export class JuttuWidget {
 		);
 	}
 
-	private showLoginForm(): void {
-		const composer = this.getComposer();
-		if (!composer) return;
-		composer.innerHTML = '';
-
-		const form = document.createElement('div');
-		form.className = 'juttu-login-form';
-
-		const input = document.createElement('input');
-		input.type = 'text';
-		input.className = 'juttu-handle-input';
-		input.placeholder = 'yourhandle.bsky.social';
-		input.autocomplete = 'username';
-		form.appendChild(input);
-
-		const submitBtn = document.createElement('button');
-		submitBtn.className = 'juttu-login-submit';
-		submitBtn.textContent = 'Login →';
-		form.appendChild(submitBtn);
-
-		const cancelBtn = document.createElement('button');
-		cancelBtn.className = 'juttu-login-cancel';
-		cancelBtn.textContent = 'Cancel';
-		form.appendChild(cancelBtn);
-
-		composer.appendChild(form);
-		input.focus();
-	}
-
-	private async handleLoginSubmit(): Promise<void> {
-		const composer = this.getComposer();
-		if (!composer) return;
-		const input = composer.querySelector<HTMLInputElement>('.juttu-handle-input');
-		const submitBtn = composer.querySelector<HTMLButtonElement>('.juttu-login-submit');
-		if (!input || !submitBtn) return;
-
-		const rawHandle = input.value.trim().replace(/^@/, '');
-		if (!rawHandle) { input.focus(); return; }
-
-		submitBtn.disabled = true;
-		submitBtn.textContent = 'Opening…';
-
-		// Remove any previous error
-		composer.querySelector('.juttu-login-error')?.remove();
-
-		try {
-			const res = await fetch(`${this.config.apiUrl}/auth/login`, {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				credentials: 'include',
-				body: JSON.stringify({ handle: rawHandle })
-			});
-			if (!res.ok) {
-				const data = await res.json().catch(() => ({}));
-				throw new Error((data as { error?: string }).error ?? `Login failed (${res.status})`);
-			}
-			const data = await res.json() as { redirect_url: string };
-
-			this.loginPopup = window.open(
-				data.redirect_url,
-				'juttu-auth',
-				'width=600,height=700,menubar=no,toolbar=no,location=no,status=no'
-			);
-
-			// Show waiting state
-			composer.innerHTML = '';
-			const waiting = document.createElement('div');
-			waiting.className = 'juttu-login-waiting';
-			const msg = document.createElement('span');
-			msg.textContent = 'Waiting for Bluesky authorization…';
-			waiting.appendChild(msg);
-			const cancelBtn = document.createElement('button');
-			cancelBtn.className = 'juttu-login-cancel-poll';
-			cancelBtn.textContent = 'Cancel';
-			waiting.appendChild(cancelBtn);
-			composer.appendChild(waiting);
-
-			// Primary signal: postMessage from the callback HTML page
-			this.authMessageHandler = (e: MessageEvent) => {
-				if (e.data?.type === 'juttu-auth-complete') {
-					this.onAuthComplete();
-				}
-			};
-			window.addEventListener('message', this.authMessageHandler);
-
-			// Fallback polling (handles cases where postMessage doesn't fire)
-			this.loginPollStartTime = Date.now();
-			this.loginPollInterval = setInterval(() => this.pollForLogin(), LOGIN_POLL_INTERVAL_MS);
-		} catch (err) {
-			submitBtn.disabled = false;
-			submitBtn.textContent = 'Login →';
-			const errEl = document.createElement('div');
-			errEl.className = 'juttu-login-error';
-			errEl.textContent = err instanceof Error ? err.message : 'Login failed';
-			composer.appendChild(errEl);
-		}
+	private openLoginPopup(): void {
+		this.loginPopup = window.open(
+			`${this.config.apiUrl}/login`,
+			'juttu-auth',
+			'width=500,height=600,menubar=no,toolbar=no,location=no,status=no'
+		);
+		this.loginPollStartTime = Date.now();
+		this.loginPollInterval = setInterval(() => this.pollForLogin(), LOGIN_POLL_INTERVAL_MS);
 	}
 
 	private async onAuthComplete(): Promise<void> {
@@ -693,10 +592,6 @@ export class JuttuWidget {
 		if (this.loginPollInterval !== null) {
 			clearInterval(this.loginPollInterval);
 			this.loginPollInterval = null;
-		}
-		if (this.authMessageHandler) {
-			window.removeEventListener('message', this.authMessageHandler);
-			this.authMessageHandler = null;
 		}
 		try { this.loginPopup?.close(); } catch { /* cross-origin popup close may throw */ }
 		this.loginPopup = null;
@@ -731,10 +626,6 @@ export class JuttuWidget {
 		if (this.loginPollInterval !== null) {
 			clearInterval(this.loginPollInterval);
 			this.loginPollInterval = null;
-		}
-		if (this.authMessageHandler) {
-			window.removeEventListener('message', this.authMessageHandler);
-			this.authMessageHandler = null;
 		}
 		try { this.loginPopup?.close(); } catch { /* ignore */ }
 		this.loginPopup = null;
@@ -776,16 +667,7 @@ export class JuttuWidget {
 
 	private requireAuth(): boolean {
 		if (!this.currentUser) {
-			const composer = this.container.querySelector<HTMLElement>('.juttu-composer');
-			composer?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-			const loginBtn = this.container.querySelector<HTMLElement>('.juttu-login-btn');
-			if (loginBtn) {
-				loginBtn.classList.remove('juttu-login-btn--pulse');
-				// Force reflow to restart animation
-				void (loginBtn as HTMLElement).offsetWidth;
-				loginBtn.classList.add('juttu-login-btn--pulse');
-				setTimeout(() => loginBtn.classList.remove('juttu-login-btn--pulse'), 800);
-			}
+			this.openLoginPopup();
 			return false;
 		}
 		return true;
@@ -1159,19 +1041,10 @@ export class JuttuWidget {
 		title.textContent = 'Sign in as the document owner';
 		el.appendChild(title);
 
-		const form = document.createElement('div');
-		form.className = 'juttu-login-form';
-		const input = document.createElement('input');
-		input.type = 'text';
-		input.className = 'juttu-handle-input';
-		input.placeholder = 'yourhandle.bsky.social';
-		input.autocomplete = 'username';
-		form.appendChild(input);
-		const submit = document.createElement('button');
-		submit.className = 'juttu-login-submit';
-		submit.textContent = 'Login →';
-		form.appendChild(submit);
-		el.appendChild(form);
+		const btn = document.createElement('button');
+		btn.className = 'juttu-linking-login-btn';
+		btn.textContent = 'Login with Bluesky →';
+		el.appendChild(btn);
 		return el;
 	}
 
@@ -1359,8 +1232,8 @@ export class JuttuWidget {
 			return;
 		}
 
-		// Login form (reuses existing handlers)
-		if (target.closest('.juttu-login-submit')) { this.handleLoginSubmit(); return; }
+		// Login
+		if (target.closest('.juttu-linking-login-btn')) { this.openLoginPopup(); return; }
 
 		// Metadata continue
 		if (target.closest('.juttu-linking-continue-btn') && !target.closest('.juttu-linking-write-submit')) {
@@ -1533,7 +1406,6 @@ export class JuttuWidget {
 
 	public destroy(): void {
 		if (this.loginPollInterval !== null) clearInterval(this.loginPollInterval);
-		if (this.authMessageHandler) window.removeEventListener('message', this.authMessageHandler);
 		try { this.loginPopup?.close(); } catch { /* ignore */ }
 		this.container.innerHTML = '';
 	}

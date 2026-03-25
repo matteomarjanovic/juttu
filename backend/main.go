@@ -23,6 +23,9 @@ import (
 //go:embed index.html
 var indexHTML []byte
 
+//go:embed login.html
+var loginHTML []byte
+
 func main() {
 	app := cli.Command{
 		Name:   "bsky-api-service",
@@ -166,6 +169,11 @@ func runServer(ctx context.Context, cmd *cli.Command) error {
 			w.Write(indexHTML)
 		})
 	}
+
+	mux.HandleFunc("GET /login", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Write(loginHTML)
+	})
 
 	mux.HandleFunc("GET /oauth-client-metadata.json", srv.ClientMetadata)
 	mux.HandleFunc("GET /oauth/jwks.json", srv.JWKS)

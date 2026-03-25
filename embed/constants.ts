@@ -116,46 +116,6 @@ export const STYLES = `
   transition: opacity 0.15s;
 }
 .juttu-login-btn:hover { opacity: 0.88; }
-.juttu-login-form { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
-.juttu-handle-input {
-  flex: 1;
-  min-width: 160px;
-  border: 1px solid var(--juttu-border-color);
-  border-radius: var(--juttu-radius);
-  padding: 0.4rem 0.65rem;
-  font-family: var(--juttu-font-family);
-  font-size: 0.875rem;
-  background: var(--juttu-surface);
-  color: var(--juttu-text);
-}
-.juttu-handle-input:focus { outline: none; border-color: var(--juttu-accent-color); }
-.juttu-handle-input::placeholder { color: var(--juttu-text-muted); }
-.juttu-login-submit {
-  background: var(--juttu-accent-color);
-  color: #fff;
-  border: none;
-  border-radius: var(--juttu-radius);
-  padding: 0.4rem 0.85rem;
-  cursor: pointer;
-  font-size: 0.875rem;
-  font-family: var(--juttu-font-family);
-  white-space: nowrap;
-  transition: opacity 0.15s;
-}
-.juttu-login-submit:hover:not(:disabled) { opacity: 0.88; }
-.juttu-login-submit:disabled { opacity: 0.5; cursor: not-allowed; }
-.juttu-login-cancel, .juttu-login-cancel-poll {
-  background: none;
-  border: 1px solid var(--juttu-border-color);
-  border-radius: var(--juttu-radius);
-  padding: 0.4rem 0.65rem;
-  cursor: pointer;
-  font-size: 0.875rem;
-  color: var(--juttu-text-muted);
-  font-family: var(--juttu-font-family);
-}
-.juttu-login-waiting { display: flex; align-items: center; gap: 0.75rem; font-size: 0.875rem; color: var(--juttu-text-muted); }
-.juttu-login-error { font-size: 0.8rem; color: #c0392b; margin-top: 0.35rem; }
 .juttu-compose-user { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
 .juttu-compose-avatar {
   width: var(--juttu-avatar-size);
@@ -289,8 +249,6 @@ export const STYLES = `
 .juttu-powered-by:hover { text-decoration: underline; }
 .juttu-loading { padding: 2rem; text-align: center; color: var(--juttu-text-muted); font-size: 0.875rem; }
 .juttu-error { padding: 1rem; color: #c0392b; font-size: 0.875rem; background: #fdf0ee; border-radius: var(--juttu-radius); border: 1px solid #f5c6c0; }
-@keyframes juttu-pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.06); } }
-.juttu-login-btn--pulse { animation: juttu-pulse 0.35s ease-in-out 2; }
 .juttu-linking { padding: 0.5rem 0; }
 .juttu-linking-title { font-size: 0.9375rem; font-weight: 600; margin: 0 0 0.375rem; color: var(--juttu-text); }
 .juttu-linking-desc { font-size: 0.875rem; color: var(--juttu-text-muted); margin: 0 0 1rem; }
@@ -301,6 +259,13 @@ export const STYLES = `
   font-weight: 500; transition: opacity 0.15s;
 }
 .juttu-linking-start-btn:hover { opacity: 0.88; }
+.juttu-linking-login-btn {
+  background: var(--juttu-accent-color); color: #fff; border: none;
+  border-radius: var(--juttu-radius); padding: 0.45rem 1.1rem;
+  cursor: pointer; font-size: 0.875rem; font-family: var(--juttu-font-family);
+  font-weight: 500; transition: opacity 0.15s;
+}
+.juttu-linking-login-btn:hover { opacity: 0.88; }
 .juttu-linking-methods { display: flex; gap: 0.75rem; flex-wrap: wrap; }
 .juttu-linking-method-btn {
   flex: 1; min-width: 140px; border: 1px solid var(--juttu-border-color);

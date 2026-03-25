@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"html"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -78,13 +79,13 @@ func (s *Server) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 	sessData, err := s.OAuth.ProcessCallback(ctx, r.URL.Query())
 	if err != nil {
 		slog.Error("failed processing oauth callback", "err", err)
-		jsonError(w, fmt.Sprintf("failed processing oauth callback: %s", err), http.StatusBadRequest)
+		callbackError(w, fmt.Sprintf("failed processing oauth callback: %s", err))
 		return
 	}
 
 	oauthSess, err := s.OAuth.ResumeSession(ctx, sessData.AccountDID, sessData.SessionID)
 	if err != nil {
-		jsonError(w, "not authenticated", http.StatusUnauthorized)
+		callbackError(w, "not authenticated")
 		return
 	}
 	c := oauthSess.APIClient()
@@ -93,7 +94,7 @@ func (s *Server) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 		Handle string `json:"handle"`
 	}
 	if err := c.Get(ctx, "com.atproto.server.getSession", nil, &resp); err != nil {
-		jsonError(w, err.Error(), http.StatusInternalServerError)
+		callbackError(w, err.Error())
 		return
 	}
 
@@ -102,12 +103,19 @@ func (s *Server) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 	sess.Values["session_id"] = sessData.SessionID
 	sess.Values["handle"] = resp.Handle
 	if err := sess.Save(r, w); err != nil {
-		jsonError(w, err.Error(), http.StatusInternalServerError)
+		callbackError(w, err.Error())
 		return
 	}
 
 	slog.Info("login successful", "did", sessData.AccountDID.String())
-	jsonOK(w, map[string]string{"did": sessData.AccountDID.String(), "handle": resp.Handle})
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	fmt.Fprint(w, `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body><script>window.close();</script></body></html>`)
+}
+
+func callbackError(w http.ResponseWriter, message string) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.WriteHeader(http.StatusBadRequest)
+	fmt.Fprintf(w, `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body style="font-family:system-ui;padding:2rem"><p style="color:#c0392b">Login failed: %s</p><button onclick="window.close()">Close</button></body></html>`, html.EscapeString(message))
 }
 
 func (s *Server) Logout(w http.ResponseWriter, r *http.Request) {
