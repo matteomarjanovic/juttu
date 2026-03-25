@@ -224,9 +224,6 @@ export class JuttuWidget {
 			return;
 		}
 
-		// Login flow
-		if (target.closest('.juttu-login-btn')) { this.openLoginPopup(); return; }
-
 		// Logout
 		if (target.closest('.juttu-logout-btn')) { this.handleLogout(); return; }
 
@@ -242,14 +239,14 @@ export class JuttuWidget {
 		const replyBtn = target.closest<HTMLElement>('.juttu-reply-btn');
 		if (replyBtn) {
 			const uri = replyBtn.dataset.uri;
-			if (uri) { if (this.requireAuth()) this.handleToggleReplyForm(uri); }
+			if (uri) this.handleToggleReplyForm(uri);
 			return;
 		}
 
 		// Reply form actions
 		if (target.closest('.juttu-reply-cancel')) { this.closeReplyForm(); return; }
 		if (target.closest('.juttu-reply-submit')) {
-			if (this.openReplyFormUri) this.handleSubmitReply(this.openReplyFormUri);
+			if (this.openReplyFormUri) { if (this.requireAuth()) this.handleSubmitReply(this.openReplyFormUri); }
 			return;
 		}
 
@@ -293,53 +290,41 @@ export class JuttuWidget {
 	private renderComposer(): HTMLElement {
 		const composer = document.createElement('div');
 		composer.className = 'juttu-composer';
-		if (!this.currentUser) {
-			composer.appendChild(this.makeLoginArea());
-		} else {
-			composer.appendChild(this.makeComposeArea());
-		}
+		composer.appendChild(this.makeComposeArea());
 		return composer;
-	}
-
-	private makeLoginArea(): HTMLElement {
-		const area = document.createElement('div');
-		area.className = 'juttu-login-area';
-		const btn = document.createElement('button');
-		btn.className = 'juttu-login-btn';
-		btn.textContent = 'Login with Bluesky';
-		area.appendChild(btn);
-		return area;
 	}
 
 	private makeComposeArea(): HTMLElement {
 		const area = document.createElement('div');
 		area.className = 'juttu-compose-area';
 
-		const userRow = document.createElement('div');
-		userRow.className = 'juttu-compose-user';
+		if (this.currentUser) {
+			const userRow = document.createElement('div');
+			userRow.className = 'juttu-compose-user';
 
-		if (this.currentUser!.avatar) {
-			const img = document.createElement('img');
-			img.className = 'juttu-compose-avatar';
-			img.src = this.currentUser!.avatar;
-			img.alt = this.currentUser!.handle;
-			userRow.appendChild(img);
-		} else {
-			const ph = document.createElement('div');
-			ph.className = 'juttu-avatar-placeholder';
-			userRow.appendChild(ph);
+			if (this.currentUser.avatar) {
+				const img = document.createElement('img');
+				img.className = 'juttu-compose-avatar';
+				img.src = this.currentUser.avatar;
+				img.alt = this.currentUser.handle;
+				userRow.appendChild(img);
+			} else {
+				const ph = document.createElement('div');
+				ph.className = 'juttu-avatar-placeholder';
+				userRow.appendChild(ph);
+			}
+
+			const handle = document.createElement('span');
+			handle.className = 'juttu-compose-handle';
+			handle.textContent = `@${this.currentUser.handle}`;
+			userRow.appendChild(handle);
+
+			const logoutBtn = document.createElement('button');
+			logoutBtn.className = 'juttu-logout-btn';
+			logoutBtn.textContent = 'Logout';
+			userRow.appendChild(logoutBtn);
+			area.appendChild(userRow);
 		}
-
-		const handle = document.createElement('span');
-		handle.className = 'juttu-compose-handle';
-		handle.textContent = `@${this.currentUser!.handle}`;
-		userRow.appendChild(handle);
-
-		const logoutBtn = document.createElement('button');
-		logoutBtn.className = 'juttu-logout-btn';
-		logoutBtn.textContent = 'Logout';
-		userRow.appendChild(logoutBtn);
-		area.appendChild(userRow);
 
 		const textarea = document.createElement('textarea');
 		textarea.className = 'juttu-compose-input';
@@ -564,6 +549,10 @@ export class JuttuWidget {
 	}
 
 	private openLoginPopup(): void {
+		if (this.loginPollInterval !== null) {
+			try { this.loginPopup?.focus(); } catch { /* ignore */ }
+			return;
+		}
 		this.loginPopup = window.open(
 			`${this.config.apiUrl}/login`,
 			'juttu-auth',
@@ -638,7 +627,7 @@ export class JuttuWidget {
 			const composer = this.getComposer();
 			if (composer) {
 				composer.innerHTML = '';
-				composer.appendChild(this.makeLoginArea());
+				composer.appendChild(this.makeComposeArea());
 			}
 		}
 	}
@@ -659,7 +648,7 @@ export class JuttuWidget {
 		const composer = this.getComposer();
 		if (composer) {
 			composer.innerHTML = '';
-			composer.appendChild(this.makeLoginArea());
+			composer.appendChild(this.makeComposeArea());
 		}
 	}
 

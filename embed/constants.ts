@@ -102,20 +102,6 @@ export const STYLES = `
   padding-bottom: 1rem;
   border-bottom: 1px solid var(--juttu-border-color);
 }
-.juttu-login-area { display: flex; align-items: center; gap: 0.5rem; }
-.juttu-login-btn {
-  background: var(--juttu-accent-color);
-  color: #fff;
-  border: none;
-  border-radius: var(--juttu-radius);
-  padding: 0.45rem 1.1rem;
-  cursor: pointer;
-  font-size: 0.875rem;
-  font-family: var(--juttu-font-family);
-  font-weight: 500;
-  transition: opacity 0.15s;
-}
-.juttu-login-btn:hover { opacity: 0.88; }
 .juttu-compose-user { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
 .juttu-compose-avatar {
   width: var(--juttu-avatar-size);
