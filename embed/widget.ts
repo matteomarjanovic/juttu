@@ -33,7 +33,8 @@ import {
 	getTopLevelReplies,
 	sortReplies,
 	collectViewerState,
-	findPostInThread
+	findPostInThread,
+	buildSegments
 } from './api';
 
 // ─── Widget Class ─────────────────────────────────────────────────────────────
@@ -55,6 +56,8 @@ export class JuttuWidget {
 	private loginPopup: Window | null = null;
 	private loginPollInterval: ReturnType<typeof setInterval> | null = null;
 	private loginPollStartTime = 0;
+	private mentionDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+	private activeSuggestionsTextarea: HTMLTextAreaElement | null = null;
 	// Document linking state
 	private documentAtUri: AtUri | null = null;
 	private documentRecord: DocumentRecord | null = null;
@@ -351,7 +354,15 @@ export class JuttuWidget {
 		textarea.className = 'juttu-compose-input';
 		textarea.placeholder = 'Write a comment…';
 		textarea.rows = 3;
-		area.appendChild(textarea);
+		const { wrap, backdrop } = this.buildEditorWrap(textarea);
+		area.appendChild(wrap);
+		setTimeout(() => this.syncBackdropStyles(backdrop, textarea), 0);
+		textarea.addEventListener('input', () => {
+			this.updateBackdrop(backdrop, textarea.value);
+			this.handleMentionInput(textarea);
+		});
+		textarea.addEventListener('scroll', () => this.syncScroll(backdrop, textarea));
+		textarea.addEventListener('keydown', (e) => { if (e.key === 'Escape') this.dismissAutocomplete(textarea); });
 
 		const actions = document.createElement('div');
 		actions.className = 'juttu-compose-actions';
@@ -628,16 +639,9 @@ export class JuttuWidget {
 			// Normal mode: swap composer in-place
 			const composer = this.getComposer();
 			if (composer) {
+				this.clearMentionState();
 				composer.innerHTML = '';
 				composer.appendChild(this.makeComposeArea());
-				// Re-attach input listener for the new textarea
-				const textarea = composer.querySelector<HTMLTextAreaElement>('.juttu-compose-input');
-				const submitBtn = composer.querySelector<HTMLButtonElement>('.juttu-submit-btn');
-				if (textarea && submitBtn) {
-					textarea.addEventListener('input', () => {
-						submitBtn.disabled = !textarea.value.trim();
-					});
-				}
 			}
 		}
 	}
@@ -657,6 +661,7 @@ export class JuttuWidget {
 		} else {
 			const composer = this.getComposer();
 			if (composer) {
+				this.clearMentionState();
 				composer.innerHTML = '';
 				composer.appendChild(this.makeComposeArea());
 			}
@@ -678,6 +683,7 @@ export class JuttuWidget {
 
 		const composer = this.getComposer();
 		if (composer) {
+			this.clearMentionState();
 			composer.innerHTML = '';
 			composer.appendChild(this.makeComposeArea());
 		}
@@ -806,7 +812,15 @@ export class JuttuWidget {
 		textarea.className = 'juttu-reply-input';
 		textarea.placeholder = 'Write a reply…';
 		textarea.rows = 2;
-		form.appendChild(textarea);
+		const { wrap: replyWrap, backdrop: replyBackdrop } = this.buildEditorWrap(textarea);
+		form.appendChild(replyWrap);
+		setTimeout(() => this.syncBackdropStyles(replyBackdrop, textarea), 0);
+		textarea.addEventListener('input', () => {
+			this.updateBackdrop(replyBackdrop, textarea.value);
+			this.handleMentionInput(textarea);
+		});
+		textarea.addEventListener('scroll', () => this.syncScroll(replyBackdrop, textarea));
+		textarea.addEventListener('keydown', (e) => { if (e.key === 'Escape') this.dismissAutocomplete(textarea); });
 
 		const formActions = document.createElement('div');
 		formActions.className = 'juttu-reply-form-actions';
@@ -877,6 +891,8 @@ export class JuttuWidget {
 			}).then(this.checkApiResponse);
 
 			textarea.value = '';
+			const backdrop = textarea.closest<HTMLElement>('.juttu-editor-wrap')?.querySelector<HTMLElement>('.juttu-editor-backdrop');
+			if (backdrop) this.updateBackdrop(backdrop, '');
 			submitBtn.disabled = true;
 			submitBtn.textContent = 'Post comment';
 			setTimeout(() => this.refetchAndRender(), POST_REFETCH_DELAY_MS);
@@ -957,6 +973,167 @@ export class JuttuWidget {
 			this.viewerState = newState;
 			this.renderWidget();
 		} catch { /* silently ignore — stale view is acceptable */ }
+	}
+
+	// ─── Editor backdrop + mention autocomplete ──────────────────────────────────
+
+	private buildEditorWrap(textarea: HTMLTextAreaElement): { wrap: HTMLElement; backdrop: HTMLElement } {
+		const wrap = document.createElement('div');
+		wrap.className = 'juttu-editor-wrap';
+		const backdrop = document.createElement('div');
+		backdrop.className = 'juttu-editor-backdrop';
+		backdrop.setAttribute('aria-hidden', 'true');
+		wrap.appendChild(backdrop);
+		wrap.appendChild(textarea);
+		return { wrap, backdrop };
+	}
+
+	private syncBackdropStyles(backdrop: HTMLElement, textarea: HTMLTextAreaElement): void {
+		const cs = window.getComputedStyle(textarea);
+		const style = backdrop.style as Record<string, string>;
+		for (const prop of [
+			'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft',
+			'borderTopWidth', 'borderRightWidth', 'borderBottomWidth', 'borderLeftWidth',
+			'fontFamily', 'fontSize', 'fontWeight', 'lineHeight', 'letterSpacing'
+		]) {
+			style[prop] = (cs as unknown as Record<string, string>)[prop];
+		}
+	}
+
+	private updateBackdrop(backdrop: HTMLElement, text: string): void {
+		while (backdrop.firstChild) backdrop.removeChild(backdrop.firstChild);
+		for (const seg of buildSegments(text)) {
+			if (seg.type === 'plain') {
+				backdrop.appendChild(document.createTextNode(seg.text));
+			} else {
+				const span = document.createElement('span');
+				span.className = `juttu-editor-highlight-${seg.type}`;
+				span.textContent = seg.text;
+				backdrop.appendChild(span);
+			}
+		}
+		// Trailing newline ensures backdrop height matches textarea when text ends with newline
+		backdrop.appendChild(document.createTextNode('\n'));
+	}
+
+	private syncScroll(backdrop: HTMLElement, textarea: HTMLTextAreaElement): void {
+		backdrop.scrollTop = textarea.scrollTop;
+	}
+
+	private clearMentionState(): void {
+		if (this.mentionDebounceTimer !== null) {
+			clearTimeout(this.mentionDebounceTimer);
+			this.mentionDebounceTimer = null;
+		}
+		this.activeSuggestionsTextarea = null;
+	}
+
+	private handleMentionInput(textarea: HTMLTextAreaElement): void {
+		const cursor = textarea.selectionStart ?? textarea.value.length;
+		const before = textarea.value.slice(0, cursor);
+		const match = before.match(/@([a-zA-Z0-9][a-zA-Z0-9.-]*)$/);
+		if (match) {
+			this.activeSuggestionsTextarea = textarea;
+			if (this.mentionDebounceTimer !== null) clearTimeout(this.mentionDebounceTimer);
+			this.mentionDebounceTimer = setTimeout(() => {
+				void this.fetchMentionSuggestions(match[1], textarea);
+			}, 300);
+		} else {
+			this.dismissAutocomplete(textarea);
+		}
+	}
+
+	private async fetchMentionSuggestions(query: string, textarea: HTMLTextAreaElement): Promise<void> {
+		if (this.activeSuggestionsTextarea !== textarea) return;
+		try {
+			const res = await fetch(
+				`https://public.api.bsky.app/xrpc/app.bsky.actor.searchActorsTypeahead?q=${encodeURIComponent(query)}&limit=4`
+			);
+			if (!res.ok || this.activeSuggestionsTextarea !== textarea) return;
+			const data = await res.json() as { actors: Array<{ did: string; handle: string; displayName?: string; avatar?: string }> };
+			this.renderAutocomplete(data.actors, textarea);
+		} catch {
+			this.dismissAutocomplete(textarea);
+		}
+	}
+
+	private renderAutocomplete(
+		actors: Array<{ did: string; handle: string; displayName?: string; avatar?: string }>,
+		textarea: HTMLTextAreaElement
+	): void {
+		const wrap = textarea.closest<HTMLElement>('.juttu-editor-wrap');
+		if (!wrap) return;
+		wrap.querySelector('.juttu-autocomplete')?.remove();
+		if (actors.length === 0) return;
+
+		const ul = document.createElement('ul');
+		ul.className = 'juttu-autocomplete';
+
+		for (const actor of actors) {
+			const li = document.createElement('li');
+			const btn = document.createElement('button');
+			btn.className = 'juttu-autocomplete-item';
+			btn.type = 'button';
+
+			if (actor.avatar) {
+				const img = document.createElement('img');
+				img.className = 'juttu-autocomplete-avatar';
+				img.src = actor.avatar;
+				img.alt = '';
+				btn.appendChild(img);
+			} else {
+				const ph = document.createElement('div');
+				ph.className = 'juttu-autocomplete-avatar';
+				ph.style.background = 'var(--juttu-border-color)';
+				btn.appendChild(ph);
+			}
+
+			const info = document.createElement('div');
+			if (actor.displayName) {
+				const name = document.createElement('div');
+				name.style.fontWeight = '600';
+				name.textContent = actor.displayName;
+				info.appendChild(name);
+			}
+			const handleEl = document.createElement('div');
+			handleEl.className = 'juttu-autocomplete-handle';
+			handleEl.textContent = `@${actor.handle}`;
+			info.appendChild(handleEl);
+			btn.appendChild(info);
+
+			btn.addEventListener('mousedown', (e) => {
+				e.preventDefault();
+				this.applyMentionSuggestion(actor.handle, textarea);
+			});
+
+			li.appendChild(btn);
+			ul.appendChild(li);
+		}
+
+		wrap.appendChild(ul);
+	}
+
+	private applyMentionSuggestion(handle: string, textarea: HTMLTextAreaElement): void {
+		const cursor = textarea.selectionStart ?? textarea.value.length;
+		const before = textarea.value.slice(0, cursor).replace(/@([a-zA-Z0-9][a-zA-Z0-9.-]*)$/, `@${handle} `);
+		textarea.value = before + textarea.value.slice(cursor);
+		const newCursor = before.length;
+		setTimeout(() => {
+			textarea.focus();
+			textarea.setSelectionRange(newCursor, newCursor);
+		}, 0);
+		this.dismissAutocomplete(textarea);
+		const backdrop = textarea.closest<HTMLElement>('.juttu-editor-wrap')?.querySelector<HTMLElement>('.juttu-editor-backdrop');
+		if (backdrop) this.updateBackdrop(backdrop, textarea.value);
+	}
+
+	private dismissAutocomplete(textarea: HTMLTextAreaElement): void {
+		if (this.mentionDebounceTimer !== null) {
+			clearTimeout(this.mentionDebounceTimer);
+			this.mentionDebounceTimer = null;
+		}
+		this.activeSuggestionsTextarea = null;
+		textarea.closest<HTMLElement>('.juttu-editor-wrap')?.querySelector('.juttu-autocomplete')?.remove();
 	}
 
 	// ─── Utilities ───────────────────────────────────────────────────────────────

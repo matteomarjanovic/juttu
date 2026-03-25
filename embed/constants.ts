@@ -310,4 +310,36 @@ export const STYLES = `
 .juttu-linking-post-date { font-size: 0.75rem; color: var(--juttu-text-muted); }
 .juttu-linking-error { font-size: 0.8rem; color: #c0392b; margin-top: 0.5rem; }
 .juttu-linking-spinner { font-size: 0.875rem; color: var(--juttu-text-muted); }
+/* Editor backdrop overlay */
+.juttu-editor-wrap { position: relative; background: var(--juttu-surface); border-radius: var(--juttu-radius); }
+.juttu-editor-wrap .juttu-compose-input,
+.juttu-editor-wrap .juttu-reply-input { color: transparent; caret-color: var(--juttu-text); background: transparent; position: relative; }
+.juttu-editor-backdrop {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none; overflow: hidden;
+  white-space: pre-wrap; word-break: break-word;
+  border: 1px solid transparent;
+}
+.juttu-editor-highlight-mention,
+.juttu-editor-highlight-link,
+.juttu-editor-highlight-tag { color: var(--juttu-accent-color); }
+/* Mention autocomplete */
+.juttu-autocomplete {
+  position: absolute; top: 100%; left: 0; right: 0; z-index: 10;
+  background: var(--juttu-bg); border: 1px solid var(--juttu-border-color);
+  border-radius: var(--juttu-radius); margin-top: 2px;
+  list-style: none; padding: 0; overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+.juttu-autocomplete-item {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.4rem 0.65rem; cursor: pointer;
+  width: 100%; background: none; border: none; text-align: left;
+  font-family: var(--juttu-font-family); font-size: 0.8125rem;
+  color: var(--juttu-text);
+}
+.juttu-autocomplete-item:hover,
+.juttu-autocomplete-item:focus { background: var(--juttu-surface); outline: none; }
+.juttu-autocomplete-avatar { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+.juttu-autocomplete-handle { font-size: 0.75rem; color: var(--juttu-text-muted); }
 `;

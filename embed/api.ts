@@ -208,3 +208,78 @@ export function findPostInThread(thread: ThreadViewPost | null, uri: string): Bs
 	}
 	return null;
 }
+
+// ─── Rich text segment builder (for editor highlighting) ─────────────────────
+
+export type SegmentType = 'mention' | 'link' | 'tag' | 'plain';
+export interface TextSegment { text: string; type: SegmentType; }
+
+const MENTION_RE = /@([a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+)/g;
+const URL_RE = /https?:\/\/[^\s\x00-\x1f<>"]+/g;
+const PLAIN_DOMAIN_RE = /(^|[\s(])((?:[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}(?:\/[^\s\x00-\x1f<>"]*)?)/g;
+const TAG_RE = /#[^\s\x00-\x1f.,;!?\-#]{1,64}/g;
+const TRAILING_PUNCT = /[.,;!?)\]]+$/;
+
+function hasValidTld(uri: string): boolean {
+	const domain = uri.split('/')[0];
+	const tld = domain.split('.').at(-1) ?? '';
+	return tld.length >= 2 && /^[a-z]+$/i.test(tld);
+}
+
+export function buildSegments(text: string): TextSegment[] {
+	interface Hit { start: number; end: number; type: SegmentType; }
+	const hits: Hit[] = [];
+	let m: RegExpExecArray | null;
+
+	URL_RE.lastIndex = 0;
+	while ((m = URL_RE.exec(text)) !== null) {
+		const stripped = m[0].replace(TRAILING_PUNCT, '');
+		if (stripped) hits.push({ start: m.index, end: m.index + stripped.length, type: 'link' });
+	}
+
+	PLAIN_DOMAIN_RE.lastIndex = 0;
+	while ((m = PLAIN_DOMAIN_RE.exec(text)) !== null) {
+		const prefix = m[1] ?? '';
+		const uri = m[2];
+		if (!hasValidTld(uri)) continue;
+		const start = m.index + prefix.length;
+		const stripped = uri.replace(TRAILING_PUNCT, '');
+		if (stripped) hits.push({ start, end: start + stripped.length, type: 'link' });
+	}
+
+	TAG_RE.lastIndex = 0;
+	while ((m = TAG_RE.exec(text)) !== null) {
+		const stripped = m[0].replace(TRAILING_PUNCT, '');
+		if (stripped) hits.push({ start: m.index, end: m.index + stripped.length, type: 'tag' });
+	}
+
+	MENTION_RE.lastIndex = 0;
+	while ((m = MENTION_RE.exec(text)) !== null) {
+		const atPos = m.index;
+		if (atPos > 0) {
+			const prev = text[atPos - 1];
+			if (prev !== ' ' && prev !== '\t' && prev !== '\n' && prev !== '(') continue;
+		}
+		hits.push({ start: atPos, end: atPos + m[0].length, type: 'mention' });
+	}
+
+	hits.sort((a, b) => a.start - b.start);
+
+	const accepted: Hit[] = [];
+	let lastEnd = 0;
+	for (const hit of hits) {
+		if (hit.start < lastEnd) continue;
+		accepted.push(hit);
+		lastEnd = hit.end;
+	}
+
+	const segments: TextSegment[] = [];
+	let cursor = 0;
+	for (const hit of accepted) {
+		if (hit.start > cursor) segments.push({ text: text.slice(cursor, hit.start), type: 'plain' });
+		segments.push({ text: text.slice(hit.start, hit.end), type: hit.type });
+		cursor = hit.end;
+	}
+	if (cursor < text.length) segments.push({ text: text.slice(cursor), type: 'plain' });
+	return segments;
+}

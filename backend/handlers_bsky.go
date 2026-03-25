@@ -59,7 +59,7 @@ func (s *Server) CreatePost(w http.ResponseWriter, r *http.Request) {
 		"text":      req.Text,
 		"createdAt": time.Now().UTC().Format(time.RFC3339),
 	}
-	if facets := parseFacets(req.Text); facets != nil {
+	if facets := parseFacets(ctx, req.Text); facets != nil {
 		record["facets"] = facets
 	}
 	if req.Reply != nil {
