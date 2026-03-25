@@ -56,6 +56,7 @@ export class JuttuWidget {
 	private loginPopup: Window | null = null;
 	private loginPollInterval: ReturnType<typeof setInterval> | null = null;
 	private loginPollStartTime = 0;
+	private pendingAction: (() => Promise<void>) | null = null;
 	private mentionDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 	private activeSuggestionsTextarea: HTMLTextAreaElement | null = null;
 	// Document linking state
@@ -108,27 +109,14 @@ export class JuttuWidget {
 			if (docRecord?.bskyPostRef?.uri) {
 				this.rootPostUri = docRecord.bskyPostRef.uri;
 				this.rootPostCid = docRecord.bskyPostRef.cid;
-				const [user, thread] = await Promise.all([
-					checkCurrentUser(this.config.apiUrl),
-					fetchThread(docRecord.bskyPostRef.uri)
-				]);
-				if (user) {
-					const profile = await fetchUserProfile(user.handle);
-					this.currentUser = { ...user, ...profile };
-				}
-				this.threadData = thread;
-				collectViewerState(thread, this.viewerState);
+				this.threadData = await fetchThread(docRecord.bskyPostRef.uri);
+				collectViewerState(this.threadData, this.viewerState);
 				this.renderWidget();
 			} else {
 				// No bskyPostRef (or no record) — enter document linking flow
 				this.documentAtUri = atUri;
 				this.documentRecord = docRecord;
 				this.linkingStep = 'setup';
-				const user = await checkCurrentUser(this.config.apiUrl);
-				if (user) {
-					const profile = await fetchUserProfile(user.handle);
-					this.currentUser = { ...user, ...profile };
-				}
 				this.renderLinkingUI();
 			}
 		} catch (err) {
@@ -231,16 +219,16 @@ export class JuttuWidget {
 		}
 
 		// Login link / Logout
-		if (target.closest('.juttu-login-link')) { this.openLoginPopup(); return; }
+		if (target.closest('.juttu-login-link')) { this.resolveAuth(); return; }
 		if (target.closest('.juttu-logout-btn')) { this.handleLogout(); return; }
 
 		// Like
 		const likeBtn = target.closest<HTMLElement>('.juttu-like-btn');
-		if (likeBtn) { if (this.requireAuth()) this.handleLike(likeBtn); return; }
+		if (likeBtn) { this.resolveAuth(() => this.handleLike(likeBtn)); return; }
 
 		// Repost
 		const repostBtn = target.closest<HTMLElement>('.juttu-repost-btn');
-		if (repostBtn) { if (this.requireAuth()) this.handleRepost(repostBtn); return; }
+		if (repostBtn) { this.resolveAuth(() => this.handleRepost(repostBtn)); return; }
 
 		// Reply toggle
 		const replyBtn = target.closest<HTMLElement>('.juttu-reply-btn');
@@ -253,12 +241,12 @@ export class JuttuWidget {
 		// Reply form actions
 		if (target.closest('.juttu-reply-cancel')) { this.closeReplyForm(); return; }
 		if (target.closest('.juttu-reply-submit')) {
-			if (this.openReplyFormUri) { if (this.requireAuth()) this.handleSubmitReply(this.openReplyFormUri); }
+			if (this.openReplyFormUri) { this.resolveAuth(() => this.handleSubmitReply(this.openReplyFormUri!)); }
 			return;
 		}
 
 		// Top-level post
-		if (target.closest('.juttu-submit-btn')) { if (this.requireAuth()) this.handlePost(); return; }
+		if (target.closest('.juttu-submit-btn')) { this.resolveAuth(() => this.handlePost()); return; }
 	}
 
 	private setSortOrder(order: SortOption): void {
@@ -600,11 +588,6 @@ export class JuttuWidget {
 		this.loginPollInterval = setInterval(() => this.pollForLogin(), LOGIN_POLL_INTERVAL_MS);
 	}
 
-	private async onAuthComplete(): Promise<void> {
-		const user = await checkCurrentUser(this.config.apiUrl);
-		if (user) await this.completeLogin(user);
-	}
-
 	private async pollForLogin(): Promise<void> {
 		const elapsed = Date.now() - this.loginPollStartTime;
 		if (elapsed > LOGIN_POLL_TIMEOUT_MS) {
@@ -636,17 +619,21 @@ export class JuttuWidget {
 			this.linkingStep = !this.documentRecord ? 'metadata' : 'choose-method';
 			this.renderLinkingUI();
 		} else {
-			// Normal mode: swap composer in-place
+			// Normal mode: swap composer in-place, then run any pending action
 			const composer = this.getComposer();
 			if (composer) {
 				this.clearMentionState();
 				composer.innerHTML = '';
 				composer.appendChild(this.makeComposeArea());
 			}
+			const pending = this.pendingAction;
+			this.pendingAction = null;
+			await pending?.();
 		}
 	}
 
 	private cancelLogin(): void {
+		this.pendingAction = null;
 		if (this.loginPollInterval !== null) {
 			clearInterval(this.loginPollInterval);
 			this.loginPollInterval = null;
@@ -691,12 +678,36 @@ export class JuttuWidget {
 
 	// ─── Auth guard ──────────────────────────────────────────────────────────────
 
-	private requireAuth(): boolean {
-		if (!this.currentUser) {
-			this.openLoginPopup();
-			return false;
+	private async resolveAuth(action?: () => Promise<void>): Promise<void> {
+		if (this.currentUser) {
+			await action?.();
+			return;
 		}
-		return true;
+		const user = await checkCurrentUser(this.config.apiUrl);
+		if (user) {
+			const profile = await fetchUserProfile(user.handle);
+			this.currentUser = { ...user, ...profile };
+			if (this.documentAtUri) {
+				this.linkingStep = !this.documentRecord ? 'metadata' : 'choose-method';
+				this.renderLinkingUI();
+			} else {
+				const composer = this.getComposer();
+				if (composer) {
+					this.clearMentionState();
+					composer.innerHTML = '';
+					composer.appendChild(this.makeComposeArea());
+				}
+				await action?.();
+			}
+		} else {
+			if (this.documentAtUri) {
+				this.linkingStep = 'login';
+				this.renderLinkingUI();
+			} else {
+				this.pendingAction = action ?? null;
+				this.openLoginPopup();
+			}
+		}
 	}
 
 	// ─── Like ────────────────────────────────────────────────────────────────────
@@ -1418,14 +1429,7 @@ export class JuttuWidget {
 
 		// Start linking
 		if (target.closest('.juttu-linking-start-btn')) {
-			if (!this.currentUser) {
-				this.linkingStep = 'login';
-			} else if (!this.documentRecord) {
-				this.linkingStep = 'metadata';
-			} else {
-				this.linkingStep = 'choose-method';
-			}
-			this.renderLinkingUI();
+			this.resolveAuth();
 			return;
 		}
 
