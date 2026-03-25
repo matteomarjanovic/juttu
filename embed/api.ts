@@ -76,16 +76,19 @@ export async function checkCurrentUser(apiUrl: string): Promise<CurrentUser | nu
 	}
 }
 
-export async function fetchUserAvatar(handle: string): Promise<string | undefined> {
+export async function fetchUserProfile(handle: string): Promise<{ avatar?: string; displayName?: string }> {
 	try {
 		const res = await fetch(
 			`https://public.api.bsky.app/xrpc/app.bsky.actor.getProfile?actor=${encodeURIComponent(handle)}`
 		);
-		if (!res.ok) return undefined;
+		if (!res.ok) return {};
 		const data = await res.json();
-		return data.avatar as string | undefined;
+		return {
+			avatar: data.avatar as string | undefined,
+			displayName: data.displayName as string | undefined
+		};
 	} catch {
-		return undefined;
+		return {};
 	}
 }
 

@@ -27,7 +27,7 @@ import {
 	fetchDocumentRecord,
 	fetchThread,
 	checkCurrentUser,
-	fetchUserAvatar,
+	fetchUserProfile,
 	formatRelativeTime,
 	renderRichText,
 	getTopLevelReplies,
@@ -109,7 +109,10 @@ export class JuttuWidget {
 					checkCurrentUser(this.config.apiUrl),
 					fetchThread(docRecord.bskyPostRef.uri)
 				]);
-				this.currentUser = user;
+				if (user) {
+					const profile = await fetchUserProfile(user.handle);
+					this.currentUser = { ...user, ...profile };
+				}
 				this.threadData = thread;
 				collectViewerState(thread, this.viewerState);
 				this.renderWidget();
@@ -120,8 +123,8 @@ export class JuttuWidget {
 				this.linkingStep = 'setup';
 				const user = await checkCurrentUser(this.config.apiUrl);
 				if (user) {
-					const avatar = await fetchUserAvatar(user.handle);
-					this.currentUser = { ...user, avatar };
+					const profile = await fetchUserProfile(user.handle);
+					this.currentUser = { ...user, ...profile };
 				}
 				this.renderLinkingUI();
 			}
@@ -224,7 +227,8 @@ export class JuttuWidget {
 			return;
 		}
 
-		// Logout
+		// Login link / Logout
+		if (target.closest('.juttu-login-link')) { this.openLoginPopup(); return; }
 		if (target.closest('.juttu-logout-btn')) { this.handleLogout(); return; }
 
 		// Like
@@ -270,6 +274,10 @@ export class JuttuWidget {
 		title.textContent = `${commentCount} Comment${commentCount !== 1 ? 's' : ''}`;
 		header.appendChild(title);
 
+		return header;
+	}
+
+	private makeSortControls(): HTMLElement {
 		const sortControls = document.createElement('div');
 		sortControls.className = 'juttu-sort-controls';
 		for (const { value, label } of [
@@ -283,8 +291,7 @@ export class JuttuWidget {
 			btn.textContent = label;
 			sortControls.appendChild(btn);
 		}
-		header.appendChild(sortControls);
-		return header;
+		return sortControls;
 	}
 
 	private renderComposer(): HTMLElement {
@@ -314,16 +321,30 @@ export class JuttuWidget {
 				userRow.appendChild(ph);
 			}
 
+			const authorInfo = document.createElement('div');
+			authorInfo.className = 'juttu-author-info';
+			if (this.currentUser.displayName) {
+				const name = document.createElement('span');
+				name.className = 'juttu-display-name';
+				name.textContent = this.currentUser.displayName;
+				authorInfo.appendChild(name);
+			}
 			const handle = document.createElement('span');
-			handle.className = 'juttu-compose-handle';
+			handle.className = 'juttu-handle';
 			handle.textContent = `@${this.currentUser.handle}`;
-			userRow.appendChild(handle);
+			authorInfo.appendChild(handle);
+			userRow.appendChild(authorInfo);
 
 			const logoutBtn = document.createElement('button');
 			logoutBtn.className = 'juttu-logout-btn';
 			logoutBtn.textContent = 'Logout';
 			userRow.appendChild(logoutBtn);
 			area.appendChild(userRow);
+		} else {
+			const loginLink = document.createElement('button');
+			loginLink.className = 'juttu-login-link';
+			loginLink.textContent = 'Login to comment';
+			area.appendChild(loginLink);
 		}
 
 		const textarea = document.createElement('textarea');
@@ -332,11 +353,17 @@ export class JuttuWidget {
 		textarea.rows = 3;
 		area.appendChild(textarea);
 
+		const actions = document.createElement('div');
+		actions.className = 'juttu-compose-actions';
+		actions.appendChild(this.makeSortControls());
+
 		const submitBtn = document.createElement('button');
 		submitBtn.className = 'juttu-submit-btn';
 		submitBtn.textContent = 'Post comment';
 		submitBtn.disabled = true;
-		area.appendChild(submitBtn);
+		actions.appendChild(submitBtn);
+
+		area.appendChild(actions);
 
 		return area;
 	}
@@ -574,7 +601,11 @@ export class JuttuWidget {
 			return;
 		}
 		const user = await checkCurrentUser(this.config.apiUrl);
-		if (user) await this.completeLogin(user);
+		if (user) {
+			await this.completeLogin(user);
+		} else if (this.loginPopup?.closed) {
+			this.cancelLogin();
+		}
 	}
 
 	private async completeLogin(user: CurrentUser): Promise<void> {
@@ -585,9 +616,9 @@ export class JuttuWidget {
 		try { this.loginPopup?.close(); } catch { /* cross-origin popup close may throw */ }
 		this.loginPopup = null;
 
-		// Fetch avatar from Bluesky public API
-		const avatar = await fetchUserAvatar(user.handle);
-		this.currentUser = { ...user, avatar };
+		// Fetch profile (avatar + display name) from Bluesky public API
+		const profile = await fetchUserProfile(user.handle);
+		this.currentUser = { ...user, ...profile };
 
 		if (this.documentAtUri) {
 			// Linking mode: advance to the appropriate step

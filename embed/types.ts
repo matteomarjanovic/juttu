@@ -77,6 +77,7 @@ export interface CurrentUser {
 	did: string;
 	handle: string;
 	avatar?: string;
+	displayName?: string;
 }
 
 export interface DocumentRecord {

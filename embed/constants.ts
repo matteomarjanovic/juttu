@@ -70,12 +70,7 @@ export const STYLES = `
   box-sizing: border-box;
 }
 .juttu-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   margin-bottom: 1rem;
-  flex-wrap: wrap;
-  gap: 0.5rem;
 }
 .juttu-title {
   font-size: 1rem;
@@ -99,9 +94,22 @@ export const STYLES = `
 .juttu-sort-btn--active { background: var(--juttu-accent-color); border-color: var(--juttu-accent-color); color: #fff; }
 .juttu-composer {
   margin-bottom: 1rem;
-  padding-bottom: 1rem;
+  padding-bottom: 0.5rem;
   border-bottom: 1px solid var(--juttu-border-color);
 }
+.juttu-login-link {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--juttu-accent-color);
+  font-family: var(--juttu-font-family);
+  font-size: 0.875rem;
+  text-decoration: underline;
+  margin-bottom: 0.5rem;
+  display: inline-block;
+}
+.juttu-login-link:hover { opacity: 0.75; }
 .juttu-compose-user { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
 .juttu-compose-avatar {
   width: var(--juttu-avatar-size);
@@ -110,7 +118,6 @@ export const STYLES = `
   object-fit: cover;
   flex-shrink: 0;
 }
-.juttu-compose-handle { font-size: 0.875rem; color: var(--juttu-text-muted); flex: 1; }
 .juttu-logout-btn {
   background: none;
   border: 1px solid var(--juttu-border-color);
@@ -137,8 +144,13 @@ export const STYLES = `
 }
 .juttu-compose-input:focus { outline: none; border-color: var(--juttu-accent-color); }
 .juttu-compose-input::placeholder { color: var(--juttu-text-muted); }
-.juttu-submit-btn {
+.juttu-compose-actions {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
   margin-top: 0.5rem;
+}
+.juttu-submit-btn {
   background: var(--juttu-accent-color);
   color: #fff;
   border: none;
