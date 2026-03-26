@@ -57,6 +57,7 @@ export class JuttuWidget {
 	private loginPopup: Window | null = null;
 	private loginPollInterval: ReturnType<typeof setInterval> | null = null;
 	private loginPollStartTime = 0;
+	private popupClosedAt = 0;
 	private pendingAction: (() => Promise<void>) | null = null;
 	private mentionDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 	private activeSuggestionsTextarea: HTMLTextAreaElement | null = null;
@@ -586,6 +587,7 @@ export class JuttuWidget {
 			'width=500,height=600,menubar=no,toolbar=no,location=no,status=no'
 		);
 		this.loginPollStartTime = Date.now();
+		this.popupClosedAt = 0;
 		this.loginPollInterval = setInterval(() => this.pollForLogin(), LOGIN_POLL_INTERVAL_MS);
 	}
 
@@ -599,7 +601,10 @@ export class JuttuWidget {
 		if (user) {
 			await this.completeLogin(user);
 		} else if (this.loginPopup?.closed) {
-			this.cancelLogin();
+			// The popup closes itself after the OAuth callback sets the session cookie.
+			// Give a grace period for the cookie to become readable before giving up.
+			if (!this.popupClosedAt) this.popupClosedAt = Date.now();
+			if (Date.now() - this.popupClosedAt > 5000) this.cancelLogin();
 		}
 	}
 
