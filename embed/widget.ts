@@ -26,6 +26,7 @@ import {
 	resolveDid,
 	fetchDocumentRecord,
 	fetchThread,
+	fetchViewerStates,
 	checkCurrentUser,
 	fetchUserProfile,
 	formatRelativeTime,
@@ -629,6 +630,17 @@ export class JuttuWidget {
 			const pending = this.pendingAction;
 			this.pendingAction = null;
 			await pending?.();
+
+			// Refresh viewer state so already-liked/reposted buttons show as colored
+			if (this.rootPostUri) {
+				const incoming = await fetchViewerStates(this.config.apiUrl, this.rootPostUri);
+				for (const [uri, state] of incoming) {
+					const existing = this.viewerState.get(uri);
+					if (existing?.likeUri === 'pending' || existing?.repostUri === 'pending') continue;
+					this.viewerState.set(uri, state);
+				}
+				this.renderWidget();
+			}
 		}
 	}
 
@@ -698,6 +710,17 @@ export class JuttuWidget {
 					composer.appendChild(this.makeComposeArea());
 				}
 				await action?.();
+
+				// Refresh viewer state so already-liked/reposted buttons show as colored
+				if (this.rootPostUri) {
+					const incoming = await fetchViewerStates(this.config.apiUrl, this.rootPostUri);
+					for (const [uri, state] of incoming) {
+						const existing = this.viewerState.get(uri);
+						if (existing?.likeUri === 'pending' || existing?.repostUri === 'pending') continue;
+						this.viewerState.set(uri, state);
+					}
+					this.renderWidget();
+				}
 			}
 		} else {
 			if (this.documentAtUri) {
@@ -1495,8 +1518,8 @@ export class JuttuWidget {
 		try {
 			const res = await fetch(
 				`https://public.api.bsky.app/xrpc/app.bsky.feed.getAuthorFeed` +
-					`?actor=${encodeURIComponent(this.currentUser.handle)}` +
-					`&filter=posts_no_replies&limit=20`
+				`?actor=${encodeURIComponent(this.currentUser.handle)}` +
+				`&filter=posts_no_replies&limit=20`
 			);
 			if (!res.ok) throw new Error(`Failed to fetch posts: ${res.status}`);
 			const data = await res.json() as { feed: Array<{ post: BskyPost; reason?: { $type: string } }> };

@@ -92,6 +92,7 @@ func runServer(ctx context.Context, cmd *cli.Command) error {
 		"repo:app.bsky.feed.repost?action=delete",
 		"repo:site.standard.document?action=create",
 		"repo:site.standard.document?action=update",
+		"rpc:app.bsky.feed.getPostThread?aud=did:web:api.bsky.app#bsky_appview",
 	}
 	bind := ":8080"
 
@@ -189,6 +190,8 @@ func runServer(ctx context.Context, cmd *cli.Command) error {
 	mux.HandleFunc("DELETE /bsky/like", srv.DeleteLike)
 	mux.HandleFunc("POST /bsky/repost", srv.CreateRepost)
 	mux.HandleFunc("DELETE /bsky/repost", srv.DeleteRepost)
+
+	mux.HandleFunc("GET /bsky/thread", srv.GetThread)
 
 	mux.HandleFunc("PUT /atproto/document", srv.PutDocument)
 

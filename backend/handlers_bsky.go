@@ -10,6 +10,74 @@ import (
 	"github.com/bluesky-social/indigo/atproto/syntax"
 )
 
+type threadPostViewer struct {
+	Like   string `json:"like"`
+	Repost string `json:"repost"`
+}
+
+type threadPost struct {
+	URI    string            `json:"uri"`
+	Viewer *threadPostViewer `json:"viewer"`
+}
+
+type threadViewPost struct {
+	Post    threadPost       `json:"post"`
+	Replies []threadViewPost `json:"replies"`
+}
+
+type getPostThreadResponse struct {
+	Thread threadViewPost `json:"thread"`
+}
+
+func extractViewerStates(node threadViewPost, out map[string]map[string]string) {
+	if node.Post.URI != "" && node.Post.Viewer != nil {
+		entry := map[string]string{}
+		if node.Post.Viewer.Like != "" {
+			entry["likeUri"] = node.Post.Viewer.Like
+		}
+		if node.Post.Viewer.Repost != "" {
+			entry["repostUri"] = node.Post.Viewer.Repost
+		}
+		if len(entry) > 0 {
+			out[node.Post.URI] = entry
+		}
+	}
+	for _, reply := range node.Replies {
+		extractViewerStates(reply, out)
+	}
+}
+
+func (s *Server) GetThread(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	_, c, err := s.requireSession(r)
+	if err != nil {
+		jsonError(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	uri := r.URL.Query().Get("uri")
+	if uri == "" {
+		jsonError(w, "uri is required", http.StatusBadRequest)
+		return
+	}
+
+	proxy := c.WithService("did:web:api.bsky.app#bsky_appview")
+	var resp getPostThreadResponse
+	if err := proxy.Get(ctx, "app.bsky.feed.getPostThread", map[string]any{
+		"uri":          uri,
+		"depth":        10,
+		"parentHeight": 0,
+	}, &resp); err != nil {
+		jsonError(w, fmt.Sprintf("getPostThread failed: %s", err), http.StatusInternalServerError)
+		return
+	}
+
+	states := map[string]map[string]string{}
+	extractViewerStates(resp.Thread, states)
+	jsonOK(w, map[string]any{"states": states})
+}
+
 func (s *Server) requireSession(r *http.Request) (*syntax.DID, *atclient.APIClient, error) {
 	did, sessionID, _ := s.currentSessionDID(r)
 	if did == nil {

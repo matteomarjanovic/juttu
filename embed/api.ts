@@ -66,6 +66,17 @@ export async function fetchThread(rootUri: string): Promise<ThreadViewPost> {
 	return data.thread as ThreadViewPost;
 }
 
+export async function fetchViewerStates(apiUrl: string, rootUri: string): Promise<Map<string, ViewerState>> {
+	try {
+		const res = await fetch(`${apiUrl}/bsky/thread?uri=${encodeURIComponent(rootUri)}`, { credentials: 'include' });
+		if (!res.ok) return new Map();
+		const data = await res.json() as { states: Record<string, ViewerState> };
+		return new Map(Object.entries(data.states));
+	} catch {
+		return new Map();
+	}
+}
+
 export async function checkCurrentUser(apiUrl: string): Promise<CurrentUser | null> {
 	try {
 		const res = await fetch(`${apiUrl}/auth/me`, { credentials: 'include' });
