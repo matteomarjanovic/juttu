@@ -1024,13 +1024,12 @@ export class JuttuWidget {
 
 	private syncBackdropStyles(backdrop: HTMLElement, textarea: HTMLTextAreaElement): void {
 		const cs = window.getComputedStyle(textarea);
-		const style = backdrop.style as Record<string, string>;
 		for (const prop of [
 			'paddingTop', 'paddingRight', 'paddingBottom', 'paddingLeft',
 			'borderTopWidth', 'borderRightWidth', 'borderBottomWidth', 'borderLeftWidth',
 			'fontFamily', 'fontSize', 'fontWeight', 'lineHeight', 'letterSpacing'
-		]) {
-			style[prop] = (cs as unknown as Record<string, string>)[prop];
+		] as const) {
+			backdrop.style[prop] = cs[prop];
 		}
 	}
 
@@ -1222,12 +1221,6 @@ export class JuttuWidget {
 		root.appendChild(linking);
 
 		root.addEventListener('click', (e) => this.handleLinkingClick(e));
-		root.addEventListener('keydown', (e) => {
-			const target = e.target as HTMLElement;
-			if (target.classList.contains('juttu-handle-input') && (e as KeyboardEvent).key === 'Enter') {
-				this.handleLoginSubmit();
-			}
-		});
 
 		const footer = document.createElement('div');
 		footer.className = 'juttu-footer';
