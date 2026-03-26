@@ -684,13 +684,8 @@ export class JuttuWidget {
 
 		this.currentUser = null;
 		this.viewerState.clear();
-
-		const composer = this.getComposer();
-		if (composer) {
-			this.clearMentionState();
-			composer.innerHTML = '';
-			composer.appendChild(this.makeComposeArea());
-		}
+		this.clearMentionState();
+		this.renderWidget();
 	}
 
 	// ─── Auth guard ──────────────────────────────────────────────────────────────
