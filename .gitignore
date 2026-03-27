@@ -12,8 +12,6 @@ Thumbs.db
 
 # Build artifacts
 backend/bsky-api-service*
-backend/juttu-embed.js
-embed/juttu-embed.js
 
 # Editor / tooling
 .claude
