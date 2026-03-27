@@ -159,11 +159,11 @@ export const STYLES = `
 .juttu-avatar-link { flex-shrink: 0; display: block; }
 .juttu-avatar { width: var(--juttu-avatar-size); height: var(--juttu-avatar-size); border-radius: 50%; object-fit: cover; display: block; }
 .juttu-avatar-placeholder { width: var(--juttu-avatar-size); height: var(--juttu-avatar-size); border-radius: 50%; background: var(--juttu-border-color); flex-shrink: 0; }
-.juttu-author-info { display: flex; flex-direction: column; min-width: 0; flex: 1; gap: 0.1rem; }
-.juttu-display-name { font-weight: 700; font-size: 0.875rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--juttu-text); text-decoration: none; }
-.juttu-display-name:hover { text-decoration: underline; }
-.juttu-handle { font-size: 0.8rem; color: var(--juttu-text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-decoration: none; }
-.juttu-handle:hover { text-decoration: underline; }
+.juttu-author-info { display: flex; flex-direction: column; min-width: 0; flex: 1; gap: 0.1rem; align-items: flex-start; }
+.juttu-display-name { font-weight: 700; font-size: 0.875rem; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--juttu-text); text-decoration: none; }
+a.juttu-display-name:hover { text-decoration: underline; }
+.juttu-handle { font-size: 0.8rem; color: var(--juttu-text-muted); max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-decoration: none; }
+a.juttu-handle:hover { text-decoration: underline; }
 .juttu-time-link { font-size: 0.75rem; color: var(--juttu-text-muted); text-decoration: none; flex-shrink: 0; white-space: nowrap; }
 .juttu-time-link:hover { text-decoration: underline; }
 .juttu-comment-body { font-family: var(--juttu-comment-font-family); font-size: 0.875rem; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; margin-bottom: 0.4rem; color: var(--juttu-text); }
