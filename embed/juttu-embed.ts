@@ -8,13 +8,8 @@ if (typeof window !== 'undefined') {
 	const currentScript = document.currentScript as HTMLScriptElement | null;
 
 	function autoInitFromScript(script: HTMLScriptElement): void {
-		const apiUrl = script.getAttribute('data-api-url');
+		const apiUrl = script.getAttribute('data-api-url') ?? 'https://api.juttu.app';
 		const theme = (script.getAttribute('data-theme') ?? 'auto') as 'auto' | 'light' | 'dark';
-
-		if (!apiUrl) {
-			console.error('Juttu: Missing data-api-url attribute on script tag');
-			return;
-		}
 		const container = document.getElementById('juttu-comments');
 		if (!container) {
 			console.error('Juttu: No element with id="juttu-comments" found on this page');
