@@ -26,6 +26,9 @@ var indexHTML []byte
 //go:embed login.html
 var loginHTML []byte
 
+//go:embed juttu-embed.js
+var embedJS []byte
+
 func main() {
 	app := cli.Command{
 		Name:   "bsky-api-service",
@@ -174,6 +177,12 @@ func runServer(ctx context.Context, cmd *cli.Command) error {
 	mux.HandleFunc("GET /login", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Write(loginHTML)
+	})
+
+	mux.HandleFunc("GET /embed/juttu-embed.js", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/javascript")
+		w.Header().Set("Cache-Control", "public, max-age=3600")
+		w.Write(embedJS)
 	})
 
 	mux.HandleFunc("GET /oauth-client-metadata.json", srv.ClientMetadata)

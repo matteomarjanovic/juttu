@@ -7,17 +7,34 @@ on:
     branches: [main]
 
 jobs:
-  test:
+  embed:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: juttu
+        working-directory: embed
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: juttu/package-lock.json
+          cache-dependency-path: embed/package-lock.json
       - run: npm ci
-      - run: npm test
+      - run: node minify.js
+
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: embed/package-lock.json
+      - run: cd embed && npm ci && node minify.js && cp juttu-embed.js ../backend/
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
+      - run: cd backend && go build ./...
+      - run: cd backend && go vet ./...

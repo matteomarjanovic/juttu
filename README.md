@@ -17,7 +17,7 @@ Add the following to your page. The `<link>` and `<script>` tags go in `<head>`;
 ```html
 <!-- in <head> -->
 <link rel="site.standard.document" href="at://did:plc:abc123/site.standard.document/my-article-slug" />
-<script defer src="https://juttu.app/embed/juttu-embed.min.js" data-theme="auto"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/juttu@latest/juttu-embed.js" data-theme="auto"></script>
 
 <!-- in <body>, where you want comments -->
 <div id="juttu-comments"></div>
@@ -29,125 +29,102 @@ To find your DID: go to [this docs page](https://docs.bsky.app/getting-started/i
 
 The comment section resizes itself dynamically — no fixed height needed. On first load, you'll be prompted to log in with your Bluesky account to link the article to a Bluesky post — that post's reply thread becomes the comment section.
 
-`data-theme` accepts `light`, `dark`, or `auto` (follows the visitor's system preference).
+### Attributes
+
+| Attribute | Default | Description |
+|-----------|---------|-------------|
+| `data-theme` | `auto` | `light`, `dark`, or `auto` (follows the site's color scheme) |
+| `data-api-url` | `https://api.juttu.app` | API backend URL (override when self-hosting) |
 
 ## Self-hosting
 
-Run your own instance if you prefer not to use the hosted service.
+Run your own instance with Docker Compose. The backend serves both the API and the embed script.
 
-### Docker (recommended)
+### Requirements
 
-A pre-built image requires no code changes — just set `PUBLIC_HOSTNAME` to your domain:
+Create a `.env` file with:
 
-```sh
-docker run -d \
-  -e PUBLIC_HOSTNAME=comments.example.com \
-  -p 3000:3000 \
-  ghcr.io/matteomarjanovic/juttu:latest
+```
+SESSION_SECRET=your-random-secret
+CLIENT_HOSTNAME=comments.example.com
+CLIENT_SECRET_KEY=your-p256-private-key-in-multibase
 ```
 
-`ORIGIN` is automatically derived as `https://$PUBLIC_HOSTNAME`. To override it explicitly:
+`SESSION_SECRET` is a random string for cookie signing. `CLIENT_HOSTNAME` is your public domain (without `https://`). `CLIENT_SECRET_KEY` is a P-256 private key in multibase encoding for confidential OAuth.
 
-```sh
-docker run -d \
-  -e PUBLIC_HOSTNAME=comments.example.com \
-  -e ORIGIN=https://comments.example.com \
-  -p 3000:3000 \
-  ghcr.io/matteomarjanovic/juttu:latest
+### Docker Compose
+
+```yaml
+services:
+  app:
+    image: ghcr.io/matteomarjanovic/juttu:latest
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    environment:
+      REDIS_URL: redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  redis_data:
 ```
 
-To build the image yourself:
+Then update your embed snippet to point at your own domain:
 
-```sh
-docker build -t juttu ./juttu
-docker run -d -e PUBLIC_HOSTNAME=comments.example.com -p 3000:3000 juttu
+```html
+<script defer src="https://comments.example.com/embed/juttu-embed.js"
+  data-api-url="https://comments.example.com"
+  data-theme="auto"></script>
 ```
 
-Then point your embed snippet at your own domain instead of `juttu.app`.
+### Building from source
 
-### Manual deploy
-
-Deploy it like any SvelteKit (`adapter-node`) app:
-
-1. Set `PUBLIC_HOSTNAME` to your own domain.
-2. Set `ORIGIN` to `https://<your-domain>` (required by `adapter-node`).
-3. Run `npm run build` then `node build`.
-4. Optionally set `PUBLIC_ANALYTICS_ENDPOINT` if you want usage tracking sent to your own server.
+```sh
+docker build -t juttu .
+```
 
 ## Development
 
-### Prerequisites
+### Backend
 
-- Node.js 20+
+Requires Go 1.25+ and a running Redis instance.
 
-### Setup
-
-```sh
-cd juttu && npm install
-```
-
-Create `juttu/.env`:
-
-```
-PUBLIC_HOSTNAME=yourapp.example.com
-```
-
-`PUBLIC_HOSTNAME` is required (without `https://`). It is used to construct OAuth redirect URIs, postMessage origins, and the OAuth client metadata served at `/oauth-client-metadata.json`.
-
-### Commands
+Build the embed script first, then run the server:
 
 ```sh
-npm run dev          # Start dev server (runs prebuild scripts first)
-npm run build        # Production build (runs prebuild scripts first)
-npm run check        # TypeScript type-check
-npm run lint         # Prettier + ESLint
-npm run format       # Auto-format
-npm test             # Run tests
-npm run test:watch   # Tests in watch mode
+cd embed && npm install && node minify.js && cp juttu-embed.js ../backend/
+cd ../backend && go run . --development
 ```
 
-## Telemetry
-
-Juttu includes optional, minimal telemetry to help the hosted service operator understand usage. It is **disabled by default** and opt-in for self-hosters.
-
-### Enabling telemetry
-
-Set `PUBLIC_ANALYTICS_ENDPOINT` in your `.env` to the URL of an HTTP endpoint that accepts `POST` requests with a JSON body:
+The `--development` flag serves a test UI at `/`. You'll need a `.env` file in `backend/` with at least:
 
 ```
-PUBLIC_ANALYTICS_ENDPOINT=https://your-analytics-server.example.com/event
+SESSION_SECRET=dev-secret
+REDIS_URL=redis://localhost:6379/0
 ```
 
-If the variable is absent, no data is ever sent — there is no default endpoint and no fallback.
+### Embed script
 
-### What is collected
-
-| Event | Trigger |
-|-------|---------|
-| `page_view` | Widget iframe is loaded |
-| `like` | A user likes a comment |
-| `unlike` | A user removes a like |
-| `repost` | A user reposts a comment |
-| `unrepost` | A user removes a repost |
-| `reply` | A user posts a reply or root comment |
-
-Each request body:
-
-```json
-{
-  "event": "page_view",
-  "userHandle": "site-owner.bsky.social",
-  "timestamp": "2026-01-01T00:00:00.000Z"
-}
+```sh
+cd embed && npm install && node minify.js
 ```
 
-`userHandle` is the handle of the **site owner** who embedded the widget (from the widget URL `/comments/{atPath}`). It is never the handle of individual commenters.
-
-Requests are fire-and-forget — they never block the UI and errors are silently ignored.
-
-### Opting out (self-hosters)
-
-Do not set `PUBLIC_ANALYTICS_ENDPOINT`. If the variable is absent, no analytics code runs.
+Bundles `juttu-embed.ts` into a single minified IIFE at `juttu-embed.js`.
 
 ## License
 

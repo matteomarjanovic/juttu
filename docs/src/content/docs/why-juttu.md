@@ -39,6 +39,4 @@ Juttu is licensed under [AGPL-3.0](https://github.com/matteomarjanovic/juttu/blo
 
 ## What Juttu stores
 
-Juttu stores nothing beyond an OAuth session token in the user's browser (IndexedDB). There is no database of users, no comment archive, and no analytics by default. The comments themselves live on Bluesky — Juttu just displays them.
-
-Optional, minimal telemetry can be enabled by self-hosters who want usage data sent to their own endpoint. It is disabled by default and there is no hosted fallback. See [Self-Hosting](/self-hosting/#telemetry) for details.
+Juttu stores nothing beyond an OAuth session token in the user's browser (IndexedDB). There is no database of users, no comment archive, and no analytics. The comments themselves live on Bluesky — Juttu just displays them.

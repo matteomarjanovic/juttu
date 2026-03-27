@@ -1,7 +1,18 @@
 {
+  "name": "juttu",
+  "version": "0.0.0",
+  "description": "Bluesky-powered comment widget",
+  "main": "juttu-embed.js",
+  "files": ["juttu-embed.js"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/matteomarjanovic/juttu.git",
+    "directory": "embed"
+  },
+  "license": "AGPL-3.0",
+  "type": "module",
   "devDependencies": {
     "esbuild": "^0.27.4",
     "typescript": "^6.0.2"
-  },
-  "type": "module"
+  }
 }

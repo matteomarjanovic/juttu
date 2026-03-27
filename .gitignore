@@ -1,14 +1,5 @@
 node_modules
 
-# Output
-.output
-.vercel
-.netlify
-.wrangler
-.svelte-kit
-/juttu/.svelte-kit
-/build
-
 # OS
 .DS_Store
 Thumbs.db
@@ -19,21 +10,14 @@ Thumbs.db
 !.env.example
 !.env.test
 
-# Vite
-vite.config.js.timestamp-*
-vite.config.ts.timestamp-*
+# Build artifacts
+backend/bsky-api-service*
+backend/juttu-embed.js
+embed/juttu-embed.js
 
-# ATProto generated lexicons
-juttu/src/lib/lexicons
-
-# Embed script output
-juttu/static/embed
-
-
-AGENTS.md
-CLAUDE.md
-
+# Editor / tooling
 .claude
 .vscode
+AGENTS.md
+CLAUDE.md
 embed/index.html
-backend/bsky-api-service*

@@ -20,7 +20,7 @@ Add the following to your page. The `<link>` and `<script>` tags go in `<head>`;
 ```html
 <!-- in <head> -->
 <link rel="site.standard.document" href="at://YOUR_DID/site.standard.document/YOUR_ARTICLE_SLUG" />
-<script defer src="https://juttu.app/embed/juttu-embed.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/juttu@latest/juttu-embed.js"></script>
 
 <!-- in <body> -->
 <div id="juttu-comments"></div>
@@ -49,7 +49,7 @@ Enter your Bluesky handle to generate your personalised `<link>` tag:
 Replace **`YOUR_ARTICLE_SLUG`** with a stable, unique identifier for this article. Allowed characters: letters, digits, `-` (max 512 chars). Must not change after setup.
 
 ## The `<script>` tag (required)
-The `<script>` tag loads the Juttu embed code. The `src` must be exactly `https://juttu.app/embed/juttu-embed.min.js` if you want to use the hosted version. Self-hosters can change the `src` to their own hosted domain.
+The `<script>` tag loads the Juttu embed code. Use `https://cdn.jsdelivr.net/npm/juttu@latest/juttu-embed.js` for the hosted version. Self-hosters should point at their own backend (e.g. `https://comments.example.com/embed/juttu-embed.js`).
 
 ### `data-theme` (optional)
 
@@ -66,6 +66,16 @@ In `auto` mode, Juttu detects whether your site uses a light or dark color schem
 Example: `data-theme="dark"`
 
 For more advanced theming (custom colors, opaque backgrounds, etc.), see [Customization](/getting-started/customization).
+
+### `data-api-url` (optional)
+
+The URL of the Juttu API backend. Defaults to `https://api.juttu.app`. Self-hosters should set this to their own backend URL:
+
+```html
+<script defer src="https://comments.example.com/embed/juttu-embed.js"
+  data-api-url="https://comments.example.com"
+  data-theme="auto"></script>
+```
 
 ## The `<div>` tag (required)
 The `<div id="juttu-comments">` is where the widget will be rendered. The `id` must be exactly `juttu-comments`.
