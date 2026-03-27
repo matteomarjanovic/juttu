@@ -149,10 +149,25 @@ export class JuttuWidget {
 		this.container.appendChild(wrapper);
 	}
 
+	private detectTheme(): 'light' | 'dark' {
+		const tempDiv = document.createElement('div');
+		this.container.appendChild(tempDiv);
+		const color = window.getComputedStyle(tempDiv).color;
+		this.container.removeChild(tempDiv);
+
+		const rgb = color.match(/\d+/g);
+		if (!rgb || rgb.length < 3) return 'light';
+
+		const [r, g, b] = rgb.map(Number);
+		// If inherited text color is dark (each channel <= 120), the site background is light
+		return (r <= 120 && g <= 120 && b <= 120) ? 'light' : 'dark';
+	}
+
 	private makeRoot(): HTMLElement {
 		const root = document.createElement('div');
 		root.className = 'juttu-comments';
-		if (this.config.theme !== 'auto') root.setAttribute('data-juttu-theme', this.config.theme);
+		const theme = this.config.theme === 'auto' ? this.detectTheme() : this.config.theme;
+		root.setAttribute('data-juttu-theme', theme);
 		return root;
 	}
 

@@ -21,9 +21,10 @@ export const SVG_BSKY = `<svg class="juttu-bsky-icon" xmlns="http://www.w3.org/2
 export const STYLES = `
 .juttu-comments {
   --juttu-font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --juttu-comment-font-family: var(--juttu-font-family);
   --juttu-font-size: 14px;
-  --juttu-bg: #ffffff;
-  --juttu-surface: #f7f9f9;
+  --juttu-bg: transparent;
+  --juttu-surface: rgba(0, 0, 0, 0.03);
   --juttu-border-color: #e1e8ed;
   --juttu-text: #0f1419;
   --juttu-text-muted: #536471;
@@ -33,25 +34,16 @@ export const STYLES = `
   --juttu-avatar-size: 32px;
   --juttu-radius: 8px;
 }
-@media (prefers-color-scheme: dark) {
-  .juttu-comments:not([data-juttu-theme]) {
-    --juttu-bg: #15202b;
-    --juttu-surface: #1e2732;
-    --juttu-border-color: #38444d;
-    --juttu-text: #ffffff;
-    --juttu-text-muted: #8b98a5;
-  }
-}
 .juttu-comments[data-juttu-theme="dark"] {
-  --juttu-bg: #15202b;
-  --juttu-surface: #1e2732;
+  --juttu-bg: transparent;
+  --juttu-surface: rgba(255, 255, 255, 0.05);
   --juttu-border-color: #38444d;
   --juttu-text: #ffffff;
   --juttu-text-muted: #8b98a5;
 }
 .juttu-comments[data-juttu-theme="light"] {
-  --juttu-bg: #ffffff;
-  --juttu-surface: #f7f9f9;
+  --juttu-bg: transparent;
+  --juttu-surface: rgba(0, 0, 0, 0.03);
   --juttu-border-color: #e1e8ed;
   --juttu-text: #0f1419;
   --juttu-text-muted: #536471;
@@ -61,9 +53,6 @@ export const STYLES = `
   font-size: var(--juttu-font-size);
   color: var(--juttu-text);
   background: var(--juttu-bg);
-  border: 1px solid var(--juttu-border-color);
-  border-radius: var(--juttu-radius);
-  padding: 1.25rem;
   box-sizing: border-box;
 }
 .juttu-comments *, .juttu-comments *::before, .juttu-comments *::after {
@@ -177,7 +166,7 @@ export const STYLES = `
 .juttu-handle:hover { text-decoration: underline; }
 .juttu-time-link { font-size: 0.75rem; color: var(--juttu-text-muted); text-decoration: none; flex-shrink: 0; white-space: nowrap; }
 .juttu-time-link:hover { text-decoration: underline; }
-.juttu-comment-body { font-size: 0.875rem; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; margin-bottom: 0.4rem; color: var(--juttu-text); }
+.juttu-comment-body { font-family: var(--juttu-comment-font-family); font-size: 0.875rem; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; margin-bottom: 0.4rem; color: var(--juttu-text); }
 .juttu-mention, .juttu-link, .juttu-hashtag { color: var(--juttu-accent-color); text-decoration: none; }
 .juttu-mention:hover, .juttu-link:hover, .juttu-hashtag:hover { text-decoration: underline; }
 .juttu-comment-images { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.4rem; }

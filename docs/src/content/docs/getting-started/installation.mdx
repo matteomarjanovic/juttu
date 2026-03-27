@@ -57,11 +57,15 @@ Controls the color theme. Accepted values:
 
 | Value | Behavior |
 |-------|----------|
+| `auto` | Detect the site's theme automatically (default) |
 | `light` | Always use the light theme |
 | `dark` | Always use the dark theme |
-| `auto` | Follow the visitor's system preference (default) |
+
+In `auto` mode, Juttu detects whether your site uses a light or dark color scheme by inspecting the inherited text color of the widget container. This means it adapts to your site's actual theme — not the visitor's OS preference.
 
 Example: `data-theme="dark"`
+
+For more advanced theming (custom colors, opaque backgrounds, etc.), see [Customization](/getting-started/customization).
 
 ## The `<div>` tag (required)
 The `<div id="juttu-comments">` is where the widget will be rendered. The `id` must be exactly `juttu-comments`.
