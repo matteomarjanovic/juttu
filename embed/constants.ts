@@ -23,6 +23,7 @@ export const STYLES = `
   --juttu-font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --juttu-comment-font-family: var(--juttu-font-family);
   --juttu-font-size: 14px;
+  --juttu-comment-font-size: var(--juttu-font-size);
   --juttu-bg: transparent;
   --juttu-surface: rgba(0, 0, 0, 0.03);
   --juttu-border-color: #e1e8ed;
@@ -168,7 +169,7 @@ a.juttu-display-name:hover { text-decoration: underline; }
 a.juttu-handle:hover { text-decoration: underline; }
 .juttu-time-link { font-size: 0.75rem; color: var(--juttu-text-muted); text-decoration: none; flex-shrink: 0; white-space: nowrap; }
 .juttu-time-link:hover { text-decoration: underline; }
-.juttu-comment-body { font-family: var(--juttu-comment-font-family); font-size: 0.875rem; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; margin-bottom: 0.4rem; color: var(--juttu-text); }
+.juttu-comment-body { font-family: var(--juttu-comment-font-family); font-size: var(--juttu-comment-font-size); line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; margin-bottom: 0.4rem; color: var(--juttu-text); }
 .juttu-mention, .juttu-link, .juttu-hashtag { color: var(--juttu-accent-color); text-decoration: none; }
 .juttu-mention:hover, .juttu-link:hover, .juttu-hashtag:hover { text-decoration: underline; }
 .juttu-comment-images { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.4rem; }

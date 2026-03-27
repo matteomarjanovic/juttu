@@ -29,6 +29,7 @@ To customize the widget, define your overrides on the `.juttu-comments` selector
 | `--juttu-font-family` | system-ui, … | same | Font stack for UI elements |
 | `--juttu-comment-font-family` | inherits `--juttu-font-family` | same | Font stack for comment text |
 | `--juttu-font-size` | `14px` | same | Base font size |
+| `--juttu-comment-font-size` | inherits `--juttu-font-size` | same | Font size for comment text |
 | `--juttu-bg` | `transparent` | `transparent` | Widget background |
 | `--juttu-surface` | `rgba(0,0,0,0.03)` | `rgba(255,255,255,0.05)` | Input fields, cards |
 | `--juttu-border-color` | `#e1e8ed` | `#38444d` | Borders and dividers |
