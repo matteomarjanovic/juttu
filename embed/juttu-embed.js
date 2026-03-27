@@ -13,6 +13,7 @@
   --juttu-repost-color: #17bf63;
   --juttu-avatar-size: 32px;
   --juttu-radius: 8px;
+  --juttu-autocomplete-bg: #ffffff;
 }
 .juttu-comments[data-juttu-theme="dark"] {
   --juttu-bg: transparent;
@@ -20,6 +21,7 @@
   --juttu-border-color: #38444d;
   --juttu-text: #ffffff;
   --juttu-text-muted: #8b98a5;
+  --juttu-autocomplete-bg: #1e2d3d;
 }
 .juttu-comments[data-juttu-theme="light"] {
   --juttu-bg: transparent;
@@ -295,7 +297,7 @@ a.juttu-handle:hover { text-decoration: underline; }
 /* Mention autocomplete */
 .juttu-autocomplete {
   position: absolute; top: 100%; left: 0; right: 0; z-index: 10;
-  background: var(--juttu-bg); border: 1px solid var(--juttu-border-color);
+  background: var(--juttu-autocomplete-bg); border: 1px solid var(--juttu-border-color);
   border-radius: var(--juttu-radius); margin-top: 2px;
   list-style: none; padding: 0; overflow: hidden;
   box-shadow: 0 4px 12px rgba(0,0,0,0.12);

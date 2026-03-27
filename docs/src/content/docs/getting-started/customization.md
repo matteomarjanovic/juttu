@@ -39,6 +39,7 @@ To customize the widget, define your overrides on the `.juttu-comments` selector
 | `--juttu-repost-color` | `#17bf63` | same | Repost button active state |
 | `--juttu-avatar-size` | `32px` | same | Avatar dimensions |
 | `--juttu-radius` | `8px` | same | Border radius |
+| `--juttu-autocomplete-bg` | `#ffffff` | `#1e2d3d` | Background of the @mention autocomplete dropdown |
 
 ## Examples
 
