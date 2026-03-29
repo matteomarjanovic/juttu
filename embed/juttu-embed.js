@@ -138,7 +138,7 @@
 .juttu-submit-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 .juttu-post-error { font-size: 0.75rem; color: #c0392b; margin-top: 0.25rem; }
 .juttu-comment { margin-bottom: 1rem; }
-.juttu-comment-header { display: flex; align-items: flex-start; gap: 0.5rem; margin-bottom: 0.35rem; }
+.juttu-comment-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem; }
 .juttu-avatar-link { flex-shrink: 0; display: block; }
 .juttu-avatar { width: var(--juttu-avatar-size); height: var(--juttu-avatar-size); border-radius: 50%; object-fit: cover; display: block; }
 .juttu-avatar-placeholder { width: var(--juttu-avatar-size); height: var(--juttu-avatar-size); border-radius: 50%; background: var(--juttu-border-color); flex-shrink: 0; }
