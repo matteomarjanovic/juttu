@@ -12,6 +12,8 @@
   --juttu-accent-color: #1d9bf0;
   --juttu-like-color: #e0245e;
   --juttu-repost-color: #17bf63;
+  --juttu-reply-color: #1d9bf0;
+  --juttu-bsky-color: #1d9bf0;
   --juttu-avatar-size: 32px;
   --juttu-radius: 8px;
   --juttu-autocomplete-bg: #ffffff;
@@ -171,8 +173,8 @@ a.juttu-handle:hover { text-decoration: underline; }
 .juttu-repost-btn[data-reposted="true"] .juttu-repost-icon { stroke: var(--juttu-repost-color); }
 .juttu-repost-btn[data-reposted="true"] .juttu-repost-count { color: var(--juttu-repost-color); }
 .juttu-reply-btn .juttu-reply-icon { stroke: currentColor; transition: stroke 0.15s; }
-.juttu-reply-btn:hover .juttu-reply-icon { stroke: var(--juttu-accent-color); }
-.juttu-bsky-link { color: var(--juttu-accent-color); text-decoration: none; display: flex; align-items: center; gap: 0.3rem; font-size: 0.75rem; transition: opacity 0.15s; }
+.juttu-reply-btn:hover .juttu-reply-icon { stroke: var(--juttu-reply-color); }
+.juttu-bsky-link { color: var(--juttu-bsky-color); text-decoration: none; display: flex; align-items: center; gap: 0.3rem; font-size: 0.75rem; transition: opacity 0.15s; }
 .juttu-bsky-link:hover { opacity: 0.75; }
 .juttu-action-error { font-size: 0.72rem; color: #c0392b; margin-top: 0.2rem; }
 .juttu-reply-form { margin-top: 0.5rem; }
