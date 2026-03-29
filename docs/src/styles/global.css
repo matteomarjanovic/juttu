@@ -46,6 +46,13 @@
   --color-gray-800: oklch(0.363 0.032 232);
   --color-gray-900: oklch(0.309 0.031 232);
   --color-gray-950: oklch(0.223 0.022 234);
+
+  /*
+   * Brand blue — the accent used on the marketing landing page.
+   * Distinct from the navy accent scale above; this is the vivid blue CTA colour.
+   */
+  --color-brand-500: oklch(0.6035 0.217 257.8);
+  --color-brand-600: oklch(0.5 0.18 257.8);
 }
 
 /* Headings use Outfit — short display text where its geometric clarity works best. */

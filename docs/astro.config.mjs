@@ -6,7 +6,7 @@ import tailwindcss from '@tailwindcss/vite';
 
 // https://astro.build/config
 export default defineConfig({
-    site: 'https://docs.juttu.app',
+    site: 'https://juttu.app',
     integrations: [
         starlight({
             title: 'Juttu',
@@ -28,10 +28,6 @@ export default defineConfig({
             favicon: 'favicon.ico',
         }),
     ],
-
-    redirects: {
-        '/': '/getting-started/installation/',
-    },
 
     vite: {
         plugins: [tailwindcss()],

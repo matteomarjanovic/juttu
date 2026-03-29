@@ -1,0 +1,1919 @@
+---
+import "@fontsource-variable/outfit";
+import "@fontsource-variable/recursive/full.css";
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Juttu — Comments that live on the open web</title>
+    <meta
+      name="description"
+      content="Juttu is a Bluesky-powered comment widget. Every comment is a real Bluesky post — owned by your readers, not by you, not by us."
+    />
+    <link rel="icon" href="/favicon.ico" />
+  </head>
+  <body>
+    <!-- ─── NAVBAR ─────────────────────────────────────────────── -->
+    <nav class="navbar" id="navbar">
+      <div class="container navbar-inner">
+        <a href="/" class="logo" aria-label="Juttu">
+          <svg
+            height="26"
+            viewBox="0 0 904 333"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="currentColor"
+            aria-hidden="true"
+          >
+            <path
+              d="M90.012,332.763c-19.899,0 -37.388,-3.809 -52.468,-11.426c-11.592,-5.856 -21.669,-13.365 -30.229,-22.529c-4.297,-4.568 -4.083,-11.752 0.479,-16.056c7.495,-7.086 18.83,-17.78 26.658,-25.165c4.494,-4.24 11.551,-4.118 15.896,0.275c3.855,3.881 8.158,7.082 12.905,9.607c7.89,4.197 16.654,6.296 26.292,6.296c9.872,0 18.403,-2.04 25.593,-6.121c7.19,-4.081 12.787,-9.988 16.79,-17.722c4.003,-7.734 6.005,-17.12 6.005,-28.158c0,-0 0,-165.091 0,-210.387c0,-3.018 1.199,-5.911 3.332,-8.045c2.134,-2.134 5.028,-3.332 8.045,-3.332l40.906,0c3.018,-0 5.911,1.199 8.045,3.332c2.134,2.134 3.332,5.028 3.332,8.045c-0,44.759 0,206.306 0,206.306c-0,23.164 -4.606,43.373 -13.817,60.63c-9.211,17.256 -22.134,30.645 -38.768,40.167c-16.634,9.522 -36.3,14.283 -58.997,14.283Z"
+            ></path>
+            <path
+              d="M322.613,332.763c-19.729,0 -37.312,-4.236 -52.748,-12.709c-15.437,-8.473 -27.489,-20.172 -36.155,-35.099c-8.667,-14.927 -13,-32.145 -13,-51.655c-0,-0 0,-87.518 0,-119.319c0,-6.284 5.094,-11.378 11.378,-11.378l38.574,0c3.018,-0 5.911,1.199 8.045,3.332c2.134,2.134 3.332,5.028 3.332,8.045c0,31.543 -0,117.81 -0,117.81c0,9.337 1.589,17.319 4.766,23.946c3.177,6.627 7.84,11.715 13.988,15.267c6.148,3.551 13.461,5.327 21.938,5.327c12.748,0 22.658,-3.889 29.732,-11.667c7.073,-7.778 10.61,-18.735 10.61,-32.873c0,-0 0,-86.267 0,-117.81c-0,-3.018 1.199,-5.911 3.332,-8.045c2.134,-2.134 5.028,-3.332 8.045,-3.332l38.574,0c3.018,-0 5.911,1.199 8.045,3.332c2.134,2.134 3.332,5.028 3.332,8.045c0,31.802 0,119.326 -0,119.326c-0,19.743 -4.314,37.077 -12.942,52.002c-8.628,14.924 -20.588,26.564 -35.879,34.92c-15.291,8.356 -32.947,12.534 -52.967,12.534Z"
+            ></path>
+            <path
+              d="M486.538,327.866c-3.018,0 -5.911,-1.199 -8.045,-3.332c-2.134,-2.134 -3.332,-5.028 -3.332,-8.045l0,-296.017c-0,-3.018 1.199,-5.911 3.332,-8.045c2.134,-2.134 5.028,-3.332 8.045,-3.332l38.574,0c3.018,-0 5.911,1.199 8.045,3.332c2.134,2.134 3.332,5.028 3.332,8.045l0,296.017c0,3.018 -1.199,5.911 -3.332,8.045c-2.134,2.134 -5.028,3.332 -8.045,3.332l-38.574,0Zm-112.089,-171.628c-6.284,-0 -11.378,-5.094 -11.378,-11.378l0,-30.879c-0,-6.284 5.094,-11.378 11.378,-11.378l374.838,0c6.284,0 11.378,5.094 11.378,11.378l0,30.879c0,6.284 -5.094,11.378 -11.378,11.378l-374.838,0Zm224.177,171.628c-3.018,0 -5.911,-1.199 -8.045,-3.332c-2.134,-2.134 -3.332,-5.028 -3.332,-8.045l0,-296.017c-0,-3.018 1.199,-5.911 3.332,-8.045c2.134,-2.134 5.028,-3.332 8.045,-3.332l38.574,0c3.018,-0 5.911,1.199 8.045,3.332c2.134,2.134 3.332,5.028 3.332,8.045l0,296.017c0,3.018 -1.199,5.911 -3.332,8.045c-2.134,2.134 -5.028,3.332 -8.045,3.332l-38.574,0Z"
+            ></path>
+            <path
+              d="M801.24,332.763c-19.729,0 -37.312,-4.236 -52.748,-12.709c-15.437,-8.473 -27.489,-20.172 -36.155,-35.099c-8.667,-14.927 -13,-32.145 -13,-51.655c0,-0 0,-87.518 0,-119.319c0,-6.284 5.094,-11.378 11.378,-11.378l38.574,0c3.018,-0 5.911,1.199 8.045,3.332c2.134,2.134 3.332,5.028 3.332,8.045c0,31.543 0,117.81 0,117.81c0,9.337 1.589,17.319 4.766,23.946c3.177,6.627 7.84,11.715 13.988,15.267c6.148,3.551 13.461,5.327 21.938,5.327c12.748,0 22.658,-3.889 29.732,-11.667c7.073,-7.778 10.61,-18.735 10.61,-32.873c0,-0 0,-86.267 0,-117.81c-0,-3.018 1.199,-5.911 3.332,-8.045c2.134,-2.134 5.028,-3.332 8.045,-3.332l38.574,0c3.018,-0 5.911,1.199 8.045,3.332c2.134,2.134 3.332,5.028 3.332,8.045l0,119.326c-0,19.743 -4.314,37.077 -12.942,52.002c-8.628,14.924 -20.588,26.564 -35.879,34.92c-15.291,8.356 -32.947,12.534 -52.967,12.534Z"
+            ></path>
+          </svg>
+        </a>
+
+        <div class="nav-links">
+          <a href="https://juttu.app/why-juttu" class="nav-link"
+            >Documentation</a
+          >
+          <a
+            href="https://github.com/matteomarjanovic/juttu"
+            class="nav-link"
+            target="_blank"
+            rel="noopener"
+          >
+            <svg
+              width="17"
+              height="17"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"
+              ></path>
+            </svg>
+            GitHub
+          </a>
+          <a
+            href="https://bsky.app/profile/juttu.app"
+            class="nav-link"
+            target="_blank"
+            rel="noopener"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 568 501"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                d="M123.121 33.664C188.241 82.553 258.281 181.68 284 234.873c25.719-53.192 95.759-152.32 160.879-201.21C491.866-1.611 568-28.906 568 57.947c0 17.346-9.945 145.713-15.778 166.555-20.275 72.453-94.155 90.933-159.875 79.748C507.222 323.8 536.444 388.56 473.333 453.32c-119.86 122.992-172.272-30.859-185.702-70.281-2.462-7.227-3.614-10.608-3.631-7.733-.017-2.875-1.169.506-3.631 7.733-13.43 39.422-65.842 193.273-185.702 70.281-63.111-64.76-33.89-129.52 80.986-149.071-65.72 11.185-139.6-7.295-159.875-79.748C9.945 203.659 0 75.291 0 57.946 0-28.906 76.135-1.612 123.121 33.664Z"
+              ></path>
+            </svg>
+            Bluesky
+          </a>
+          <a href="/getting-started/installation/" class="btn-primary"
+            >Get Started</a
+          >
+        </div>
+
+        <button class="hamburger" id="hamburger" aria-label="Toggle menu">
+          <svg
+            id="hamburger-open"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+          >
+            <line x1="3" y1="6" x2="21" y2="6"></line><line
+              x1="3"
+              y1="12"
+              x2="21"
+              y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+          <svg
+            id="hamburger-close"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            style="display:none"
+          >
+            <line x1="18" y1="6" x2="6" y2="18"></line><line
+              x1="6"
+              y1="6"
+              x2="18"
+              y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="mobile-menu" id="mobile-menu" hidden>
+        <a href="https://juttu.app/why-juttu" class="mobile-link"
+          >Documentation</a
+        >
+        <a
+          href="https://github.com/matteomarjanovic/juttu"
+          class="mobile-link"
+          target="_blank"
+          rel="noopener">GitHub</a
+        >
+        <a
+          href="https://bsky.app/profile/juttu.app"
+          class="mobile-link"
+          target="_blank"
+          rel="noopener">Bluesky</a
+        >
+        <div class="mobile-cta">
+          <a href="/getting-started/installation/" class="btn-primary btn-full"
+            >Get Started</a
+          >
+        </div>
+      </div>
+    </nav>
+
+    <!-- ─── HERO ───────────────────────────────────────────────── -->
+    <section class="section-hero" id="hero">
+      <div class="container hero-inner">
+        <div class="hero-text">
+          <div class="badge">Built on AT Protocol</div>
+          <h1 class="hero-title">
+            Comments that live on the <em>open web</em>
+          </h1>
+          <p class="hero-sub">
+            Every comment is a real Bluesky post. Owned by your readers, not by
+            you, not by us&nbsp;— forever.
+          </p>
+          <div class="hero-actions">
+            <a href="/getting-started/installation/" class="btn-primary btn-lg"
+              >Get Started</a
+            >
+            <a
+              href="https://github.com/matteomarjanovic/juttu"
+              class="btn-outline btn-lg"
+              target="_blank"
+              rel="noopener"
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"
+                ></path>
+              </svg>
+              View on GitHub
+            </a>
+          </div>
+        </div>
+
+        <!-- MOCK WIDGET PREVIEW -->
+        <div class="mock-browser" id="mock-widget">
+          <div class="browser-chrome">
+            <span class="dot dot-red"></span>
+            <span class="dot dot-yellow"></span>
+            <span class="dot dot-green"></span>
+            <span class="browser-url">myblog.com/my-first-post</span>
+          </div>
+
+          <div class="blog-excerpt">
+            <div class="blog-title">My first blog post</div>
+            <div class="blog-body">
+              This is my first post with Juttu! Readers can comment using their
+              Bluesky accounts, and every comment is a real post on the open
+              web.
+            </div>
+          </div>
+
+          <div class="widget-area">
+            <!-- Composer -->
+            <div class="composer">
+              <div class="comment-header">
+                <div
+                  class="avatar"
+                  style="background-image: url('https://api.dicebear.com/9.x/dylan/svg?seed=sarahyy')"
+                >
+                </div>
+                <div class="commenter-info">
+                  <span class="display-name">Sarah</span>
+                  <span class="handle">@sarah.bsky.app</span>
+                </div>
+              </div>
+              <textarea
+                id="mock-compose"
+                class="mock-textarea"
+                placeholder="Add a comment..."
+                rows="3"></textarea>
+              <div class="composer-footer">
+                <span class="try-it">✦ Try it out!</span>
+                <button id="mock-submit" class="btn-primary btn-sm" disabled
+                  >Comment</button
+                >
+              </div>
+            </div>
+
+            <!-- Comment list -->
+            <div id="mock-comment-list">
+              <div class="comments-heading">
+                <span id="comment-count-label" class="comments-count"
+                  >2 comments</span
+                >
+                <span class="sort-label">Most liked</span>
+              </div>
+
+              <!-- Comment 1: Alice -->
+              <div class="comment" data-id="1">
+                <div class="comment-header">
+                  <div class="comment-meta">
+                    <div
+                      class="avatar"
+                      style="background-image: url('https://api.dicebear.com/9.x/dylan/svg?seed=ali')"
+                    >
+                    </div>
+                    <div class="commenter-info">
+                      <span class="display-name">Alice</span>
+                      <span class="handle">@alice.bsky.social</span>
+                    </div>
+                  </div>
+                  <span class="comment-date">2h ago</span>
+                </div>
+                <div class="comment-body">
+                  This is a great post! Really enjoyed reading it.
+                </div>
+                <div class="comment-actions">
+                  <button
+                    class="action-btn like-btn"
+                    data-liked="false"
+                    data-count="7"
+                    title="Like"
+                  >
+                    <svg
+                      class="action-icon"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path
+                        d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"
+                      ></path>
+                    </svg>
+                    <span class="action-count">7</span>
+                  </button>
+                  <button
+                    class="action-btn repost-btn"
+                    data-reposted="false"
+                    data-count="2"
+                    title="Repost"
+                  >
+                    <svg
+                      class="action-icon"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="m17 2 4 4-4 4"></path><path
+                        d="M3 11v-1a4 4 0 0 1 4-4h14"></path><path
+                        d="m7 22-4-4 4-4"></path><path
+                        d="M21 13v1a4 4 0 0 1-4 4H3"></path>
+                    </svg>
+                    <span class="action-count">2</span>
+                  </button>
+                  <button
+                    class="action-btn reply-btn"
+                    data-reply-count="1"
+                    title="Reply"
+                  >
+                    <svg
+                      class="action-icon"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path
+                        d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"
+                      ></path>
+                    </svg>
+                    <span class="action-count">1</span>
+                  </button>
+                </div>
+
+                <!-- Nested reply: Carol -->
+                <div class="replies">
+                  <div class="comment reply-comment" data-id="10">
+                    <div class="comment-header">
+                      <div class="comment-meta">
+                        <div
+                          class="avatar avatar-sm"
+                          style="background-image: url('https://api.dicebear.com/9.x/dylan/svg?seed=carol')"
+                        >
+                        </div>
+                        <div class="commenter-info">
+                          <span class="display-name">Carol</span>
+                          <span class="handle">@carol.bsky.social</span>
+                        </div>
+                      </div>
+                      <span class="comment-date">1h ago</span>
+                    </div>
+                    <div class="comment-body">Totally agree!</div>
+                    <div class="comment-actions">
+                      <button
+                        class="action-btn like-btn"
+                        data-liked="false"
+                        data-count="3"
+                        title="Like"
+                      >
+                        <svg
+                          class="action-icon"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        >
+                          <path
+                            d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"
+                          ></path>
+                        </svg>
+                        <span class="action-count">3</span>
+                      </button>
+                      <button
+                        class="action-btn repost-btn"
+                        data-reposted="false"
+                        data-count="0"
+                        title="Repost"
+                      >
+                        <svg
+                          class="action-icon"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        >
+                          <path d="m17 2 4 4-4 4"></path><path
+                            d="M3 11v-1a4 4 0 0 1 4-4h14"></path><path
+                            d="m7 22-4-4 4-4"></path><path
+                            d="M21 13v1a4 4 0 0 1-4 4H3"></path>
+                        </svg>
+                        <span class="action-count">0</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Comment 2: Bob -->
+              <div class="comment" data-id="2">
+                <div class="comment-header">
+                  <div class="comment-meta">
+                    <div
+                      class="avatar"
+                      style="background-image: url('https://api.dicebear.com/9.x/dylan/svg?seed=o')"
+                    >
+                    </div>
+                    <div class="commenter-info">
+                      <span class="display-name">Bob</span>
+                      <span class="handle">@bob.bsky.social</span>
+                    </div>
+                  </div>
+                  <span class="comment-date">3h ago</span>
+                </div>
+                <div class="comment-body">
+                  Agreed — and the best part is my comment lives on Bluesky too
+                  🎉
+                </div>
+                <div class="comment-actions">
+                  <button
+                    class="action-btn like-btn"
+                    data-liked="false"
+                    data-count="12"
+                    title="Like"
+                  >
+                    <svg
+                      class="action-icon"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path
+                        d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"
+                      ></path>
+                    </svg>
+                    <span class="action-count">12</span>
+                  </button>
+                  <button
+                    class="action-btn repost-btn"
+                    data-reposted="false"
+                    data-count="3"
+                    title="Repost"
+                  >
+                    <svg
+                      class="action-icon"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="m17 2 4 4-4 4"></path><path
+                        d="M3 11v-1a4 4 0 0 1 4-4h14"></path><path
+                        d="m7 22-4-4 4-4"></path><path
+                        d="M21 13v1a4 4 0 0 1-4 4H3"></path>
+                    </svg>
+                    <span class="action-count">3</span>
+                  </button>
+                  <button
+                    class="action-btn reply-btn"
+                    data-reply-count="0"
+                    title="Reply"
+                  >
+                    <svg
+                      class="action-icon"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path
+                        d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"
+                      ></path>
+                    </svg>
+                    <span class="action-count">0</span>
+                  </button>
+                </div>
+
+                <div class="replies"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── TRUST STRIP ────────────────────────────────────────── -->
+    <section class="section-dark section-trust">
+      <div class="container trust-inner">
+        {
+          [
+            "AGPLv3 Open Source",
+            "No reader tracking",
+            "No ads, ever",
+            "Self-hostable",
+          ].map((item) => (
+            <div class="trust-item">
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                aria-hidden="true"
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              {item}
+            </div>
+          ))
+        }
+      </div>
+    </section>
+
+    <!-- ─── HOW IT WORKS ───────────────────────────────────────── -->
+    <section class="section-light section-how">
+      <div class="container">
+        <div class="section-label">How it works</div>
+        <h2 class="section-title">Three steps to open comments</h2>
+        <div class="steps">
+          <div class="step-card">
+            <div class="step-num">01</div>
+            <h3 class="step-heading">Add three lines of HTML</h3>
+            <p class="step-body">
+              Drop the Juttu snippet into your page. Works with any blog, static
+              site, or custom setup — no framework required.
+            </p>
+          </div>
+          <div class="step-arrow" aria-hidden="true">→</div>
+          <div class="step-card">
+            <div class="step-num">02</div>
+            <h3 class="step-heading">Link a Bluesky post</h3>
+            <p class="step-body">
+              Share an update about your article on Bluesky and link it from the
+              widget. That post's reply thread becomes the comment section.
+            </p>
+          </div>
+          <div class="step-arrow" aria-hidden="true">→</div>
+          <div class="step-card">
+            <div class="step-num">03</div>
+            <h3 class="step-heading">Readers join via Bluesky</h3>
+            <p class="step-body">
+              Visitors reply using their own Bluesky account. Every comment is a
+              real post on the open network — owned by the commenter, readable
+              everywhere, forever.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── FEATURES ──────────────────────────────────────────── -->
+    <section class="section-dark section-features">
+      <div class="container">
+        <div class="section-label">Features</div>
+        <h2 class="section-title">Built for the open web</h2>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                aria-hidden="true"
+                ><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"
+                ></path></svg
+              >
+            </div>
+            <h3 class="feature-title">Comments owned by readers</h3>
+            <p class="feature-body">
+              Comments live on the AT Protocol. Readers own their words — not
+              you, not Juttu. They can't be deleted by a platform pivot or a
+              vendor shutdown.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                aria-hidden="true"
+                ><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"
+                ></path><circle cx="9" cy="7" r="4"></circle><path
+                  d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path
+                  d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg
+              >
+            </div>
+            <h3 class="feature-title">Grow your Bluesky audience</h3>
+            <p class="feature-body">
+              Every commenter is a potential follower. Readers who engage with
+              your content organically expand your presence on Bluesky.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                aria-hidden="true"
+                ><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"
+                ></path><circle cx="12" cy="12" r="3"></circle><line
+                  x1="1"
+                  y1="1"
+                  x2="23"
+                  y2="23"></line></svg
+              >
+            </div>
+            <h3 class="feature-title">Zero reader tracking</h3>
+            <p class="feature-body">
+              Juttu stores nothing. No database of users, no comment archive, no
+              analytics. Comments live on Bluesky — Juttu just displays them.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                aria-hidden="true"
+                ><polyline points="16 18 22 12 16 6"></polyline><polyline
+                  points="8 6 2 12 8 18"></polyline></svg
+              >
+            </div>
+            <h3 class="feature-title">Open source, forever</h3>
+            <p class="feature-body">
+              AGPLv3 licensed. Self-host it, audit it, fork it. No black boxes.
+              The entire codebase is public and always will be.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                aria-hidden="true"
+                ><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg
+              >
+            </div>
+            <h3 class="feature-title">Lightweight by design</h3>
+            <p class="feature-body">
+              A tiny script tag, no iframes, no heavy dependencies. Your page
+              stays fast and the widget just works.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                aria-hidden="true"
+                ><circle cx="12" cy="12" r="10"></circle><line
+                  x1="2"
+                  y1="12"
+                  x2="22"
+                  y2="12"></line><path
+                  d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
+                ></path></svg
+              >
+            </div>
+            <h3 class="feature-title">Natural spam filter</h3>
+            <p class="feature-body">
+              Commenting requires a Bluesky account. This single requirement
+              dramatically reduces spam and bots without any moderation
+              overhead.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── CODE SNIPPET ──────────────────────────────────────── -->
+    <section class="section-light section-code">
+      <div class="container">
+        <div class="section-label">Integration</div>
+        <h2 class="section-title">Works with any stack</h2>
+        <p class="section-sub">
+          If it renders HTML, it works with Juttu. Drop three lines into your
+          page and you're done.
+        </p>
+        <div class="code-window">
+          <div class="code-chrome">
+            <span class="dot dot-red"></span>
+            <span class="dot dot-yellow"></span>
+            <span class="dot dot-green"></span>
+            <span class="code-filename">index.html</span>
+          </div>
+          <div class="code-body">
+            <div class="code-comment">&lt;!-- in &lt;head&gt; --&gt;</div>
+            <div class="code-line anim-1">
+              <span class="tok-tag">&lt;link</span>
+              <span class="tok-attr"> rel</span><span class="tok-eq">=</span
+              ><span class="tok-str">"site.standard.document"</span>
+            </div>
+            <div class="code-line anim-2">
+              <span class="tok-attr"> href</span><span class="tok-eq">=</span
+              ><span class="tok-str"
+                >"at://YOUR_DID/site.standard.document/YOUR_SLUG"</span
+              >
+              <span class="tok-tag"> /&gt;</span>
+            </div>
+            <div class="code-line anim-3">
+              <span class="tok-tag">&lt;script</span>
+              <span class="tok-attr"> defer src</span><span class="tok-eq"
+                >=</span
+              ><span class="tok-str"
+                >"https://cdn.jsdelivr.net/npm/juttu@latest/juttu-embed.js"</span
+              >
+              <span class="tok-tag">&gt;&lt;/script&gt;</span>
+            </div>
+            <div class="code-blank"></div>
+            <div class="code-comment">&lt;!-- in &lt;body&gt; --&gt;</div>
+            <div class="code-line anim-4">
+              <span class="tok-tag">&lt;div</span>
+              <span class="tok-attr"> id</span><span class="tok-eq">=</span
+              ><span class="tok-str">"juttu-comments"</span>
+              <span class="tok-tag">&gt;&lt;/div&gt;</span>
+            </div>
+          </div>
+        </div>
+        <div class="code-footer-link">
+          <a href="/getting-started/installation/"
+            >View full installation guide →</a
+          >
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── FINAL CTA ─────────────────────────────────────────── -->
+    <section class="section-alt section-cta">
+      <div class="container cta-inner">
+        <h2 class="cta-title">
+          Ready to give comments back<br />to the open web?
+        </h2>
+        <p class="cta-sub">
+          Free and open source. Self-host or use the hosted version.
+        </p>
+        <div class="cta-actions">
+          <a href="/getting-started/installation/" class="btn-primary btn-lg"
+            >Get Started</a
+          >
+          <a
+            href="https://github.com/matteomarjanovic/juttu"
+            class="btn-outline btn-lg"
+            target="_blank"
+            rel="noopener">View on GitHub</a
+          >
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── FOOTER ────────────────────────────────────────────── -->
+    <footer class="section-dark footer">
+      <div class="container footer-inner">
+        <div class="footer-brand">
+          <a href="/" class="logo logo-light" aria-label="Juttu">
+            <svg
+              height="22"
+              viewBox="0 0 904 333"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                d="M90.012,332.763c-19.899,0 -37.388,-3.809 -52.468,-11.426c-11.592,-5.856 -21.669,-13.365 -30.229,-22.529c-4.297,-4.568 -4.083,-11.752 0.479,-16.056c7.495,-7.086 18.83,-17.78 26.658,-25.165c4.494,-4.24 11.551,-4.118 15.896,0.275c3.855,3.881 8.158,7.082 12.905,9.607c7.89,4.197 16.654,6.296 26.292,6.296c9.872,0 18.403,-2.04 25.593,-6.121c7.19,-4.081 12.787,-9.988 16.79,-17.722c4.003,-7.734 6.005,-17.12 6.005,-28.158c0,-0 0,-165.091 0,-210.387c0,-3.018 1.199,-5.911 3.332,-8.045c2.134,-2.134 5.028,-3.332 8.045,-3.332l40.906,0c3.018,-0 5.911,1.199 8.045,3.332c2.134,2.134 3.332,5.028 3.332,8.045c-0,44.759 0,206.306 0,206.306c-0,23.164 -4.606,43.373 -13.817,60.63c-9.211,17.256 -22.134,30.645 -38.768,40.167c-16.634,9.522 -36.3,14.283 -58.997,14.283Z"
+              ></path>
+              <path
+                d="M322.613,332.763c-19.729,0 -37.312,-4.236 -52.748,-12.709c-15.437,-8.473 -27.489,-20.172 -36.155,-35.099c-8.667,-14.927 -13,-32.145 -13,-51.655c-0,-0 0,-87.518 0,-119.319c0,-6.284 5.094,-11.378 11.378,-11.378l38.574,0c3.018,-0 5.911,1.199 8.045,3.332c2.134,2.134 3.332,5.028 3.332,8.045c0,31.543 -0,117.81 -0,117.81c0,9.337 1.589,17.319 4.766,23.946c3.177,6.627 7.84,11.715 13.988,15.267c6.148,3.551 13.461,5.327 21.938,5.327c12.748,0 22.658,-3.889 29.732,-11.667c7.073,-7.778 10.61,-18.735 10.61,-32.873c0,-0 0,-86.267 0,-117.81c-0,-3.018 1.199,-5.911 3.332,-8.045c2.134,-2.134 5.028,-3.332 8.045,-3.332l38.574,0c3.018,-0 5.911,1.199 8.045,3.332c2.134,2.134 3.332,5.028 3.332,8.045c0,31.802 0,119.326 -0,119.326c-0,19.743 -4.314,37.077 -12.942,52.002c-8.628,14.924 -20.588,26.564 -35.879,34.92c-15.291,8.356 -32.947,12.534 -52.967,12.534Z"
+              ></path>
+              <path
+                d="M486.538,327.866c-3.018,0 -5.911,-1.199 -8.045,-3.332c-2.134,-2.134 -3.332,-5.028 -3.332,-8.045l0,-296.017c-0,-3.018 1.199,-5.911 3.332,-8.045c2.134,-2.134 5.028,-3.332 8.045,-3.332l38.574,0c3.018,-0 5.911,1.199 8.045,3.332c2.134,2.134 3.332,5.028 3.332,8.045l0,296.017c0,3.018 -1.199,5.911 -3.332,8.045c-2.134,2.134 -5.028,3.332 -8.045,3.332l-38.574,0Zm-112.089,-171.628c-6.284,-0 -11.378,-5.094 -11.378,-11.378l0,-30.879c-0,-6.284 5.094,-11.378 11.378,-11.378l374.838,0c6.284,0 11.378,5.094 11.378,11.378l0,30.879c0,6.284 -5.094,11.378 -11.378,11.378l-374.838,0Zm224.177,171.628c-3.018,0 -5.911,-1.199 -8.045,-3.332c-2.134,-2.134 -3.332,-5.028 -3.332,-8.045l0,-296.017c-0,-3.018 1.199,-5.911 3.332,-8.045c2.134,-2.134 5.028,-3.332 8.045,-3.332l38.574,0c3.018,-0 5.911,1.199 8.045,3.332c2.134,2.134 3.332,5.028 3.332,8.045l0,296.017c0,3.018 -1.199,5.911 -3.332,8.045c-2.134,2.134 -5.028,3.332 -8.045,3.332l-38.574,0Z"
+              ></path>
+              <path
+                d="M801.24,332.763c-19.729,0 -37.312,-4.236 -52.748,-12.709c-15.437,-8.473 -27.489,-20.172 -36.155,-35.099c-8.667,-14.927 -13,-32.145 -13,-51.655c0,-0 0,-87.518 0,-119.319c0,-6.284 5.094,-11.378 11.378,-11.378l38.574,0c3.018,-0 5.911,1.199 8.045,3.332c2.134,2.134 3.332,5.028 3.332,8.045c0,31.543 0,117.81 0,117.81c0,9.337 1.589,17.319 4.766,23.946c3.177,6.627 7.84,11.715 13.988,15.267c6.148,3.551 13.461,5.327 21.938,5.327c12.748,0 22.658,-3.889 29.732,-11.667c7.073,-7.778 10.61,-18.735 10.61,-32.873c0,-0 0,-86.267 0,-117.81c-0,-3.018 1.199,-5.911 3.332,-8.045c2.134,-2.134 5.028,-3.332 8.045,-3.332l38.574,0c3.018,-0 5.911,1.199 8.045,3.332c2.134,2.134 3.332,5.028 3.332,8.045l0,119.326c-0,19.743 -4.314,37.077 -12.942,52.002c-8.628,14.924 -20.588,26.564 -35.879,34.92c-15.291,8.356 -32.947,12.534 -52.967,12.534Z"
+              ></path>
+            </svg>
+          </a>
+          <p class="footer-tagline">Comments for the open web.</p>
+        </div>
+        <nav class="footer-links" aria-label="Footer navigation">
+          <a href="https://juttu.app" class="footer-link">Docs</a>
+          <a
+            href="https://github.com/matteomarjanovic/juttu"
+            class="footer-link"
+            target="_blank"
+            rel="noopener">GitHub</a
+          >
+          <a
+            href="https://bsky.app/profile/juttu.app"
+            class="footer-link"
+            target="_blank"
+            rel="noopener">Bluesky</a
+          >
+          <a
+            href="https://github.com/matteomarjanovic/juttu/blob/main/LICENSE"
+            class="footer-link"
+            target="_blank"
+            rel="noopener">AGPLv3</a
+          >
+        </nav>
+      </div>
+      <div class="container footer-bottom">
+        &copy; {new Date().getFullYear()} Juttu. Built by
+        <a
+          href="https://matteomarjanovic.com"
+          class="footer-author"
+          target="_blank"
+          rel="noopener">Matteo Marjanovic</a
+        >.
+      </div>
+    </footer>
+  </body>
+</html>
+
+<script is:inline>
+  // ─── Mobile menu ───────────────────────────────────────────────
+  const hamburger = document.getElementById("hamburger");
+  const mobileMenu = document.getElementById("mobile-menu");
+  const iconOpen = document.getElementById("hamburger-open");
+  const iconClose = document.getElementById("hamburger-close");
+
+  hamburger.addEventListener("click", () => {
+    const isOpen = !mobileMenu.hidden;
+    mobileMenu.hidden = isOpen;
+    iconOpen.style.display = isOpen ? "" : "none";
+    iconClose.style.display = isOpen ? "none" : "";
+  });
+
+  // ─── Mock widget ───────────────────────────────────────────────
+  let nextId = 100;
+  let mockCount = 2; // initial top-level comment count
+
+  function updateCount() {
+    document.getElementById("comment-count-label").textContent =
+      mockCount + " comment" + (mockCount !== 1 ? "s" : "");
+  }
+
+  // Like / Repost toggle
+  document.querySelectorAll(".like-btn, .repost-btn").forEach((btn) => {
+    const isLike = btn.classList.contains("like-btn");
+    const activeColor = isLike ? "#e0245e" : "#17bf63";
+    const svg = btn.querySelector("svg");
+    const countEl = btn.querySelector(".action-count");
+
+    btn.addEventListener("click", () => {
+      const active =
+        btn.dataset.liked === "true" || btn.dataset.reposted === "true";
+      const newCount = parseInt(countEl.textContent) + (active ? -1 : 1);
+      countEl.textContent = newCount;
+
+      if (isLike) {
+        btn.dataset.liked = (!active).toString();
+        svg.style.stroke = active ? "" : activeColor;
+        svg.style.fill = active ? "none" : activeColor;
+        countEl.style.color = active ? "" : activeColor;
+      } else {
+        btn.dataset.reposted = (!active).toString();
+        svg.style.stroke = active ? "" : activeColor;
+        countEl.style.color = active ? "" : activeColor;
+      }
+    });
+  });
+
+  function buildComment(text) {
+    const id = nextId++;
+    const div = document.createElement("div");
+    div.className = "comment";
+    div.dataset.id = id;
+    div.innerHTML = `
+      <div class="comment-header">
+        <div class="comment-meta">
+          <div class="avatar" style="background-image: url('https://api.dicebear.com/9.x/dylan/svg?seed=sarahyy')"></div>
+          <div class="commenter-info">
+            <span class="display-name">Sarah</span>
+            <span class="handle">@sarah.bsky.app</span>
+          </div>
+        </div>
+        <span class="comment-date">just now</span>
+      </div>
+      <div class="comment-body">${text.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</div>
+      <div class="comment-actions">
+        <button class="action-btn like-btn" data-liked="false" data-count="0" title="Like">
+          <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"/>
+          </svg>
+          <span class="action-count">0</span>
+        </button>
+        <button class="action-btn repost-btn" data-reposted="false" data-count="0" title="Repost">
+          <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>
+          </svg>
+          <span class="action-count">0</span>
+        </button>
+        <button class="action-btn reply-btn" data-reply-count="0" title="Reply">
+          <svg class="action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z"/>
+          </svg>
+          <span class="action-count">0</span>
+        </button>
+      </div>
+      <div class="replies"></div>`;
+
+    // Wire up like/repost
+    div.querySelectorAll(".like-btn, .repost-btn").forEach((b) => {
+      const isLike = b.classList.contains("like-btn");
+      const activeColor = isLike ? "#e0245e" : "#17bf63";
+      const svg = b.querySelector("svg");
+      const countEl = b.querySelector(".action-count");
+      b.addEventListener("click", () => {
+        const active =
+          b.dataset.liked === "true" || b.dataset.reposted === "true";
+        const newCount = parseInt(countEl.textContent) + (active ? -1 : 1);
+        countEl.textContent = newCount;
+        if (isLike) {
+          b.dataset.liked = (!active).toString();
+          svg.style.stroke = active ? "" : activeColor;
+          svg.style.fill = active ? "none" : activeColor;
+          countEl.style.color = active ? "" : activeColor;
+        } else {
+          b.dataset.reposted = (!active).toString();
+          svg.style.stroke = active ? "" : activeColor;
+          countEl.style.color = active ? "" : activeColor;
+        }
+      });
+    });
+
+    return div;
+  }
+
+  // Main compose
+  const composeTA = document.getElementById("mock-compose");
+  const composeSubmit = document.getElementById("mock-submit");
+  const commentList = document.getElementById("mock-comment-list");
+  const commentsHeading = commentList.querySelector(".comments-heading");
+
+  composeTA.addEventListener("input", () => {
+    composeSubmit.disabled = !composeTA.value.trim();
+  });
+
+  composeSubmit.addEventListener("click", () => {
+    const text = composeTA.value.trim();
+    if (!text) return;
+    const newComment = buildComment(text);
+    commentsHeading.insertAdjacentElement("afterend", newComment);
+    mockCount++;
+    updateCount();
+    composeTA.value = "";
+    composeSubmit.disabled = true;
+  });
+</script>
+
+<style is:global>
+  /* ─── Reset & Base ─────────────────────────────────────────── */
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  :root {
+    --accent: oklch(0.6035 0.217 257.8);
+    --accent-dim: oklch(0.5 0.18 257.8);
+    --bg: oklch(0.979 0.002 232);
+    --bg-alt: oklch(0.95 0.005 232);
+    --bg-dark: oklch(0.223 0.022 234);
+    --bg-dark-2: oklch(0.309 0.031 232);
+    --text: oklch(0.245 0.025 232);
+    --text-2: oklch(0.47 0.035 232);
+    --text-dark: oklch(0.95 0.005 232);
+    --text-dark-2: oklch(0.72 0.02 232);
+    --border: oklch(0.92 0.008 232);
+    --border-dark: oklch(0.363 0.032 232);
+    --font-display: "Outfit Variable", system-ui, sans-serif;
+    --font-body: "Recursive Variable", system-ui, sans-serif;
+    --font-mono: "Recursive Variable", monospace;
+    --radius: 0.75rem;
+    --radius-lg: 1rem;
+    --shadow: 0 8px 32px oklch(0.245 0.025 232 / 0.1);
+    --shadow-lg: 0 20px 60px oklch(0.245 0.025 232 / 0.15);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a {
+    color: inherit;
+  }
+
+  /* ─── Layout ────────────────────────────────────────────────── */
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding-inline: 2rem;
+  }
+
+  /* ─── Navbar ────────────────────────────────────────────────── */
+  .navbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: oklch(0.979 0.002 232 / 0.92);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .navbar-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 4rem;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    color: var(--text);
+    text-decoration: none;
+    flex-shrink: 0;
+  }
+  .logo:hover {
+    color: var(--accent);
+  }
+  .logo-light {
+    color: var(--text-dark);
+  }
+  .logo-light:hover {
+    color: var(--accent);
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 1.75rem;
+  }
+
+  .nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.875rem;
+    text-decoration: none;
+    color: var(--text);
+    opacity: 0.7;
+    transition: opacity 0.15s;
+  }
+  .nav-link:hover {
+    opacity: 1;
+  }
+
+  .hamburger {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: none;
+    background: none;
+    cursor: pointer;
+    color: var(--text);
+    border-radius: 0.5rem;
+  }
+
+  .mobile-menu {
+    border-top: 1px solid var(--border);
+    padding: 0.75rem 1.5rem 1rem;
+    background: oklch(0.979 0.002 232 / 0.97);
+  }
+
+  .mobile-link {
+    display: block;
+    padding: 0.625rem 0.75rem;
+    font-size: 0.9rem;
+    text-decoration: none;
+    color: var(--text);
+    opacity: 0.75;
+    border-radius: 0.5rem;
+    transition: opacity 0.15s;
+  }
+  .mobile-link:hover {
+    opacity: 1;
+  }
+
+  .mobile-cta {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ─── Buttons ───────────────────────────────────────────────── */
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 1.1rem;
+    font-family: var(--font-display);
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: white;
+    background: var(--accent);
+    border: none;
+    border-radius: var(--radius);
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      background 0.15s,
+      opacity 0.15s;
+    white-space: nowrap;
+  }
+  .btn-primary:hover {
+    background: var(--accent-dim);
+  }
+  .btn-primary:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .btn-outline {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 1.1rem;
+    font-family: var(--font-display);
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text);
+    background: transparent;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      border-color 0.15s,
+      color 0.15s;
+    white-space: nowrap;
+  }
+  .btn-outline:hover {
+    border-color: var(--text-2);
+  }
+
+  .btn-ghost {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.8rem;
+    color: var(--text-2);
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    transition: background 0.1s;
+  }
+  .btn-ghost:hover {
+    background: var(--bg-alt);
+  }
+
+  .btn-lg {
+    padding: 0.7rem 1.5rem;
+    font-size: 1rem;
+  }
+  .btn-sm {
+    padding: 0.35rem 0.8rem;
+    font-size: 0.8rem;
+  }
+  .btn-xs {
+    padding: 0.2rem 0.6rem;
+    font-size: 0.75rem;
+  }
+  .btn-full {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* ─── Hero ──────────────────────────────────────────────────── */
+  .section-hero {
+    padding-top: 6rem;
+    padding-bottom: 4rem;
+    background: var(--bg-alt);
+  }
+
+  .hero-inner {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 4rem;
+    align-items: start;
+  }
+
+  .hero-text {
+    padding-top: 2rem;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.35rem 0.85rem;
+    background: oklch(0.6035 0.217 257.8 / 0.12);
+    border: 1px solid oklch(0.6035 0.217 257.8 / 0.3);
+    color: var(--accent);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    border-radius: 999px;
+    margin-bottom: 1.5rem;
+  }
+
+  .hero-title {
+    font-family: var(--font-display);
+    font-size: clamp(2.25rem, 4vw, 3.25rem);
+    font-weight: 800;
+    line-height: 1.08;
+    letter-spacing: -0.03em;
+    color: var(--text);
+    margin-bottom: 1.25rem;
+  }
+
+  .hero-title em {
+    font-style: normal;
+    color: var(--accent);
+  }
+
+  .hero-sub {
+    font-size: clamp(1rem, 1.5vw, 1.1rem);
+    color: var(--text-2);
+    line-height: 1.65;
+    margin-bottom: 2rem;
+  }
+
+  .hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.875rem;
+  }
+
+  /* ─── Mock widget ───────────────────────────────────────────── */
+  .mock-browser {
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    background: white;
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .browser-chrome,
+  .code-chrome {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.625rem 1rem;
+    background: var(--bg-alt);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .dot {
+    width: 0.625rem;
+    height: 0.625rem;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .dot-red {
+    background: #ff5f57;
+  }
+  .dot-yellow {
+    background: #ffbd2e;
+  }
+  .dot-green {
+    background: #28c840;
+  }
+
+  .browser-url {
+    margin-left: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    font-variation-settings: "MONO" 1;
+    color: var(--text-2);
+    opacity: 0.65;
+  }
+
+  .blog-excerpt {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .blog-title {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 0.375rem;
+  }
+
+  .blog-body {
+    font-size: 0.8rem;
+    color: var(--text-2);
+    line-height: 1.55;
+  }
+
+  .widget-area {
+    padding: 1.25rem 1.5rem;
+  }
+
+  /* Composer */
+  .composer {
+    margin-bottom: 1.25rem;
+  }
+
+  .composer-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 0.5rem;
+  }
+
+  .try-it {
+    font-size: 0.7rem;
+    color: var(--text-2);
+    font-style: italic;
+    opacity: 0.7;
+  }
+
+  .mock-textarea {
+    width: 100%;
+    padding: 0.5rem 0.625rem;
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    color: var(--text);
+    background: var(--bg-alt);
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    resize: none;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .mock-textarea:focus {
+    border-color: var(--accent);
+  }
+
+  /* Comment list heading */
+  .comments-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+
+  .comments-count {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .sort-label {
+    font-size: 0.7rem;
+    color: var(--text-2);
+  }
+
+  /* Comment cards */
+  .comment {
+    margin-bottom: 1rem;
+  }
+
+  .comment-header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 0.25rem;
+    gap: 0.75rem;
+  }
+
+  .comment-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .avatar {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background-size: cover;
+    background-position: center;
+    background-color: var(--bg-alt);
+  }
+
+  .avatar-sm {
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+
+  .commenter-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .display-name {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .handle {
+    font-size: 0.75rem;
+    color: var(--text-2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .comment-date {
+    font-size: 0.7rem;
+    color: var(--text-2);
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-left: 0.5rem;
+  }
+
+  .comment-body {
+    font-size: 0.9rem;
+    line-height: 1.55;
+    color: var(--text);
+    padding: 0.25rem 0;
+    /* white-space: pre-wrap; */
+  }
+
+  .comment-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.4rem;
+  }
+
+  .action-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    font-size: 0.75rem;
+    color: var(--text-2);
+    transition: color 0.1s;
+  }
+
+  .action-icon {
+    width: 0.875rem;
+    height: 0.875rem;
+    flex-shrink: 0;
+    transition:
+      stroke 0.1s,
+      fill 0.1s;
+  }
+
+  .action-count {
+    transition: color 0.1s;
+  }
+
+  /* Reply form */
+  .reply-form {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    align-items: flex-start;
+  }
+
+  .reply-form-body {
+    flex: 1;
+  }
+
+  .reply-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.375rem;
+    margin-top: 0.375rem;
+  }
+
+  /* Replies */
+  .replies {
+    margin-top: 0.75rem;
+    padding-left: 0.875rem;
+    border-left: 2px solid var(--border);
+  }
+
+  .reply-comment {
+    margin-bottom: 0.75rem;
+  }
+  .reply-comment:last-child {
+    margin-bottom: 0;
+  }
+
+  /* ─── Trust strip ───────────────────────────────────────────── */
+  .section-trust {
+    padding-block: 1.125rem;
+  }
+
+  .trust-inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+  }
+
+  .trust-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.825rem;
+    color: var(--text-dark-2);
+    color: oklch(0.72 0.02 232);
+  }
+
+  .trust-item svg {
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  /* ─── Section styles ─────────────────────────────────────────── */
+  .section-dark {
+    background: var(--bg-dark);
+    color: var(--text-dark);
+  }
+
+  .section-light {
+    background: white;
+    color: var(--text);
+  }
+
+  .section-alt {
+    background: var(--bg-alt);
+    color: var(--text);
+  }
+
+  .section-how,
+  .section-features,
+  .section-code,
+  .section-cta {
+    padding-block: 5.5rem;
+  }
+
+  .section-label {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.75rem;
+  }
+
+  .section-title {
+    font-family: var(--font-display);
+    font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.025em;
+    margin-bottom: 3rem;
+  }
+
+  .section-sub {
+    font-size: 1.05rem;
+    color: var(--text-2);
+    line-height: 1.65;
+    margin-top: -2rem;
+    margin-bottom: 3rem;
+  }
+
+  .section-dark .section-title {
+    color: var(--text-dark);
+  }
+  .section-dark .section-sub {
+    color: oklch(0.72 0.02 232);
+  }
+
+  /* ─── How it works ───────────────────────────────────────────── */
+  .steps {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+  }
+
+  .step-card {
+    flex: 1;
+    background: var(--bg-alt);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+  }
+
+  .step-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding-inline: 1rem;
+    font-size: 1.5rem;
+    color: var(--border);
+  }
+
+  .step-num {
+    font-family: var(--font-display);
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--accent);
+    opacity: 0.5;
+    line-height: 1;
+    margin-bottom: 1rem;
+  }
+
+  .step-heading {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 0.5rem;
+  }
+
+  .step-body {
+    font-size: 0.875rem;
+    line-height: 1.65;
+    color: var(--text-2);
+  }
+
+  /* ─── Features ───────────────────────────────────────────────── */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+  }
+
+  .feature-card {
+    background: oklch(1 0 0 / 0.04);
+    border: 1px solid oklch(1 0 0 / 0.08);
+    border-radius: var(--radius-lg);
+    padding: 1.75rem;
+    transition:
+      background 0.15s,
+      border-color 0.15s;
+  }
+  .feature-card:hover {
+    background: oklch(1 0 0 / 0.07);
+    border-color: oklch(0.6035 0.217 257.8 / 0.25);
+  }
+
+  .feature-icon {
+    color: var(--accent);
+    margin-bottom: 1.125rem;
+    line-height: 0;
+  }
+
+  .feature-title {
+    font-family: var(--font-display);
+    font-size: 0.925rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 0.5rem;
+  }
+
+  .feature-body {
+    font-size: 0.825rem;
+    line-height: 1.65;
+    color: oklch(0.72 0.02 232);
+  }
+
+  /* ─── Code section ───────────────────────────────────────────── */
+  .code-window {
+    max-width: 700px;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+    background: #1a2733;
+  }
+
+  .code-chrome {
+    background: #243140;
+    border-color: rgba(255, 255, 255, 0.06);
+  }
+
+  .code-filename {
+    margin-left: 0.5rem;
+    font-family: var(--font-mono);
+    font-variation-settings: "MONO" 1;
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.35);
+  }
+
+  .code-body {
+    padding: 1.5rem 1.75rem;
+    font-family: var(--font-mono);
+    font-variation-settings: "MONO" 1;
+    font-size: 0.825rem;
+    line-height: 1.9;
+    overflow-x: auto;
+  }
+
+  .code-comment {
+    color: rgba(255, 255, 255, 0.3);
+    font-style: italic;
+  }
+
+  .code-blank {
+    height: 0.5lh;
+  }
+
+  .tok-tag {
+    color: #7ec8e3;
+  }
+  .tok-attr {
+    color: #9ecbff;
+  }
+  .tok-eq {
+    color: rgba(255, 255, 255, 0.4);
+  }
+  .tok-str {
+    color: #a8d8a8;
+  }
+
+  .code-line {
+    opacity: 0;
+    transform: translateY(4px);
+    animation: line-appear 0.3s ease forwards;
+  }
+  .anim-1 {
+    animation-delay: 0.3s;
+  }
+  .anim-2 {
+    animation-delay: 0.6s;
+  }
+  .anim-3 {
+    animation-delay: 0.9s;
+  }
+  .anim-4 {
+    animation-delay: 1.2s;
+  }
+
+  @keyframes line-appear {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .code-footer-link {
+    margin-top: 1.25rem;
+  }
+
+  .code-footer-link a {
+    font-size: 1rem;
+    color: var(--text-2);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .code-footer-link a:hover {
+    color: var(--text);
+  }
+
+  /* ─── CTA ────────────────────────────────────────────────────── */
+  .cta-inner {
+    text-align: center;
+  }
+
+  .cta-title {
+    font-family: var(--font-display);
+    font-size: clamp(1.75rem, 3.5vw, 2.75rem);
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+    color: var(--text);
+    margin-bottom: 1rem;
+  }
+
+  .cta-sub {
+    font-size: 1rem;
+    color: var(--text-2);
+    margin-bottom: 2.25rem;
+  }
+
+  .cta-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1rem;
+  }
+
+  /* ─── Footer ─────────────────────────────────────────────────── */
+  .footer {
+    padding-top: 3rem;
+    padding-bottom: 1.5rem;
+  }
+
+  .footer-inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 2rem;
+    padding-bottom: 2.5rem;
+    border-bottom: 1px solid var(--border-dark);
+  }
+
+  .footer-tagline {
+    margin-top: 0.5rem;
+    font-size: 0.85rem;
+    color: oklch(0.72 0.02 232);
+  }
+
+  .footer-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    align-items: center;
+  }
+
+  .footer-link {
+    font-size: 0.875rem;
+    color: oklch(0.72 0.02 232);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .footer-link:hover {
+    color: var(--text-dark);
+  }
+
+  .footer-bottom {
+    margin-top: 1.5rem;
+    font-size: 0.78rem;
+    color: oklch(0.55 0.025 232);
+  }
+
+  .footer-author {
+    color: oklch(0.65 0.02 232);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .footer-author:hover {
+    color: oklch(0.72 0.02 232);
+  }
+
+  /* ─── Responsive ─────────────────────────────────────────────── */
+  @media (max-width: 900px) {
+    .hero-inner {
+      grid-template-columns: 1fr;
+      gap: 2.5rem;
+    }
+
+    .hero-text {
+      padding-top: 0;
+    }
+
+    .features-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 680px) {
+    .nav-links {
+      display: none;
+    }
+    .hamburger {
+      display: flex;
+    }
+
+    .steps {
+      flex-direction: column;
+    }
+
+    .step-arrow {
+      display: none;
+    }
+
+    .features-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
