@@ -1220,10 +1220,14 @@ import "@fontsource-variable/recursive/full.css";
     grid-template-columns: 1fr;
     gap: 4rem;
     align-items: start;
+    max-width: calc(0.25rem * 215);
   }
 
   .hero-text {
     padding-top: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
   }
 
   .badge {
@@ -1243,12 +1247,14 @@ import "@fontsource-variable/recursive/full.css";
 
   .hero-title {
     font-family: var(--font-display);
-    font-size: clamp(2.25rem, 4vw, 3.25rem);
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
     font-weight: 800;
     line-height: 1.08;
     letter-spacing: -0.03em;
     color: var(--text);
     margin-bottom: 1.25rem;
+    text-align: center;
+    text-wrap: balance;
   }
 
   .hero-title em {
@@ -1257,16 +1263,19 @@ import "@fontsource-variable/recursive/full.css";
   }
 
   .hero-sub {
-    font-size: clamp(1rem, 1.5vw, 1.1rem);
+    font-size: clamp(1rem, 2vw, 1.2rem);
     color: var(--text-2);
-    line-height: 1.65;
+    line-height: 1.625;
     margin-bottom: 2rem;
+    text-align: center;
+    text-wrap: balance;
   }
 
   .hero-actions {
     display: flex;
     flex-wrap: wrap;
     gap: 0.875rem;
+    justify-content: center;
   }
 
   /* ─── Mock widget ───────────────────────────────────────────── */
