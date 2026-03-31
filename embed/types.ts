@@ -96,6 +96,12 @@ export interface ViewerState {
 	repostUri?: string;
 }
 
+export interface LocalCounts {
+	likes: number;
+	reposts: number;
+	replies: number;
+}
+
 export interface PaginationState {
 	visibleTopLevel: number;
 	visibleReplies: Map<string, number>;

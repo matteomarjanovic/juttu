@@ -4,6 +4,7 @@ import type {
 	CurrentUser,
 	DocumentRecord,
 	JuttuConfig,
+	LocalCounts,
 	PaginationState,
 	SortOption,
 	ThreadViewPost,
@@ -53,6 +54,8 @@ export class JuttuWidget {
 		visibleReplies: new Map()
 	};
 	private viewerState: Map<string, ViewerState> = new Map();
+	private localCounts: Map<string, LocalCounts> = new Map();
+	private pendingActions: Set<string> = new Set();
 	private openReplyFormUri: string | null = null;
 	private loginPopup: Window | null = null;
 	private loginPollInterval: ReturnType<typeof setInterval> | null = null;
@@ -113,6 +116,7 @@ export class JuttuWidget {
 				this.rootPostCid = docRecord.bskyPostRef.cid;
 				this.threadData = await fetchThread(docRecord.bskyPostRef.uri);
 				collectViewerState(this.threadData, this.viewerState);
+				this.syncLocalCounts(this.threadData);
 				this.renderWidget();
 			} else {
 				// No bskyPostRef (or no record) — enter document linking flow
@@ -128,6 +132,21 @@ export class JuttuWidget {
 	}
 
 	// ─── Render ─────────────────────────────────────────────────────────────────
+
+	private syncLocalCounts(thread: ThreadViewPost): void {
+		const walk = (node: ThreadViewPost): void => {
+			const { post } = node;
+			this.localCounts.set(post.uri, {
+				likes: post.likeCount ?? 0,
+				reposts: post.repostCount ?? 0,
+				replies: post.replyCount ?? 0
+			});
+			for (const reply of node.replies ?? []) {
+				if (reply.$type === 'app.bsky.feed.defs#threadViewPost') walk(reply as ThreadViewPost);
+			}
+		};
+		walk(thread);
+	}
 
 	private renderLoading(): void {
 		this.container.innerHTML = '';
@@ -504,6 +523,7 @@ export class JuttuWidget {
 		const state = this.viewerState.get(post.uri) ?? {};
 		const isLiked = !!state.likeUri;
 		const isReposted = !!state.repostUri;
+		const counts = this.localCounts.get(post.uri) ?? { likes: post.likeCount ?? 0, reposts: post.repostCount ?? 0, replies: post.replyCount ?? 0 };
 
 		const actions = document.createElement('div');
 		actions.className = 'juttu-comment-actions';
@@ -517,7 +537,7 @@ export class JuttuWidget {
 		likeBtn.innerHTML = SVG_LIKE;
 		const likeCount = document.createElement('span');
 		likeCount.className = 'juttu-like-count';
-		likeCount.textContent = String(post.likeCount ?? 0);
+		likeCount.textContent = String(counts.likes);
 		likeBtn.appendChild(likeCount);
 		actions.appendChild(likeBtn);
 
@@ -530,7 +550,7 @@ export class JuttuWidget {
 		repostBtn.innerHTML = SVG_REPOST;
 		const repostCount = document.createElement('span');
 		repostCount.className = 'juttu-repost-count';
-		repostCount.textContent = String(post.repostCount ?? 0);
+		repostCount.textContent = String(counts.reposts);
 		repostBtn.appendChild(repostCount);
 		actions.appendChild(repostBtn);
 
@@ -541,7 +561,7 @@ export class JuttuWidget {
 		replyBtn.innerHTML = SVG_REPLY;
 		const replyCount = document.createElement('span');
 		replyCount.className = 'juttu-reply-count';
-		replyCount.textContent = String(post.replyCount ?? 0);
+		replyCount.textContent = String(counts.replies);
 		replyBtn.appendChild(replyCount);
 		actions.appendChild(replyBtn);
 
@@ -755,15 +775,22 @@ export class JuttuWidget {
 		const cid = btn.dataset.cid;
 		if (!uri || !cid) return;
 
+		const actionKey = `like:${uri}`;
+		if (this.pendingActions.has(actionKey)) return;
+		this.pendingActions.add(actionKey);
+
 		const state = this.viewerState.get(uri) ?? {};
 		const wasLiked = !!state.likeUri;
-		const countSpan = btn.querySelector<HTMLElement>('.juttu-like-count');
-		const currentCount = parseInt(countSpan?.textContent ?? '0', 10);
+		const counts = this.localCounts.get(uri);
+		const prevLikes = counts?.likes ?? 0;
 
 		// Optimistic update
 		const newLiked = !wasLiked;
+		const newLikes = Math.max(0, prevLikes + (newLiked ? 1 : -1));
 		btn.dataset.liked = String(newLiked);
-		if (countSpan) countSpan.textContent = String(currentCount + (newLiked ? 1 : -1));
+		const countSpan = btn.querySelector<HTMLElement>('.juttu-like-count');
+		if (countSpan) countSpan.textContent = String(newLikes);
+		if (counts) counts.likes = newLikes;
 		this.viewerState.set(uri, { ...state, likeUri: newLiked ? 'pending' : undefined });
 
 		try {
@@ -789,9 +816,12 @@ export class JuttuWidget {
 		} catch (err) {
 			// Roll back
 			btn.dataset.liked = String(wasLiked);
-			if (countSpan) countSpan.textContent = String(currentCount);
+			if (counts) counts.likes = prevLikes;
+			if (countSpan) countSpan.textContent = String(prevLikes);
 			this.viewerState.set(uri, state);
 			this.showActionError(btn, err instanceof Error ? err.message : 'Action failed');
+		} finally {
+			this.pendingActions.delete(actionKey);
 		}
 	}
 
@@ -802,15 +832,22 @@ export class JuttuWidget {
 		const cid = btn.dataset.cid;
 		if (!uri || !cid) return;
 
+		const actionKey = `repost:${uri}`;
+		if (this.pendingActions.has(actionKey)) return;
+		this.pendingActions.add(actionKey);
+
 		const state = this.viewerState.get(uri) ?? {};
 		const wasReposted = !!state.repostUri;
-		const countSpan = btn.querySelector<HTMLElement>('.juttu-repost-count');
-		const currentCount = parseInt(countSpan?.textContent ?? '0', 10);
+		const counts = this.localCounts.get(uri);
+		const prevReposts = counts?.reposts ?? 0;
 
 		// Optimistic update
 		const newReposted = !wasReposted;
+		const newReposts = Math.max(0, prevReposts + (newReposted ? 1 : -1));
 		btn.dataset.reposted = String(newReposted);
-		if (countSpan) countSpan.textContent = String(currentCount + (newReposted ? 1 : -1));
+		const countSpan = btn.querySelector<HTMLElement>('.juttu-repost-count');
+		if (countSpan) countSpan.textContent = String(newReposts);
+		if (counts) counts.reposts = newReposts;
 		this.viewerState.set(uri, { ...state, repostUri: newReposted ? 'pending' : undefined });
 
 		try {
@@ -836,9 +873,12 @@ export class JuttuWidget {
 		} catch (err) {
 			// Roll back
 			btn.dataset.reposted = String(wasReposted);
-			if (countSpan) countSpan.textContent = String(currentCount);
+			if (counts) counts.reposts = prevReposts;
+			if (countSpan) countSpan.textContent = String(prevReposts);
 			this.viewerState.set(uri, state);
 			this.showActionError(btn, err instanceof Error ? err.message : 'Action failed');
+		} finally {
+			this.pendingActions.delete(actionKey);
 		}
 	}
 
@@ -926,7 +966,7 @@ export class JuttuWidget {
 		this.container.querySelector('.juttu-post-error')?.remove();
 
 		try {
-			await fetch(`${this.config.apiUrl}/bsky/post`, {
+			const res = await fetch(`${this.config.apiUrl}/bsky/post`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				credentials: 'include',
@@ -938,12 +978,22 @@ export class JuttuWidget {
 					}
 				})
 			}).then(this.checkApiResponse);
+			const data = await res.json() as { uri: string; cid: string };
 
 			textarea.value = '';
 			const backdrop = textarea.closest<HTMLElement>('.juttu-editor-wrap')?.querySelector<HTMLElement>('.juttu-editor-backdrop');
 			if (backdrop) this.updateBackdrop(backdrop, '');
 			submitBtn.disabled = true;
 			submitBtn.textContent = 'Post comment';
+
+			// Inject synthetic comment immediately (read-your-own-writes)
+			if (this.threadData && this.currentUser) {
+				const synthetic = this.makeSyntheticReply(data.uri, data.cid, text);
+				if (!this.threadData.replies) this.threadData.replies = [];
+				this.threadData.replies.push(synthetic);
+				this.syncLocalCounts(this.threadData);
+				this.renderWidget();
+			}
 			setTimeout(() => this.refetchAndRender(), POST_REFETCH_DELAY_MS);
 		} catch (err) {
 			submitBtn.disabled = false;
@@ -975,7 +1025,7 @@ export class JuttuWidget {
 		form.querySelector('.juttu-reply-error')?.remove();
 
 		try {
-			await fetch(`${this.config.apiUrl}/bsky/post`, {
+			const res = await fetch(`${this.config.apiUrl}/bsky/post`, {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				credentials: 'include',
@@ -987,8 +1037,21 @@ export class JuttuWidget {
 					}
 				})
 			}).then(this.checkApiResponse);
+			const data = await res.json() as { uri: string; cid: string };
 
 			this.closeReplyForm();
+
+			// Inject synthetic reply immediately (read-your-own-writes)
+			if (this.threadData && this.currentUser) {
+				const parentThread = this.findThreadNode(this.threadData, parentUri);
+				if (parentThread) {
+					const synthetic = this.makeSyntheticReply(data.uri, data.cid, text);
+					if (!parentThread.replies) parentThread.replies = [];
+					parentThread.replies.push(synthetic);
+					this.syncLocalCounts(this.threadData);
+					this.renderWidget();
+				}
+			}
 			setTimeout(() => this.refetchAndRender(), POST_REFETCH_DELAY_MS);
 		} catch (err) {
 			submitBtn.disabled = false;
@@ -1000,6 +1063,40 @@ export class JuttuWidget {
 		}
 	}
 
+	private makeSyntheticReply(uri: string, cid: string, text: string): ThreadViewPost {
+		const user = this.currentUser!;
+		return {
+			$type: 'app.bsky.feed.defs#threadViewPost',
+			post: {
+				uri,
+				cid,
+				author: {
+					did: user.did,
+					handle: user.handle,
+					displayName: user.displayName,
+					avatar: user.avatar
+				},
+				record: { text, createdAt: new Date().toISOString() },
+				indexedAt: new Date().toISOString(),
+				likeCount: 0,
+				repostCount: 0,
+				replyCount: 0
+			},
+			replies: []
+		};
+	}
+
+	private findThreadNode(thread: ThreadViewPost, uri: string): ThreadViewPost | null {
+		if (thread.post.uri === uri) return thread;
+		for (const reply of thread.replies ?? []) {
+			if (reply.$type === 'app.bsky.feed.defs#threadViewPost') {
+				const found = this.findThreadNode(reply as ThreadViewPost, uri);
+				if (found) return found;
+			}
+		}
+		return null;
+	}
+
 	// ─── Re-fetch after posting ──────────────────────────────────────────────────
 
 	private async refetchAndRender(): Promise<void> {
@@ -1007,19 +1104,46 @@ export class JuttuWidget {
 		try {
 			const thread = await fetchThread(this.rootPostUri);
 			this.threadData = thread;
-			// Merge new viewer state but keep any pending optimistic state
-			const newState: Map<string, ViewerState> = new Map();
-			collectViewerState(thread, newState);
-			for (const [uri, state] of newState) {
-				// Prefer existing (locally updated) state if it has real URIs
-				const existing = this.viewerState.get(uri);
-				const merged: ViewerState = {
-					likeUri: existing?.likeUri !== 'pending' ? (existing?.likeUri ?? state.likeUri) : state.likeUri,
-					repostUri: existing?.repostUri !== 'pending' ? (existing?.repostUri ?? state.repostUri) : state.repostUri
-				};
-				if (merged.likeUri || merged.repostUri) newState.set(uri, merged);
+
+			// Merge viewer state: keep locally-touched entries, adopt server for untouched posts
+			const serverState: Map<string, ViewerState> = new Map();
+			collectViewerState(thread, serverState);
+			const merged: Map<string, ViewerState> = new Map();
+			for (const [uri, server] of serverState) {
+				const local = this.viewerState.get(uri);
+				if (local && (local.likeUri !== undefined || local.repostUri !== undefined)) {
+					// We have local state for this post — keep it unless it's still 'pending'
+					merged.set(uri, {
+						likeUri: local.likeUri === 'pending' ? server.likeUri : local.likeUri,
+						repostUri: local.repostUri === 'pending' ? server.repostUri : local.repostUri
+					});
+				} else {
+					merged.set(uri, server);
+				}
 			}
-			this.viewerState = newState;
+			this.viewerState = merged;
+
+			// Sync counts from server, but preserve local deltas for posts we've touched
+			const prevCounts = this.localCounts;
+			this.syncLocalCounts(thread);
+			for (const [uri, local] of this.viewerState) {
+				if (!local.likeUri && !local.repostUri) continue;
+				const prev = prevCounts.get(uri);
+				const now = this.localCounts.get(uri);
+				if (prev && now) {
+					// If we locally adjusted likes/reposts, carry the delta forward
+					// when the server hasn't caught up yet
+					const serverLikes = (findPostInThread(thread, uri)?.likeCount ?? 0);
+					const serverReposts = (findPostInThread(thread, uri)?.repostCount ?? 0);
+					if (now.likes === serverLikes && prev.likes !== serverLikes) {
+						now.likes = prev.likes;
+					}
+					if (now.reposts === serverReposts && prev.reposts !== serverReposts) {
+						now.reposts = prev.reposts;
+					}
+				}
+			}
+
 			this.renderWidget();
 		} catch { /* silently ignore — stale view is acceptable */ }
 	}

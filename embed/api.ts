@@ -198,9 +198,7 @@ export function sortReplies(replies: ThreadViewPost[], order: SortOption): Threa
 
 export function collectViewerState(thread: ThreadViewPost, map: Map<string, ViewerState>): void {
 	const { post } = thread;
-	if (post.viewer?.like || post.viewer?.repost) {
-		map.set(post.uri, { likeUri: post.viewer.like, repostUri: post.viewer.repost });
-	}
+	map.set(post.uri, { likeUri: post.viewer?.like, repostUri: post.viewer?.repost });
 	for (const reply of thread.replies ?? []) {
 		if (reply.$type === 'app.bsky.feed.defs#threadViewPost') {
 			collectViewerState(reply as ThreadViewPost, map);
