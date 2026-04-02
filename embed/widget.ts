@@ -1520,7 +1520,7 @@ export class JuttuWidget {
 		actions.style.cssText = 'display:flex;gap:0.5rem;margin-top:0.5rem;';
 		const backBtn = document.createElement('button');
 		backBtn.className = 'juttu-linking-back-btn';
-		backBtn.style.cssText = 'background:none;border:1px solid var(--juttu-border-color);border-radius:var(--juttu-radius);padding:0.4rem 0.75rem;cursor:pointer;font-size:0.875rem;color:var(--juttu-text-muted);font-family:var(--juttu-font-family);';
+		backBtn.style.cssText = 'background:none;border:1px solid var(--juttu-border-color);border-radius:var(--juttu-radius);padding:0.4rem 0.75rem;cursor:pointer;font-size:1rem;color:var(--juttu-text-muted);font-family:var(--juttu-font-family);';
 		backBtn.textContent = '← Back';
 		actions.appendChild(backBtn);
 		const submitBtn = document.createElement('button');
@@ -1546,7 +1546,7 @@ export class JuttuWidget {
 
 		const backBtn = document.createElement('button');
 		backBtn.className = 'juttu-linking-back-btn';
-		backBtn.style.cssText = 'background:none;border:1px solid var(--juttu-border-color);border-radius:var(--juttu-radius);padding:0.3rem 0.65rem;cursor:pointer;font-size:0.8rem;color:var(--juttu-text-muted);font-family:var(--juttu-font-family);margin-bottom:0.75rem;';
+		backBtn.style.cssText = 'background:none;border:1px solid var(--juttu-border-color);border-radius:var(--juttu-radius);padding:0.3rem 0.65rem;cursor:pointer;font-size:0.875rem;color:var(--juttu-text-muted);font-family:var(--juttu-font-family);margin-bottom:0.75rem;';
 		backBtn.textContent = '← Back';
 		el.appendChild(backBtn);
 
