@@ -30,6 +30,7 @@ export const STYLES = `
   --juttu-text: #0f1419;
   --juttu-text-muted: #536471;
   --juttu-accent-color: #1d9bf0;
+  --juttu-link-color: #1d9bf0;
   --juttu-like-color: #e0245e;
   --juttu-repost-color: #17bf63;
   --juttu-reply-color: #1d9bf0;
@@ -172,7 +173,7 @@ a.juttu-handle:hover { text-decoration: underline; }
 .juttu-time-link { font-size: 0.875rem; color: var(--juttu-text-muted); text-decoration: none; flex-shrink: 0; white-space: nowrap; }
 .juttu-time-link:hover { text-decoration: underline; }
 .juttu-comment-body { font-family: var(--juttu-comment-font-family); font-size: var(--juttu-comment-font-size); line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; margin-bottom: 0.4rem; color: var(--juttu-text); }
-.juttu-mention, .juttu-link, .juttu-hashtag { color: var(--juttu-accent-color); text-decoration: none; }
+.juttu-mention, .juttu-link, .juttu-hashtag { color: var(--juttu-link-color); text-decoration: none; }
 .juttu-mention:hover, .juttu-link:hover, .juttu-hashtag:hover { text-decoration: underline; }
 .juttu-comment-images { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 0.4rem; }
 .juttu-comment-image-link { display: block; overflow: hidden; border-radius: var(--juttu-radius); border: 1px solid var(--juttu-border-color); transition: transform 0.15s; }
@@ -307,7 +308,7 @@ a.juttu-handle:hover { text-decoration: underline; }
 /* Editor backdrop overlay */
 .juttu-editor-wrap { position: relative; background: var(--juttu-surface); border-radius: var(--juttu-radius); }
 .juttu-editor-wrap .juttu-compose-input,
-.juttu-editor-wrap .juttu-reply-input { color: transparent; caret-color: var(--juttu-text); background: transparent; position: relative; }
+.juttu-editor-wrap .juttu-reply-input { color: transparent; caret-color: var(--juttu-text); background: transparent; position: relative; display: block; }
 .juttu-editor-backdrop {
   position: absolute; top: 0; left: 0; right: 0; bottom: 0;
   pointer-events: none; overflow: hidden;
@@ -316,7 +317,7 @@ a.juttu-handle:hover { text-decoration: underline; }
 }
 .juttu-editor-highlight-mention,
 .juttu-editor-highlight-link,
-.juttu-editor-highlight-tag { color: var(--juttu-accent-color); }
+.juttu-editor-highlight-tag { color: var(--juttu-link-color); }
 /* Mention autocomplete */
 .juttu-autocomplete {
   position: absolute; top: 100%; left: 0; right: 0; z-index: 10;
