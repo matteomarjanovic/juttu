@@ -36,17 +36,17 @@ The `<link rel="site.standard.document">` tag tells Juttu which article to show 
 at://YOUR_DID/site.standard.document/YOUR_GENERATED_TID
 ```
 
+Replace **`YOUR_GENERATED_TID`** with a generated [TID](https://atproto.com/specs/record-key). Generate it once for an article, save it in your page source, and keep reusing that exact same AT URI afterwards.
+
 :::note
 If a platform you use (e.g. a Bluesky-native blogging tool) already emits `<link rel="site.standard.document">` tags, no manual configuration is needed.
 :::
 
-### Get your DID
+### Get your `<link>` tag
 
 Enter your Bluesky handle to generate your personalised `<link>` tag:
 
 <HandleResolver />
-
-Replace **`YOUR_GENERATED_TID`** with a generated [TID](https://atproto.com/specs/record-key). Generate it once for an article, save it in your page source, and keep reusing that exact same AT URI afterwards.
 
 The helper above generates the complete tag for you, including a fresh TID in the record key.
 
