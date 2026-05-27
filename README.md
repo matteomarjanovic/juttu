@@ -16,14 +16,20 @@ Add the following to your page. The `<link>` and `<script>` tags go in `<head>`;
 
 ```html
 <!-- in <head> -->
-<link rel="site.standard.document" href="at://did:plc:abc123/site.standard.document/my-article-slug" />
+<link rel="site.standard.document" href="at://did:plc:abc123/site.standard.document/3lq6yc4drhk2j" />
 <script defer src="https://cdn.jsdelivr.net/npm/juttu@latest/juttu-embed.js" data-theme="auto"></script>
 
 <!-- in <body>, where you want comments -->
 <div id="juttu-comments"></div>
 ```
 
-The AT URI (`at://…`) identifies your article using the `site.standard.document` standard. Replace `did:plc:abc123` with your Bluesky DID and `my-article-slug` with a stable, unique slug for the article (letters, digits, `.`, `_`, `~`, `-`, up to 512 chars).
+The AT URI (`at://…`) identifies your article using the `site.standard.document` standard. Replace `did:plc:abc123` with your Bluesky DID and the final path segment with a generated TID. Generate that TID once per article and keep reusing the same AT URI afterwards.
+
+To generate the tag from the CLI:
+
+```sh
+npx juttu site-document alice.bsky.social
+```
 
 To find your DID: go to [this docs page](https://docs.bsky.app/getting-started/installation/#get-your-did).
 

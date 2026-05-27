@@ -3,7 +3,10 @@
   "version": "0.0.0",
   "description": "Bluesky-powered comment widget",
   "main": "juttu-embed.js",
-  "files": ["juttu-embed.js"],
+  "bin": {
+    "juttu": "./cli.js"
+  },
+  "files": ["juttu-embed.js", "cli.js", "site-document.js"],
   "repository": {
     "type": "git",
     "url": "https://github.com/matteomarjanovic/juttu.git",

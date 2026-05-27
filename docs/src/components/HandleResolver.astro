@@ -127,6 +127,20 @@
   let activeIndex = -1;
   let abortController: AbortController | undefined;
 
+  const TID_ALPHABET = "234567abcdefghijklmnopqrstuvwxyz";
+
+  function createTid() {
+    let value = ((BigInt(Date.now()) * 1000n) & 0x1fffffffffffffn) << 10n;
+    let tid = "";
+
+    for (let i = 0; i < 13; i += 1) {
+      tid = TID_ALPHABET[Number(value & 0x1fn)] + tid;
+      value >>= 5n;
+    }
+
+    return tid;
+  }
+
   function closeSuggestions() {
     suggestions.hidden = true;
     activeIndex = -1;
@@ -256,7 +270,7 @@
         throw new Error(msg);
       }
       const data = (await res.json()) as { did: string };
-      const snippet = `<link rel="site.standard.document" href="at://${data.did}/site.standard.document/YOUR_ARTICLE_SLUG" />`;
+      const snippet = `<link rel="site.standard.document" href="at://${data.did}/site.standard.document/${createTid()}" />`;
       output.textContent = snippet;
       result.hidden = false;
     } catch (err: unknown) {
