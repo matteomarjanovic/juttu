@@ -28,7 +28,7 @@ The AT URI (`at://…`) identifies your article using the `site.standard.documen
 To generate the tag from the CLI:
 
 ```sh
-npx juttu site-document did:plc:abc123
+npx juttu site-document alice.bsky.social
 ```
 
 To find your DID: go to [this docs page](https://docs.bsky.app/getting-started/installation/#get-your-did).

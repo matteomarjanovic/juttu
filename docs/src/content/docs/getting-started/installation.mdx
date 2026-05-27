@@ -55,16 +55,16 @@ The helper above generates the complete tag for you, including a fresh TID in th
 If you'd rather generate the tag in your terminal, run:
 
 ```sh
-npx juttu site-document YOUR_DID
+npx juttu site-document YOUR_HANDLE
 ```
 
 Example:
 
 ```sh
-npx juttu site-document did:plc:abc123
+npx juttu site-document alice.bsky.social
 ```
 
-That prints a complete `<link rel="site.standard.document" ...>` tag with a valid TID. Run it once per article and keep the generated TID stable.
+That resolves your handle to its DID, then prints a complete `<link rel="site.standard.document" ...>` tag with a valid TID. Run it once per article and keep the generated TID stable.
 
 ## The `<script>` tag (required)
 The `<script>` tag loads the Juttu embed code. Use `https://cdn.jsdelivr.net/npm/juttu@latest/juttu-embed.js` for the hosted version. Self-hosters should point at their own backend (e.g. `https://comments.example.com/embed/juttu-embed.js`).

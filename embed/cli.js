@@ -1,20 +1,20 @@
 #!/usr/bin/env node
 
-import { buildSiteDocumentTag, buildSiteDocumentUri } from './site-document.js';
+import { buildSiteDocumentTag, buildSiteDocumentUri, resolveHandleToDid } from './site-document.js';
 
 function printUsage() {
 	console.error(`Usage:
-  juttu site-document <did> [--format tag|uri] [--tid <tid>]
+  juttu site-document <handle> [--format tag|uri] [--tid <tid>]
 
 Examples:
-  npx juttu site-document did:plc:abc123
-  npx juttu site-document did:plc:abc123 --format uri
-  npx juttu site-document did:plc:abc123 --tid 3lq6yc4drhk2j
+  npx juttu site-document alice.bsky.social
+  npx juttu site-document alice.bsky.social --format uri
+  npx juttu site-document alice.bsky.social --tid 3lq6yc4drhk2j
 
 Generate the tag once per article, then keep reusing the same TID.`);
 }
 
-function main(argv) {
+async function main(argv) {
 	const [command, ...rest] = argv;
 	if (command !== 'site-document') {
 		printUsage();
@@ -24,7 +24,7 @@ function main(argv) {
 
 	let format = 'tag';
 	let tid;
-	let did = '';
+	let handle = '';
 
 	for (let i = 0; i < rest.length; i += 1) {
 		const arg = rest[i];
@@ -38,8 +38,8 @@ function main(argv) {
 			i += 1;
 			continue;
 		}
-		if (!did) {
-			did = arg;
+		if (!handle) {
+			handle = arg;
 			continue;
 		}
 
@@ -49,10 +49,11 @@ function main(argv) {
 	if (format !== 'tag' && format !== 'uri') {
 		throw new Error('The --format value must be either "tag" or "uri".');
 	}
-	if (!did) {
-		throw new Error('A DID is required.');
+	if (!handle) {
+		throw new Error('A Bluesky handle is required.');
 	}
 
+	const did = await resolveHandleToDid(handle);
 	const output = format === 'uri'
 		? buildSiteDocumentUri(did, tid)
 		: buildSiteDocumentTag(did, tid);
@@ -61,7 +62,7 @@ function main(argv) {
 }
 
 try {
-	main(process.argv.slice(2));
+	await main(process.argv.slice(2));
 } catch (error) {
 	console.error(error instanceof Error ? error.message : 'Unknown error.');
 	printUsage();

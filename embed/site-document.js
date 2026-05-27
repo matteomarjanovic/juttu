@@ -37,3 +37,26 @@ export function buildSiteDocumentUri(did, tid = createTid()) {
 export function buildSiteDocumentTag(did, tid = createTid()) {
 	return `<link rel="site.standard.document" href="${buildSiteDocumentUri(did, tid)}" />`;
 }
+
+export async function resolveHandleToDid(handle, fetchImpl = globalThis.fetch) {
+	const normalizedHandle = handle.trim();
+	if (!normalizedHandle) {
+		throw new Error('A Bluesky handle is required.');
+	}
+	if (typeof fetchImpl !== 'function') {
+		throw new Error('Fetch is not available in this runtime.');
+	}
+
+	const url = `https://bsky.social/xrpc/com.atproto.identity.resolveHandle?handle=${encodeURIComponent(normalizedHandle)}`;
+	const response = await fetchImpl(url);
+	if (!response.ok) {
+		throw new Error(`Could not resolve handle "${normalizedHandle}" (HTTP ${response.status}).`);
+	}
+
+	const data = await response.json();
+	if (typeof data?.did !== 'string' || !data.did.startsWith('did:')) {
+		throw new Error(`Could not resolve handle "${normalizedHandle}" to a DID.`);
+	}
+
+	return data.did;
+}
