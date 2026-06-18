@@ -2,7 +2,7 @@
 title: Customization
 description: Customize the look and feel of the Juttu widget.
 sidebar:
-  order: 3
+  order: 4
 ---
 
 Juttu uses CSS custom properties (variables) for all visual styling. You can override any of them to match your site's design.

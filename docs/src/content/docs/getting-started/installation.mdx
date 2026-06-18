@@ -2,24 +2,20 @@
 title: Installation
 description: Add the Juttu embed snippet to your website.
 sidebar:
-  order: 1
+  order: 2
 ---
-
-import HandleResolver from '../../../components/HandleResolver.astro';
 
 ## Prerequisites
 
-- A [Bluesky](https://bsky.app) account (this will be the article owner)
-- Your Bluesky DID (see below for how to find it)
-- A stable `site.standard.document` AT URI for each article you want to comment-enable
+- A **[standard.site](/getting-started/standard-site)-compatible blog**. Juttu reads the `site.standard.document` records your blog publishes — see [prerequisites page](/getting-started/standard-site) to get set up.
+- A [Bluesky](https://bsky.app) account (this will be the article owner).
 
 ## Add the snippet
 
-Add the following to your page. The `<link>` and `<script>` tags go in `<head>`; the `<div>` goes in `<body>` where you want comments to appear:
+Add the following to your page. The `<script>` tag goes in `<head>`; the `<div>` goes in `<body>` where you want comments to appear:
 
 ```html
 <!-- in <head> -->
-<link rel="site.standard.document" href="at://YOUR_DID/site.standard.document/YOUR_GENERATED_TID" />
 <script defer src="https://cdn.jsdelivr.net/npm/juttu@latest/juttu-embed.js"></script>
 
 <!-- in <body> -->
@@ -28,45 +24,18 @@ Add the following to your page. The `<link>` and `<script>` tags go in `<head>`;
 
 The comment section resizes itself dynamically — no fixed height required.
 
-## The `<link>` tag (required)
+## How Juttu finds your article
 
-The `<link rel="site.standard.document">` tag tells Juttu which article to show comments for. Its `href` must be a full AT URI in the format:
+Juttu reads the `<link rel="site.standard.document">` tag that your standard.site-compatible blog already emits in each article's `<head>`:
 
-```
-at://YOUR_DID/site.standard.document/YOUR_GENERATED_TID
-```
-
-Replace **`YOUR_GENERATED_TID`** with a generated [TID](https://atproto.com/specs/record-key). Generate it once for an article, save it in your page source, and keep reusing that exact same AT URI afterwards.
-
-:::note
-If a platform you use (e.g. a Bluesky-native blogging tool) already emits `<link rel="site.standard.document">` tags, no manual configuration is needed.
-:::
-
-### Get your `<link>` tag
-
-Enter your Bluesky handle to generate your personalised `<link>` tag:
-
-<HandleResolver />
-
-The helper above generates the complete tag for you, including a fresh TID in the record key.
-
-### Generate a tag in the CLI
-
-If you'd rather generate the tag in your terminal, run:
-
-```sh
-npx juttu site-document YOUR_HANDLE
+```html
+<link rel="site.standard.document" href="at://YOUR_DID/site.standard.document/YOUR_ARTICLE_SLUG" />
 ```
 
-Example:
-
-```sh
-npx juttu site-document alice.bsky.social
-```
-
-That resolves your handle to its DID, then prints a complete `<link rel="site.standard.document" ...>` tag with a valid TID. Run it once per article and keep the generated TID stable.
+You don't add this tag yourself — it's part of your [standard.site setup](/getting-started/standard-site). Juttu uses it to resolve which Bluesky thread to show comments for.
 
 ## The `<script>` tag (required)
+
 The `<script>` tag loads the Juttu embed code. Use `https://cdn.jsdelivr.net/npm/juttu@latest/juttu-embed.js` for the hosted version. Self-hosters should point at their own backend (e.g. `https://comments.example.com/embed/juttu-embed.js`).
 
 ### `data-theme` (optional)

@@ -25,15 +25,15 @@ Visitors authenticate with their existing Bluesky identity. There is no Juttu ac
 
 ## Built on open standards
 
-Juttu uses [standard.site](https://standard.site) lexicons to connect articles to Bluesky threads. `site.standard.document` is an AT Protocol standard for long-form publishing being adopted across Bluesky-native blogging platforms.
+Juttu builds on the [standard.site](https://standard.site) lexicons to connect articles to Bluesky threads. `site.standard.document` is an AT Protocol standard for long-form publishing being adopted across Bluesky-native blogging platforms. Juttu requires a standard.site-compatible blog — see [standard.site](/getting-started/standard-site) for what that means and how to get set up.
 
-Using Juttu is the easiest way to make your blog compliant with the [standard.site ecosystem](https://standard.site). By simply adding the Juttu script, your blog posts become first-class citizens in the AT Protocol network, discoverable and interoperable with other platforms that implement these open standards.
+Because it builds on these open standards rather than reinventing them, the link between your article and its Bluesky thread isn't trapped in a Juttu database — it's a public record in your own repository, readable by any tool in the ecosystem.
 
 This means:
 
 - **No proprietary lock-in.** Article–post links are stored in a public, interoperable format — not in a Juttu-specific database.
 - **Interoperability.** Your content works with any platform or tool that understands the [standard.site lexicons](https://standard.site/docs/lexicons/document).
-- **Works with compatible platforms.** If your blogging platform already emits `site.standard.document` records, Juttu just works with no extra setup.
+- **No extra setup.** Juttu reads the `site.standard.document` records your blog already publishes — there's nothing Juttu-specific to configure beyond the embed snippet.
 - **Owned by you.** The link between your article and its Bluesky thread is a record in *your* AT Protocol repository, not ours.
 
 ## Open source
