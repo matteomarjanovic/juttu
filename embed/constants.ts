@@ -286,6 +286,14 @@ a.juttu-handle:hover { text-decoration: underline; }
 }
 .juttu-linking-textarea:focus { outline: none; border-color: var(--juttu-accent-color); }
 .juttu-linking-textarea::placeholder { color: var(--juttu-text-muted); }
+.juttu-linking-cover-field {
+  display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;
+  cursor: pointer; font-size: 0.9375rem; color: var(--juttu-text);
+}
+.juttu-linking-cover-preview {
+  width: 40px; height: 40px; object-fit: cover; border-radius: var(--juttu-radius);
+  border: 1px solid var(--juttu-border-color);
+}
 .juttu-linking-continue-btn {
   background: var(--juttu-accent-color); color: #fff; border: none;
   border-radius: var(--juttu-radius); padding: 0.4rem 1rem;

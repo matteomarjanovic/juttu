@@ -78,6 +78,14 @@ export interface CurrentUser {
 	handle: string;
 	avatar?: string;
 	displayName?: string;
+	scopeTier?: 'comment' | 'owner';
+}
+
+export interface BlobRef {
+	$type: 'blob';
+	ref: { $link: string };
+	mimeType: string;
+	size: number;
 }
 
 export interface DocumentRecord {
@@ -87,8 +95,16 @@ export interface DocumentRecord {
 	site?: string;
 	title?: string;
 	description?: string;
+	coverImage?: BlobRef;
 	publishedAt?: string;
 	updatedAt?: string;
+}
+
+export interface PublicationRecord {
+	$type?: string;
+	url?: string;
+	name?: string;
+	description?: string;
 }
 
 export interface ViewerState {

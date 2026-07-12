@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	_ "github.com/joho/godotenv/autoload"
@@ -85,22 +86,14 @@ type Server struct {
 }
 
 func runServer(ctx context.Context, cmd *cli.Command) error {
-	scopes := []string{
-		"atproto",
-		"repo:app.bsky.feed.post?action=create",
-		"repo:app.bsky.feed.post?action=delete",
-		"repo:app.bsky.feed.like?action=create",
-		"repo:app.bsky.feed.like?action=delete",
-		"repo:app.bsky.feed.repost?action=create",
-		"repo:app.bsky.feed.repost?action=delete",
-		"repo:site.standard.document?action=create",
-		"repo:site.standard.document?action=update",
-		"rpc:app.bsky.feed.getPostThread?aud=did:web:api.bsky.app#bsky_appview",
-	}
+	// Client metadata declares the full (owner) scope set — the maximum any login may request.
+	// Individual logins request a narrower subset by intent (see handlers_auth.go).
+	scopes := ownerScopes
 	bind := ":8080"
 
 	var config oauth.ClientConfig
-	hostname := cmd.String("hostname")
+	// Accept CLIENT_HOSTNAME with or without a scheme/trailing slash; the URLs below add "https://".
+	hostname := strings.TrimSuffix(strings.TrimPrefix(strings.TrimPrefix(cmd.String("hostname"), "https://"), "http://"), "/")
 	if hostname == "" {
 		config = oauth.NewLocalhostConfig(
 			fmt.Sprintf("http://127.0.0.1%s/oauth/callback", bind),
@@ -203,6 +196,8 @@ func runServer(ctx context.Context, cmd *cli.Command) error {
 	mux.HandleFunc("GET /bsky/thread", srv.GetThread)
 
 	mux.HandleFunc("PUT /atproto/document", srv.PutDocument)
+	mux.HandleFunc("PUT /atproto/publication", srv.PutPublication)
+	mux.HandleFunc("POST /atproto/blob", srv.UploadBlob)
 
 	slog.Info("starting http server", "bind", bind)
 	if err := http.ListenAndServe(bind, corsMiddleware(mux)); err != nil {

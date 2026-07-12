@@ -7,6 +7,14 @@ import (
 )
 
 func (s *Server) PutDocument(w http.ResponseWriter, r *http.Request) {
+	s.putRecord(w, r, "site.standard.document")
+}
+
+func (s *Server) PutPublication(w http.ResponseWriter, r *http.Request) {
+	s.putRecord(w, r, "site.standard.publication")
+}
+
+func (s *Server) putRecord(w http.ResponseWriter, r *http.Request, collection string) {
 	ctx := r.Context()
 
 	did, c, err := s.requireSession(r)
@@ -34,7 +42,7 @@ func (s *Server) PutDocument(w http.ResponseWriter, r *http.Request) {
 
 	body := map[string]any{
 		"repo":       did.String(),
-		"collection": "site.standard.document",
+		"collection": collection,
 		"rkey":       req.Rkey,
 		"record":     req.Record,
 	}

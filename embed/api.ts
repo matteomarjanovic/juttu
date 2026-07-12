@@ -4,6 +4,7 @@ import type {
 	BskyPost,
 	CurrentUser,
 	DocumentRecord,
+	PublicationRecord,
 	SortOption,
 	ThreadViewPost,
 	ViewerState
@@ -18,31 +19,44 @@ export function parseAtUri(href: string): AtUri | null {
 	return { did, collection, rkey };
 }
 
-export async function resolveDid(did: string): Promise<string> {
-	let didDoc: { service?: Array<{ id: string; type: string; serviceEndpoint: string }> };
+interface DidDoc {
+	service?: Array<{ id: string; type: string; serviceEndpoint: string }>;
+	alsoKnownAs?: string[];
+}
 
+async function resolveDidDoc(did: string): Promise<DidDoc> {
 	if (did.startsWith('did:plc:')) {
 		const res = await fetch(`https://plc.directory/${did}`);
 		if (!res.ok) throw new Error(`Failed to resolve DID: ${res.status}`);
-		didDoc = await res.json();
-	} else if (did.startsWith('did:web:')) {
+		return res.json();
+	}
+	if (did.startsWith('did:web:')) {
 		const host = did.split(':').slice(2).join(':');
 		const res = await fetch(`https://${host}/.well-known/did.json`);
 		if (!res.ok) throw new Error(`Failed to resolve did:web DID: ${res.status}`);
-		didDoc = await res.json();
-	} else {
-		throw new Error(`Unsupported DID method: ${did}`);
+		return res.json();
 	}
+	throw new Error(`Unsupported DID method: ${did}`);
+}
 
+export async function resolveDid(did: string): Promise<string> {
+	const didDoc = await resolveDidDoc(did);
 	const pds = didDoc.service?.find((s) => s.type === 'AtprotoPersonalDataServer');
 	if (!pds?.serviceEndpoint) throw new Error('No PDS endpoint found in DID document');
 	return pds.serviceEndpoint;
 }
 
-export async function fetchDocumentRecord(
-	pdsUrl: string,
-	atUri: AtUri
-): Promise<DocumentRecord | null> {
+// Resolves a DID to its primary handle (from the DID document's alsoKnownAs), for display only.
+export async function resolveHandle(did: string): Promise<string | null> {
+	try {
+		const aka = (await resolveDidDoc(did)).alsoKnownAs?.find((a) => a.startsWith('at://'));
+		return aka ? aka.slice('at://'.length) : null;
+	} catch {
+		return null;
+	}
+}
+
+async function getRecord(pdsUrl: string, atUri: AtUri): Promise<unknown | null> {
 	const url =
 		`${pdsUrl}/xrpc/com.atproto.repo.getRecord` +
 		`?repo=${encodeURIComponent(atUri.did)}` +
@@ -50,9 +64,47 @@ export async function fetchDocumentRecord(
 		`&rkey=${encodeURIComponent(atUri.rkey)}`;
 	const res = await fetch(url);
 	if (res.status >= 400 && res.status < 500) return null;
-	if (!res.ok) throw new Error(`Failed to fetch document record: ${res.status}`);
-	const data = await res.json();
-	return data.value as DocumentRecord;
+	if (!res.ok) throw new Error(`Failed to fetch record: ${res.status}`);
+	return (await res.json()).value;
+}
+
+export async function fetchDocumentRecord(pdsUrl: string, atUri: AtUri): Promise<DocumentRecord | null> {
+	return (await getRecord(pdsUrl, atUri)) as DocumentRecord | null;
+}
+
+export async function fetchPublicationRecord(pdsUrl: string, atUri: AtUri): Promise<PublicationRecord | null> {
+	return (await getRecord(pdsUrl, atUri)) as PublicationRecord | null;
+}
+
+// Reads the site's standard.site verification file, which returns the
+// publication's AT URI. Same-origin, so no CORS concerns.
+export async function fetchPublicationUri(): Promise<string | null> {
+	try {
+		const res = await fetch('/.well-known/site.standard.publication');
+		if (!res.ok) return null;
+		const uri = (await res.text()).trim();
+		return uri.startsWith('at://') ? uri : null;
+	} catch {
+		return null;
+	}
+}
+
+// Reads the page's Open Graph image, offered as the document's coverImage during linking.
+export function getOgImageUrl(): string | null {
+	const content = document.querySelector('meta[property="og:image"]')?.getAttribute('content')?.trim();
+	return content || null;
+}
+
+// Reads the page's <h1>, offered as the document title default during linking.
+export function getPageTitle(): string | null {
+	const text = document.querySelector('h1')?.textContent?.trim();
+	return text || null;
+}
+
+// Reads the page's meta description, offered as the document description default during linking.
+export function getPageDescription(): string | null {
+	const content = document.querySelector('meta[name="description"]')?.getAttribute('content')?.trim();
+	return content || null;
 }
 
 export async function fetchThread(rootUri: string): Promise<ThreadViewPost> {

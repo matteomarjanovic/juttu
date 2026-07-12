@@ -19,3 +19,6 @@ backend/bsky-api-service*
 AGENTS.md
 CLAUDE.md
 embed/index.html
+
+# Local manual-test harness
+local-test/

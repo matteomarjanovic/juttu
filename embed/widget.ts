@@ -1,5 +1,6 @@
 import type {
 	AtUri,
+	BlobRef,
 	BskyPost,
 	CurrentUser,
 	DocumentRecord,
@@ -25,7 +26,13 @@ import {
 import {
 	parseAtUri,
 	resolveDid,
+	resolveHandle,
 	fetchDocumentRecord,
+	fetchPublicationRecord,
+	fetchPublicationUri,
+	getOgImageUrl,
+	getPageTitle,
+	getPageDescription,
 	fetchThread,
 	fetchViewerStates,
 	checkCurrentUser,
@@ -67,10 +74,25 @@ export class JuttuWidget {
 	// Document linking state
 	private documentAtUri: AtUri | null = null;
 	private documentRecord: DocumentRecord | null = null;
-	private linkingStep: 'setup' | 'login' | 'metadata' | 'choose-method' | 'write-post' | 'select-post' = 'setup';
+	private linkingStep: 'setup' | 'login' | 'create-publication' | 'metadata' | 'choose-method' | 'write-post' | 'select-post' = 'setup';
 	private linkingTitle = '';
 	private linkingDescription = '';
+	// Document path, editable only when linked to a publication (see makeLinkingMetadata).
+	private linkingPath = '';
+	// Whether to upload the page's og:image as the document's coverImage.
+	private includeCoverImage = true;
 	private userPosts: Array<{ uri: string; cid: string; text: string; createdAt: string }> = [];
+	// Publication the document belongs to (a site.standard.publication AT URI). Resolved from
+	// the site's /.well-known file; used as the document's `site` field when creating a record.
+	private publicationUri: string | null = null;
+	// Set when the well-known file declares a publication that is missing from the owner's repo.
+	private pendingPublicationUri: AtUri | null = null;
+	// Handle of the article owner (the DID in the <link> tag), resolved for the setup login button.
+	private authorHandle: string | null = null;
+	// Intent of the in-progress login: 'setup' needs owner scopes, 'comment' only reader scopes.
+	private loginIntent: 'comment' | 'setup' = 'comment';
+
+	private static readonly POPUP_FEATURES = 'width=500,height=600,menubar=no,toolbar=no,location=no,status=no';
 
 	constructor(container: HTMLElement, config: JuttuConfig) {
 		this.container = container;
@@ -122,6 +144,7 @@ export class JuttuWidget {
 				// No bskyPostRef (or no record) — enter document linking flow
 				this.documentAtUri = atUri;
 				this.documentRecord = docRecord;
+				this.authorHandle = await resolveHandle(atUri.did);
 				this.linkingStep = 'setup';
 				this.renderLinkingUI();
 			}
@@ -611,16 +634,55 @@ export class JuttuWidget {
 		);
 	}
 
-	private openLoginPopup(): void {
+	private openLoginPopup(intent: 'comment' | 'setup' = 'comment', hint?: string): void {
 		if (this.loginPollInterval !== null) {
 			try { this.loginPopup?.focus(); } catch { /* ignore */ }
 			return;
 		}
+		this.loginIntent = intent;
+
+		if (intent === 'setup' && hint) {
+			// Owner login: the DID is already known, so kick off the OAuth flow directly and
+			// skip the generic handle-entry page. Open the popup synchronously (so it isn't
+			// blocked), then point it at the auth-server redirect once we have it.
+			this.loginPopup = window.open('about:blank', 'juttu-auth', JuttuWidget.POPUP_FEATURES);
+			try { this.loginPopup?.document.write('<p style="font-family:system-ui;padding:1rem">Signing in…</p>'); } catch { /* ignore */ }
+			this.beginOwnerLogin(hint);
+			return;
+		}
+
+		// Reader login: the generic page collects a handle.
 		this.loginPopup = window.open(
-			`${this.config.apiUrl}/login`,
+			`${this.config.apiUrl}/login?intent=comment`,
 			'juttu-auth',
-			'width=500,height=600,menubar=no,toolbar=no,location=no,status=no'
+			JuttuWidget.POPUP_FEATURES
 		);
+		this.startLoginPolling();
+	}
+
+	private async beginOwnerLogin(did: string): Promise<void> {
+		try {
+			const res = await fetch(`${this.config.apiUrl}/auth/login`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				credentials: 'include',
+				body: JSON.stringify({ handle: did, intent: 'setup' })
+			}).then(this.checkApiResponse);
+			const data = await res.json() as { redirect_url: string };
+			if (!this.loginPopup || this.loginPopup.closed) throw new Error('Popup was blocked — allow popups and try again');
+			this.loginPopup.location.href = data.redirect_url;
+			this.startLoginPolling();
+		} catch (err) {
+			try { this.loginPopup?.close(); } catch { /* ignore */ }
+			this.loginPopup = null;
+			const errEl = document.createElement('p');
+			errEl.className = 'juttu-linking-error';
+			errEl.textContent = err instanceof Error ? err.message : 'Login failed';
+			this.container.querySelector('.juttu-linking')?.appendChild(errEl);
+		}
+	}
+
+	private startLoginPolling(): void {
 		this.loginPollStartTime = Date.now();
 		this.popupClosedAt = 0;
 		this.loginPollInterval = setInterval(() => this.pollForLogin(), LOGIN_POLL_INTERVAL_MS);
@@ -633,7 +695,9 @@ export class JuttuWidget {
 			return;
 		}
 		const user = await checkCurrentUser(this.config.apiUrl);
-		if (user) {
+		// During an owner setup login, an existing reader session would be detected immediately;
+		// wait until the session actually carries owner scopes before completing.
+		if (user && (this.loginIntent !== 'setup' || user.scopeTier === 'owner')) {
 			await this.completeLogin(user);
 		} else if (this.loginPopup?.closed) {
 			// The popup closes itself after the OAuth callback sets the session cookie.
@@ -657,8 +721,7 @@ export class JuttuWidget {
 
 		if (this.documentAtUri) {
 			// Linking mode: advance to the appropriate step
-			this.linkingStep = !this.documentRecord ? 'metadata' : 'choose-method';
-			this.renderLinkingUI();
+			await this.advanceLinkingAfterAuth();
 		} else {
 			// Normal mode: swap composer in-place, then run any pending action
 			const composer = this.getComposer();
@@ -707,6 +770,54 @@ export class JuttuWidget {
 		}
 	}
 
+	// ─── Publication resolution ───────────────────────────────────────────────────
+
+	// Called once the owner is authenticated in linking mode. Mode A (record exists) goes
+	// straight to picking a post. Mode B (we'll create the record) first resolves the site's
+	// publication so the new document is linked to it.
+	private async advanceLinkingAfterAuth(): Promise<void> {
+		if (this.currentUser?.scopeTier !== 'owner') {
+			// Authenticated, but the session lacks write scopes (e.g. a prior reader login).
+			// Route through an elevated login to obtain owner scopes before linking.
+			this.linkingStep = 'login';
+			this.renderLinkingUI();
+			return;
+		}
+		if (this.documentRecord) {
+			this.linkingStep = 'choose-method';
+			this.renderLinkingUI();
+			return;
+		}
+		await this.resolvePublication();
+		this.renderLinkingUI();
+	}
+
+	// Reads the site's publication from the well-known file and sets the next linking step.
+	// If the file declares a publication that the owner hasn't created yet, offer to create it;
+	// otherwise continue to the article-details step. Any failure falls back to a loose document.
+	private async resolvePublication(): Promise<void> {
+		this.publicationUri = null;
+		this.pendingPublicationUri = null;
+		try {
+			const uri = await fetchPublicationUri();
+			const atUri = uri ? parseAtUri(uri) : null;
+			if (atUri) {
+				const pds = await resolveDid(atUri.did);
+				const exists = (await fetchPublicationRecord(pds, atUri)) !== null;
+				if (exists) {
+					this.publicationUri = uri;
+				} else if (atUri.did === this.currentUser?.did) {
+					this.pendingPublicationUri = atUri;
+					this.linkingStep = 'create-publication';
+					return;
+				}
+			}
+		} catch {
+			// Network/resolution error — fall back to a loose document (site = origin).
+		}
+		this.linkingStep = 'metadata';
+	}
+
 	// ─── Logout ──────────────────────────────────────────────────────────────────
 
 	private async handleLogout(): Promise<void> {
@@ -735,8 +846,7 @@ export class JuttuWidget {
 			const profile = await fetchUserProfile(user.handle);
 			this.currentUser = { ...user, ...profile };
 			if (this.documentAtUri) {
-				this.linkingStep = !this.documentRecord ? 'metadata' : 'choose-method';
-				this.renderLinkingUI();
+				await this.advanceLinkingAfterAuth();
 			} else {
 				const composer = this.getComposer();
 				if (composer) {
@@ -1343,6 +1453,9 @@ export class JuttuWidget {
 			case 'login':
 				linking.appendChild(this.makeLinkingLoginForm());
 				break;
+			case 'create-publication':
+				linking.appendChild(this.makeLinkingCreatePublication());
+				break;
 			case 'metadata':
 				linking.appendChild(this.makeLinkingMetadata());
 				break;
@@ -1406,8 +1519,69 @@ export class JuttuWidget {
 
 		const btn = document.createElement('button');
 		btn.className = 'juttu-linking-login-btn';
-		btn.textContent = 'Login with Bluesky →';
+		btn.textContent = this.authorHandle ? `Sign in as @${this.authorHandle} →` : 'Login with Bluesky →';
 		el.appendChild(btn);
+		return el;
+	}
+
+	private makeLinkingCreatePublication(): HTMLElement {
+		const el = document.createElement('div');
+		const title = document.createElement('p');
+		title.className = 'juttu-linking-title';
+		title.textContent = 'Set up your publication';
+		el.appendChild(title);
+
+		const desc = document.createElement('p');
+		desc.className = 'juttu-linking-desc';
+		desc.textContent =
+			'Your site declares a standard.site publication that isn’t in your repository yet. Create it so this article is part of your publication.';
+		el.appendChild(desc);
+
+		const nameField = document.createElement('div');
+		nameField.className = 'juttu-linking-field';
+		const nameLabel = document.createElement('label');
+		nameLabel.className = 'juttu-linking-label';
+		nameLabel.textContent = 'Publication name *';
+		nameField.appendChild(nameLabel);
+		const nameInput = document.createElement('input');
+		nameInput.type = 'text';
+		nameInput.className = 'juttu-linking-input juttu-linking-pub-name-input';
+		nameInput.placeholder = 'My Blog';
+		nameInput.value = window.location.hostname;
+		nameField.appendChild(nameInput);
+		el.appendChild(nameField);
+
+		const descField = document.createElement('div');
+		descField.className = 'juttu-linking-field';
+		const descLabel = document.createElement('label');
+		descLabel.className = 'juttu-linking-label';
+		descLabel.textContent = 'Description (optional)';
+		descField.appendChild(descLabel);
+		const descInput = document.createElement('input');
+		descInput.type = 'text';
+		descInput.className = 'juttu-linking-input juttu-linking-pub-desc-input';
+		descInput.placeholder = 'What this publication is about';
+		descField.appendChild(descInput);
+		el.appendChild(descField);
+
+		const actions = document.createElement('div');
+		actions.style.cssText = 'display:flex;gap:0.5rem;margin-top:0.5rem;';
+		const skipBtn = document.createElement('button');
+		skipBtn.className = 'juttu-linking-skip-pub-btn';
+		skipBtn.style.cssText = 'background:none;border:1px solid var(--juttu-border-color);border-radius:var(--juttu-radius);padding:0.4rem 0.75rem;cursor:pointer;font-size:1rem;color:var(--juttu-text-muted);font-family:var(--juttu-font-family);';
+		skipBtn.textContent = 'Skip';
+		actions.appendChild(skipBtn);
+		const createBtn = document.createElement('button');
+		createBtn.className = 'juttu-linking-continue-btn juttu-linking-create-pub-btn';
+		createBtn.textContent = 'Create publication';
+		createBtn.disabled = !nameInput.value.trim();
+		actions.appendChild(createBtn);
+		el.appendChild(actions);
+
+		nameInput.addEventListener('input', () => {
+			createBtn.disabled = !nameInput.value.trim();
+		});
+
 		return el;
 	}
 
@@ -1428,7 +1602,7 @@ export class JuttuWidget {
 		titleInput.type = 'text';
 		titleInput.className = 'juttu-linking-input juttu-linking-title-input';
 		titleInput.placeholder = 'Article title';
-		titleInput.value = this.linkingTitle;
+		titleInput.value = this.linkingTitle || getPageTitle() || '';
 		titleField.appendChild(titleInput);
 		el.appendChild(titleField);
 
@@ -1442,14 +1616,54 @@ export class JuttuWidget {
 		descInput.type = 'text';
 		descInput.className = 'juttu-linking-input juttu-linking-desc-input';
 		descInput.placeholder = 'Short description';
-		descInput.value = this.linkingDescription;
+		descInput.value = this.linkingDescription || getPageDescription() || '';
 		descField.appendChild(descInput);
 		el.appendChild(descField);
+
+		// Path only makes sense combined with a publication's `site` (a loose document's `site`
+		// is already the full origin, so a path would duplicate it).
+		if (this.publicationUri) {
+			const pathField = document.createElement('div');
+			pathField.className = 'juttu-linking-field';
+			const pathLabel = document.createElement('label');
+			pathLabel.className = 'juttu-linking-label';
+			pathLabel.textContent = 'Path';
+			pathField.appendChild(pathLabel);
+			const pathInput = document.createElement('input');
+			pathInput.type = 'text';
+			pathInput.className = 'juttu-linking-input juttu-linking-path-input';
+			pathInput.placeholder = '/blog/my-article';
+			pathInput.value = this.linkingPath || window.location.pathname;
+			pathField.appendChild(pathInput);
+			el.appendChild(pathField);
+		}
+
+		const ogImageUrl = getOgImageUrl();
+		if (ogImageUrl) {
+			const coverField = document.createElement('label');
+			coverField.className = 'juttu-linking-cover-field';
+			const checkbox = document.createElement('input');
+			checkbox.type = 'checkbox';
+			checkbox.className = 'juttu-linking-cover-checkbox';
+			checkbox.checked = this.includeCoverImage;
+			coverField.appendChild(checkbox);
+			const img = document.createElement('img');
+			img.className = 'juttu-linking-cover-preview';
+			img.src = ogImageUrl;
+			img.alt = '';
+			coverField.appendChild(img);
+			const span = document.createElement('span');
+			span.textContent = 'Use this image as the cover image';
+			coverField.appendChild(span);
+			el.appendChild(coverField);
+
+			checkbox.addEventListener('change', () => { this.includeCoverImage = checkbox.checked; });
+		}
 
 		const continueBtn = document.createElement('button');
 		continueBtn.className = 'juttu-linking-continue-btn';
 		continueBtn.textContent = 'Continue';
-		continueBtn.disabled = !this.linkingTitle.trim();
+		continueBtn.disabled = !titleInput.value.trim();
 		el.appendChild(continueBtn);
 
 		// Keep continue button state in sync with title input
@@ -1588,17 +1802,39 @@ export class JuttuWidget {
 			return;
 		}
 
-		// Login
-		if (target.closest('.juttu-linking-login-btn')) { this.openLoginPopup(); return; }
+		// Login as the article owner — pre-targets the DID in the <link> tag and requests owner scopes
+		if (target.closest('.juttu-linking-login-btn')) { this.openLoginPopup('setup', this.documentAtUri?.did); return; }
+
+		// Create publication declared by the site's well-known file
+		if (target.closest('.juttu-linking-create-pub-btn')) {
+			const nameInput = this.container.querySelector<HTMLInputElement>('.juttu-linking-pub-name-input');
+			const descInput = this.container.querySelector<HTMLInputElement>('.juttu-linking-pub-desc-input');
+			const name = nameInput?.value.trim() ?? '';
+			if (name) this.handleCreatePublication(name, descInput?.value.trim() ?? '');
+			return;
+		}
+
+		// Skip publication creation → fall back to a loose document
+		if (target.closest('.juttu-linking-skip-pub-btn')) {
+			this.pendingPublicationUri = null;
+			this.publicationUri = null;
+			this.linkingStep = 'metadata';
+			this.renderLinkingUI();
+			return;
+		}
 
 		// Metadata continue
-		if (target.closest('.juttu-linking-continue-btn') && !target.closest('.juttu-linking-write-submit')) {
+		if (target.closest('.juttu-linking-continue-btn')
+			&& !target.closest('.juttu-linking-write-submit')
+			&& !target.closest('.juttu-linking-create-pub-btn')) {
 			const titleInput = this.container.querySelector<HTMLInputElement>('.juttu-linking-title-input');
 			const descInput = this.container.querySelector<HTMLInputElement>('.juttu-linking-desc-input');
+			const pathInput = this.container.querySelector<HTMLInputElement>('.juttu-linking-path-input');
 			const title = titleInput?.value.trim() ?? '';
 			if (!title) return;
 			this.linkingTitle = title;
 			this.linkingDescription = descInput?.value.trim() ?? '';
+			this.linkingPath = pathInput?.value.trim() ?? '';
 			this.linkingStep = 'choose-method';
 			this.renderLinkingUI();
 			return;
@@ -1700,6 +1936,59 @@ export class JuttuWidget {
 		}
 	}
 
+	private async handleCreatePublication(name: string, description: string): Promise<void> {
+		if (!this.pendingPublicationUri) return;
+		const createBtn = this.container.querySelector<HTMLButtonElement>('.juttu-linking-create-pub-btn');
+		if (createBtn) { createBtn.disabled = true; createBtn.textContent = 'Creating…'; }
+
+		const { did, collection, rkey } = this.pendingPublicationUri;
+		const record = {
+			$type: 'site.standard.publication',
+			url: window.location.origin,
+			name,
+			description: description || undefined
+		};
+
+		try {
+			await fetch(`${this.config.apiUrl}/atproto/publication`, {
+				method: 'PUT',
+				headers: { 'Content-Type': 'application/json' },
+				credentials: 'include',
+				body: JSON.stringify({ rkey, record })
+			}).then(this.checkApiResponse);
+
+			this.publicationUri = `at://${did}/${collection}/${rkey}`;
+			this.pendingPublicationUri = null;
+			this.linkingStep = 'metadata';
+			this.renderLinkingUI();
+		} catch (err) {
+			if (createBtn) { createBtn.disabled = false; createBtn.textContent = 'Create publication'; }
+			const errEl = document.createElement('p');
+			errEl.className = 'juttu-linking-error';
+			errEl.textContent = err instanceof Error ? err.message : 'Failed to create publication';
+			this.container.querySelector('.juttu-linking')?.appendChild(errEl);
+		}
+	}
+
+	// Uploads the page's og:image (if present and not opted out) as a blob for coverImage.
+	// Best-effort: any failure falls back to no cover image rather than blocking linking.
+	private async resolveCoverImageBlob(): Promise<BlobRef | undefined> {
+		if (!this.includeCoverImage) return undefined;
+		const imageUrl = getOgImageUrl();
+		if (!imageUrl) return undefined;
+		try {
+			const res = await fetch(`${this.config.apiUrl}/atproto/blob`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				credentials: 'include',
+				body: JSON.stringify({ url: imageUrl })
+			}).then(this.checkApiResponse);
+			return (await res.json()) as BlobRef;
+		} catch {
+			return undefined;
+		}
+	}
+
 	private async callPutDocument(postUri: string, postCid: string): Promise<void> {
 		if (!this.documentAtUri) return;
 
@@ -1720,13 +2009,18 @@ export class JuttuWidget {
 			// Mode A: update existing record — preserve all fields, add bskyPostRef
 			record = { ...this.documentRecord, bskyPostRef, updatedAt: now };
 		} else {
-			// Mode B: create new record
+			// Mode B: create new record. `site` points to the publication record when the
+			// site declares one, otherwise the bare origin (a loose document). `path` is only
+			// user-editable when linked to a publication; a loose document's `site` is already
+			// the full origin.
+			const path = this.publicationUri ? (this.linkingPath || undefined) : (window.location.pathname || undefined);
 			record = {
 				$type: 'site.standard.document',
-				site: window.location.origin,
+				site: this.publicationUri ?? window.location.origin,
 				title: this.linkingTitle,
 				description: this.linkingDescription || undefined,
-				path: window.location.pathname || undefined,
+				path,
+				coverImage: await this.resolveCoverImageBlob(),
 				publishedAt: now,
 				updatedAt: now,
 				bskyPostRef

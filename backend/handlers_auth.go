@@ -1,13 +1,111 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"html"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"strings"
+
+	"github.com/bluesky-social/indigo/atproto/syntax"
 )
+
+// Scope tiers. Readers ("comment") only get the scopes needed to post, like, and repost.
+// Owners ("setup") additionally get write access to the standard.site records, which is
+// required to link an article and create a publication.
+const (
+	scopeTierComment = "comment"
+	scopeTierOwner   = "owner"
+)
+
+// Only the owner tier requests site.standard.document scopes, so a granted scope under this
+// collection identifies an owner session (prefix match tolerates any action/format the auth
+// server echoes back).
+const ownerScopePrefix = "repo:site.standard.document"
+
+var commentScopes = []string{
+	"atproto",
+	"repo:app.bsky.feed.post?action=create",
+	"repo:app.bsky.feed.post?action=delete",
+	"repo:app.bsky.feed.like?action=create",
+	"repo:app.bsky.feed.like?action=delete",
+	"repo:app.bsky.feed.repost?action=create",
+	"repo:app.bsky.feed.repost?action=delete",
+	"rpc:app.bsky.feed.getPostThread?aud=did:web:api.bsky.app#bsky_appview",
+}
+
+var ownerScopes = append(append([]string{}, commentScopes...),
+	"repo:site.standard.document?action=create",
+	"repo:site.standard.document?action=update",
+	"repo:site.standard.publication?action=create",
+	"blob:image/*",
+)
+
+func grantedTier(scopes []string) string {
+	for _, s := range scopes {
+		if strings.HasPrefix(s, ownerScopePrefix) {
+			return scopeTierOwner
+		}
+	}
+	return scopeTierComment
+}
+
+// startAuthFlow mirrors oauth.ClientApp.StartAuthFlow but requests a caller-chosen scope set
+// (the wrapper hardcodes config.Scopes). The client metadata still declares the full owner set,
+// so each login can request a subset.
+func (s *Server) startAuthFlow(ctx context.Context, identifier string, scopes []string) (string, error) {
+	app := s.OAuth
+
+	var authserverURL string
+	var accountDID syntax.DID
+
+	if strings.HasPrefix(identifier, "https://") {
+		authserverURL = identifier
+		identifier = ""
+	} else {
+		atid, err := syntax.ParseAtIdentifier(identifier)
+		if err != nil {
+			return "", fmt.Errorf("not a valid account identifier (%s): %w", identifier, err)
+		}
+		ident, err := app.Dir.Lookup(ctx, atid)
+		if err != nil {
+			return "", fmt.Errorf("failed to resolve account (%s): %w", identifier, err)
+		}
+		accountDID = ident.DID
+		host := ident.PDSEndpoint()
+		if host == "" {
+			return "", fmt.Errorf("identity does not link to an atproto host (PDS)")
+		}
+		authserverURL, err = app.Resolver.ResolveAuthServerURL(ctx, host)
+		if err != nil {
+			return "", fmt.Errorf("resolving auth server: %w", err)
+		}
+	}
+
+	authserverMeta, err := app.Resolver.ResolveAuthServerMetadata(ctx, authserverURL)
+	if err != nil {
+		return "", fmt.Errorf("fetching auth server metadata: %w", err)
+	}
+
+	info, err := app.SendAuthRequest(ctx, authserverMeta, scopes, identifier)
+	if err != nil {
+		return "", fmt.Errorf("auth request failed: %w", err)
+	}
+	if accountDID != "" {
+		info.AccountDID = &accountDID
+	}
+	if err := app.Store.SaveAuthRequestInfo(ctx, *info); err != nil {
+		return "", fmt.Errorf("persisting auth request: %w", err)
+	}
+
+	params := url.Values{}
+	params.Set("client_id", app.Config.ClientID)
+	params.Set("request_uri", info.RequestURI)
+	return fmt.Sprintf("%s?%s", authserverMeta.AuthorizationEndpoint, params.Encode()), nil
+}
 
 func (s *Server) ClientMetadata(w http.ResponseWriter, r *http.Request) {
 	slog.Info("client metadata request", "url", r.URL, "host", r.Host)
@@ -45,22 +143,30 @@ func (s *Server) Login(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var req struct {
+		// Handle carries the account identifier: a handle, a DID (owner setup), or an auth
+		// server URL (e.g. https://bsky.social).
 		Handle string `json:"handle"`
+		Intent string `json:"intent"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		jsonError(w, "invalid request body", http.StatusBadRequest)
 		return
 	}
 
-	handle, _ := strings.CutPrefix(req.Handle, "@")
-	if handle == "" {
+	identifier, _ := strings.CutPrefix(req.Handle, "@")
+	if identifier == "" {
 		jsonError(w, "handle is required", http.StatusBadRequest)
 		return
 	}
 
-	slog.Info("Login", "client_id", s.OAuth.Config.ClientID, "callback_url", s.OAuth.Config.CallbackURL)
+	scopes := commentScopes
+	if req.Intent == scopeTierOwner || req.Intent == "setup" {
+		scopes = ownerScopes
+	}
 
-	redirectURL, err := s.OAuth.StartAuthFlow(ctx, handle)
+	slog.Info("Login", "client_id", s.OAuth.Config.ClientID, "intent", req.Intent)
+
+	redirectURL, err := s.startAuthFlow(ctx, identifier, scopes)
 	if err != nil {
 		slog.Error("OAuth login failed", "err", err)
 		jsonError(w, fmt.Sprintf("OAuth login failed: %s", err), http.StatusInternalServerError)
@@ -98,10 +204,13 @@ func (s *Server) OAuthCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	tier := grantedTier(oauthSess.Data.Scopes)
+
 	sess, _ := s.CookieStore.Get(r, "bsky-api-session")
 	sess.Values["account_did"] = sessData.AccountDID.String()
 	sess.Values["session_id"] = sessData.SessionID
 	sess.Values["handle"] = resp.Handle
+	sess.Values["scope_tier"] = tier
 	if err := sess.Save(r, w); err != nil {
 		callbackError(w, err.Error())
 		return
@@ -143,5 +252,10 @@ func (s *Server) Me(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, "not authenticated", http.StatusUnauthorized)
 		return
 	}
-	jsonOK(w, map[string]string{"did": did.String(), "handle": handle})
+	sess, _ := s.CookieStore.Get(r, "bsky-api-session")
+	tier, _ := sess.Values["scope_tier"].(string)
+	if tier == "" {
+		tier = scopeTierComment
+	}
+	jsonOK(w, map[string]string{"did": did.String(), "handle": handle, "scopeTier": tier})
 }
