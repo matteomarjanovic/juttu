@@ -74,7 +74,7 @@ export class JuttuWidget {
 	// Document linking state
 	private documentAtUri: AtUri | null = null;
 	private documentRecord: DocumentRecord | null = null;
-	private linkingStep: 'setup' | 'login' | 'create-publication' | 'metadata' | 'choose-method' | 'write-post' | 'select-post' = 'setup';
+	private linkingStep: 'setup' | 'login' | 'create-publication' | 'metadata' | 'choose-method' | 'write-post' | 'select-post' | 'record-created' = 'setup';
 	private linkingTitle = '';
 	private linkingDescription = '';
 	// Document path, editable only when linked to a publication (see makeLinkingMetadata).
@@ -1468,6 +1468,9 @@ export class JuttuWidget {
 			case 'select-post':
 				linking.appendChild(this.makeLinkingSelectPost());
 				break;
+			case 'record-created':
+				linking.appendChild(this.makeLinkingRecordCreated());
+				break;
 		}
 
 		root.appendChild(linking);
@@ -1714,7 +1717,60 @@ export class JuttuWidget {
 		selectBtn.appendChild(selectDesc);
 		methods.appendChild(selectBtn);
 
+		// Only offered in Mode B — in Mode A the record already exists, so there is nothing to
+		// publish first: the owner is here precisely to attach a post to it.
+		if (!this.documentRecord) {
+			const recordBtn = document.createElement('button');
+			recordBtn.className = 'juttu-linking-method-btn';
+			recordBtn.dataset.method = 'record';
+			const recordTitle = document.createElement('div');
+			recordTitle.className = 'juttu-linking-method-title';
+			recordTitle.textContent = 'Publish the record first';
+			const recordDesc = document.createElement('div');
+			recordDesc.className = 'juttu-linking-method-desc';
+			recordDesc.textContent = 'Post on Bluesky yourself, then come back and link it';
+			recordBtn.appendChild(recordTitle);
+			recordBtn.appendChild(recordDesc);
+			methods.appendChild(recordBtn);
+		}
+
 		el.appendChild(methods);
+		return el;
+	}
+
+	// Shown after publishing a record without a bskyPostRef. The document now resolves from the
+	// owner's repo, so a Bluesky post linking to the article unfurls with its standard.site card —
+	// which is the whole point of publishing first and linking the post afterwards.
+	private makeLinkingRecordCreated(): HTMLElement {
+		const el = document.createElement('div');
+		const title = document.createElement('p');
+		title.className = 'juttu-linking-title';
+		title.textContent = 'Record published';
+		el.appendChild(title);
+
+		const desc = document.createElement('p');
+		desc.className = 'juttu-linking-desc';
+		desc.textContent =
+			'This article is now in your repository. Post about it on Bluesky — the link will show a standard.site preview — then come back here and link that post to start the comment thread.';
+		el.appendChild(desc);
+
+		const actions = document.createElement('div');
+		actions.style.cssText = 'display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;';
+
+		const composeLink = document.createElement('a');
+		composeLink.className = 'juttu-linking-compose-link';
+		composeLink.href = `https://bsky.app/intent/compose?text=${encodeURIComponent(window.location.href)}`;
+		composeLink.target = '_blank';
+		composeLink.rel = 'noopener noreferrer';
+		composeLink.textContent = 'Write the post on Bluesky ↗';
+		actions.appendChild(composeLink);
+
+		const linkBtn = document.createElement('button');
+		linkBtn.className = 'juttu-linking-link-post-btn';
+		linkBtn.textContent = 'I’ve posted — link it';
+		actions.appendChild(linkBtn);
+
+		el.appendChild(actions);
 		return el;
 	}
 
@@ -1823,6 +1879,15 @@ export class JuttuWidget {
 			return;
 		}
 
+		// Record published, owner has posted on Bluesky — go pick that post
+		if (target.closest('.juttu-linking-link-post-btn')) {
+			this.linkingStep = 'select-post';
+			this.userPosts = [];
+			this.renderLinkingUI();
+			this.fetchUserPostsAndRender();
+			return;
+		}
+
 		// Metadata continue
 		if (target.closest('.juttu-linking-continue-btn')
 			&& !target.closest('.juttu-linking-write-submit')
@@ -1851,6 +1916,8 @@ export class JuttuWidget {
 				this.userPosts = [];
 				this.renderLinkingUI();
 				this.fetchUserPostsAndRender();
+			} else if (methodBtn.dataset.method === 'record') {
+				this.callPutDocument();
 			}
 			return;
 		}
@@ -1869,7 +1936,7 @@ export class JuttuWidget {
 		if (postItem) {
 			const uri = postItem.dataset.uri;
 			const cid = postItem.dataset.cid;
-			if (uri && cid) this.callPutDocument(uri, cid);
+			if (uri && cid) this.callPutDocument({ uri, cid });
 			return;
 		}
 
@@ -1926,7 +1993,7 @@ export class JuttuWidget {
 				body: JSON.stringify({ text })
 			}).then(this.checkApiResponse);
 			const data = await res.json() as { uri: string; cid: string };
-			await this.callPutDocument(data.uri, data.cid);
+			await this.callPutDocument({ uri: data.uri, cid: data.cid });
 		} catch (err) {
 			if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Post & Link'; }
 			const errEl = document.createElement('p');
@@ -1989,7 +2056,9 @@ export class JuttuWidget {
 		}
 	}
 
-	private async callPutDocument(postUri: string, postCid: string): Promise<void> {
+	// Writes the document record. Without a `bskyPostRef` the record is published on its own
+	// (Mode B only) so the owner can post the article link on Bluesky and attach that post later.
+	private async callPutDocument(bskyPostRef?: { uri: string; cid: string }): Promise<void> {
 		if (!this.documentAtUri) return;
 
 		// Show loading indicator
@@ -1997,14 +2066,13 @@ export class JuttuWidget {
 		if (linking) {
 			const spinner = document.createElement('p');
 			spinner.className = 'juttu-linking-spinner';
-			spinner.textContent = 'Linking…';
+			spinner.textContent = bskyPostRef ? 'Linking…' : 'Publishing record…';
 			linking.appendChild(spinner);
 		}
 
-		const bskyPostRef = { uri: postUri, cid: postCid };
 		const now = new Date().toISOString();
 
-		let record: Record<string, unknown>;
+		let record: DocumentRecord;
 		if (this.documentRecord) {
 			// Mode A: update existing record — preserve all fields, add bskyPostRef
 			record = { ...this.documentRecord, bskyPostRef, updatedAt: now };
@@ -2035,12 +2103,21 @@ export class JuttuWidget {
 				body: JSON.stringify({ rkey: this.documentAtUri.rkey, record })
 			}).then(this.checkApiResponse);
 
+			if (!bskyPostRef) {
+				// Record-only: keep the linking flow open, now in Mode A — the record we just wrote
+				// is what a later link step will update.
+				this.documentRecord = record;
+				this.linkingStep = 'record-created';
+				this.renderLinkingUI();
+				return;
+			}
+
 			// Success — transition to comments view
 			this.documentAtUri = null;
 			this.documentRecord = null;
-			this.rootPostUri = postUri;
-			this.rootPostCid = postCid;
-			const thread = await fetchThread(postUri);
+			this.rootPostUri = bskyPostRef.uri;
+			this.rootPostCid = bskyPostRef.cid;
+			const thread = await fetchThread(bskyPostRef.uri);
 			this.threadData = thread;
 			collectViewerState(thread, this.viewerState);
 			this.renderWidget();
@@ -2049,7 +2126,8 @@ export class JuttuWidget {
 			linking2?.querySelector('.juttu-linking-spinner')?.remove();
 			const errEl = document.createElement('p');
 			errEl.className = 'juttu-linking-error';
-			errEl.textContent = err instanceof Error ? err.message : 'Failed to link document';
+			const fallback = bskyPostRef ? 'Failed to link document' : 'Failed to publish record';
+			errEl.textContent = err instanceof Error ? err.message : fallback;
 			linking2?.appendChild(errEl);
 		}
 	}

@@ -302,6 +302,18 @@ a.juttu-handle:hover { text-decoration: underline; }
 }
 .juttu-linking-continue-btn:hover:not(:disabled) { opacity: 0.88; }
 .juttu-linking-continue-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.juttu-linking-compose-link {
+  display: inline-block; background: var(--juttu-accent-color); color: #fff;
+  border-radius: var(--juttu-radius); padding: 0.4rem 1rem; text-decoration: none;
+  font-size: 1rem; font-family: var(--juttu-font-family); font-weight: 500; transition: opacity 0.15s;
+}
+.juttu-linking-compose-link:hover { opacity: 0.88; }
+.juttu-linking-link-post-btn {
+  background: none; border: 1px solid var(--juttu-border-color); border-radius: var(--juttu-radius);
+  padding: 0.4rem 1rem; cursor: pointer; font-size: 1rem; color: var(--juttu-text);
+  font-family: var(--juttu-font-family); transition: border-color 0.15s;
+}
+.juttu-linking-link-post-btn:hover { border-color: var(--juttu-accent-color); }
 .juttu-linking-post-list { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem; }
 .juttu-linking-post-item {
   border: 1px solid var(--juttu-border-color); border-radius: var(--juttu-radius);
